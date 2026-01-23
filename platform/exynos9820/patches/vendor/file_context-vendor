@@ -21,6 +21,7 @@
 /vendor/etc/bluetooth_audio_policy_configuration\.xml u:object_r:vendor_configs_file:s0
 /vendor/etc/init u:object_r:vendor_configs_file:s0
 /vendor/etc/init/android\.hardware\.wifi\.supplicant-service\.rc u:object_r:vendor_configs_file:s0
+/vendor/etc/init/init\.exynos9820\.rc u:object_r:vendor_configs_file:s0
 /vendor/etc/init/init\.vendor\.rilchip\.rc u:object_r:vendor_configs_file:s0
 /vendor/etc/init/init\.vendor\.rilcommon\.rc u:object_r:vendor_configs_file:s0
 /vendor/etc/init/vendor\.samsung\.hardware\.snap-lazy\.rc u:object_r:vendor_configs_file:s0
