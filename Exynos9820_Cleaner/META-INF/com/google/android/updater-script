@@ -1,0 +1,16 @@
+if is_substring("G970", getprop("ro.boot.bootloader")) || is_substring("G973", getprop("ro.boot.bootloader")) ||  is_substring("G975", getprop("ro.boot.bootloader")) || is_substring("G977", getprop("ro.boot.bootloader")) || is_substring("N970", getprop("ro.boot.bootloader")) || is_substring("N971", getprop("ro.boot.bootloader")) || is_substring("N975", getprop("ro.boot.bootloader")) || is_substring("N976", getprop("ro.boot.bootloader")) then
+    ui_print("Welcome to Exynos 9820/9825 Partition Cleaner ZIP.");
+else
+    abort("This device is not supported - This script only supports Exynos 9820 and 9825 series devices.");
+endif;
+
+ui_print("Adapted to Exynos 9820 by @ExtremeXT and @david42069");
+ui_print("Executing cleanup script...");
+package_extract_dir("extreme", "/tmp");
+set_metadata_recursive("/tmp", "uid", 0, "gid", 0, "dmode", 0755, "fmode", 0755);
+run_program("/tmp/cleanup.sh");	
+delete_recursive("/tmp");
+  
+ui_print("Rebooting back to recovery in 5 seconds...");
+run_program("/sbin/sh", "-c", "sleep 5");
+run_program("/sbin/sh", "-c", "reboot recovery");
