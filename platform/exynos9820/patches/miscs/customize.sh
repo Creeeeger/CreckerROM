@@ -1,10 +1,3 @@
-LOG "- Disabling encryption"
-LINE=$(sed -n "/^\/dev\/block\/by-name\/userdata/=" "$WORK_DIR/vendor/etc/fstab.exynos9820")
-sed -i "${LINE}s/,fileencryption=ice//g" "$WORK_DIR/vendor/etc/fstab.exynos9820"
-
-# ODE
-sed -i -e "/ODE/d" -e "/keydata/d" -e "/keyrefuge/d" "$WORK_DIR/vendor/etc/fstab.exynos9820"
-
 LOG_STEP_IN "- Enabling updateable APEX images"
 SET_PROP "vendor" "ro.apex.updatable" "true"
 LOG_STEP_OUT
@@ -17,7 +10,12 @@ LOG_STEP_IN "- Enabling FS Verity"
 SET_PROP "vendor" "ro.apk_verity.mode" "2"
 LOG_STEP_OUT
 
+LOG_STEP_IN "- Setting first API level"
+SET_PROP "vendor" "ro.product.first_api_level" "$TARGET_PRODUCT_FIRST_API_LEVEL"
+LOG_STEP_OUT
+
 LOG_STEP_IN "- Setting /data to F2FS"
+LINE=$(sed -n "/^\/dev\/block\/by-name\/userdata/=" "$WORK_DIR/vendor/etc/fstab.exynos9820")
 FROM="noatime,nosuid,nodev,noauto_da_alloc,discard,journal_checksum,data=ordered,errors=panic"
 TO="noatime,nosuid,nodev,discard,usrquota,grpquota,fsync_mode=nobarrier,reserve_root=32768,resgid=5678"
 sed -i -e "${LINE}s/ext4/f2fs/g" -e "${LINE}s/$FROM/$TO/g" "$WORK_DIR/vendor/etc/fstab.exynos9820"
@@ -117,4 +115,3 @@ fi
 # https://github.com/duhansysl/Bluetooth-Library-Patcher/blob/67e598ad142ed296b487a7a4585927c993d4f35d/hexpatcher.sh#L43
 HEX_PATCH "$WORK_DIR/system/system/lib64/libbluetooth_jni.so" \
     "1ff828ab5e39480500352800805228ab" "1ff828ab5e392a0000142800805228ab"
-

@@ -57,3 +57,32 @@ ADD_TO_WORK_DIR "p3sxxx" "vendor" "bin/hw/vendor.samsung.hardware.light-service"
 ADD_TO_WORK_DIR "p3sxxx" "vendor" "lib64/android.hardware.light-V1-ndk_platform.so"
 ADD_TO_WORK_DIR "p3sxxx" "vendor" "lib64/vendor.samsung.hardware.light-V1-ndk_platform.so"
 LOG_STEP_OUT
+
+LOG "- Adjusting init.exynos9820.rc fstab mount triggers"
+INIT_RC="$WORK_DIR/vendor/etc/init/init.exynos9820.rc" python3 - <<'PY'
+from pathlib import Path
+import os
+
+path = Path(os.environ["INIT_RC"])
+if not path.exists():
+    print("init.exynos9820.rc not found; skipping fstab mount tweak")
+    raise SystemExit(0)
+
+data = path.read_text()
+old = "on fs\n    mount_all /vendor/etc/fstab.exynos9820"
+new = (
+    "on late-fs\n"
+    "    wait_for_prop hwservicemanager.ready true\n"
+    "    mount_all /vendor/etc/fstab.exynos9820 --late\n"
+    "\n"
+    "\n"
+    "on fs\n"
+    "    start hwservicemanager\n"
+    "    mount_all /vendor/etc/fstab.exynos9820 --early"
+)
+if old not in data:
+    print("fstab mount stanza not found in init.exynos9820.rc; skipping")
+    raise SystemExit(0)
+
+path.write_text(data.replace(old, new, 1))
+PY
