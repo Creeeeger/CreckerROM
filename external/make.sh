@@ -245,7 +245,9 @@ fi
 if $SAMLOADER; then
     SAMLOADER_CMDS=(
         "python3 -m venv \"$TOOLS_DIR/venv\""
-        "source \"$TOOLS_DIR/venv/bin/activate\"; pip3 install ."
+        # Some users have pip configured with `global.user=true`, which forces `--user`
+        # installs and breaks inside virtualenvs. Force non-user installs here.
+        "source \"$TOOLS_DIR/venv/bin/activate\"; python -m pip install --no-user ."
     )
 
     BUILD "samloader" "$SRC_DIR/external/samloader" "${SAMLOADER_CMDS[@]}"
