@@ -58,11 +58,31 @@ fi
 SINGLE_SYSTEM_IMAGE="$TARGET_SINGLE_SYSTEM_IMAGE"
 [[ "$TARGET_SINGLE_SYSTEM_IMAGE" == "essi" ]] && SINGLE_SYSTEM_IMAGE="essi_64"
 
+FORCE_EXT4_IMAGES="${FORCE_EXT4_IMAGES:-false}"
+if [[ "$FORCE_EXT4_IMAGES" != "true" ]] && [[ "$FORCE_EXT4_IMAGES" != "false" ]]; then
+    LOGE "FORCE_EXT4_IMAGES must be \"true\" or \"false\" (got: $FORCE_EXT4_IMAGES)"
+    exit 1
+fi
+
 if [ ! -f "$SRC_DIR/unica/configs/$SINGLE_SYSTEM_IMAGE.sh" ]; then
     LOGE "\"$SINGLE_SYSTEM_IMAGE\" is not a valid system image"
     exit 1
 else
     source "$SRC_DIR/unica/configs/$SINGLE_SYSTEM_IMAGE.sh" || exit 1
+fi
+
+FINAL_TARGET_OS_FILE_SYSTEM="$TARGET_OS_FILE_SYSTEM"
+if [[ "$FORCE_EXT4_IMAGES" == "true" ]] && [[ "$FINAL_TARGET_OS_FILE_SYSTEM" == "erofs" ]]; then
+    FINAL_TARGET_OS_FILE_SYSTEM="ext4"
+fi
+if [ ! "$FINAL_TARGET_OS_FILE_SYSTEM" ]; then
+    LOGE "TARGET_OS_FILE_SYSTEM is empty"
+    exit 1
+elif [[ "$FINAL_TARGET_OS_FILE_SYSTEM" != "ext4" ]] && \
+        [[ "$FINAL_TARGET_OS_FILE_SYSTEM" != "f2fs" ]] && \
+        [[ "$FINAL_TARGET_OS_FILE_SYSTEM" != "erofs" ]]; then
+    LOGE "Unsupported TARGET_OS_FILE_SYSTEM: $FINAL_TARGET_OS_FILE_SYSTEM"
+    exit 1
 fi
 
 if [ -f "$OUT_DIR/config.sh" ]; then
@@ -104,7 +124,8 @@ fi
     GET_BUILD_VAR "TARGET_PRODUCT_FIRST_API_LEVEL"
     GET_BUILD_VAR "TARGET_VNDK_VERSION"
     GET_BUILD_VAR "TARGET_SINGLE_SYSTEM_IMAGE"
-    GET_BUILD_VAR "TARGET_OS_FILE_SYSTEM"
+    GET_BUILD_VAR "FORCE_EXT4_IMAGES" "false"
+    echo "TARGET_OS_FILE_SYSTEM=\"$FINAL_TARGET_OS_FILE_SYSTEM\""
     GET_BUILD_VAR "TARGET_BOOT_DEVICE_PATH" "/dev/block/by-name"
     GET_BUILD_VAR "TARGET_INCLUDE_PATCHED_VBMETA" "false"
     GET_BUILD_VAR "TARGET_KEEP_ORIGINAL_SIGN" "false"

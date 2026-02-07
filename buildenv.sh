@@ -47,7 +47,10 @@ _GET_SRC_DIR()
 
 _PRINT_USAGE()
 {
-    echo "Usage: source buildenv.sh [--debug] <target>" >&2
+    echo "Usage: source buildenv.sh [options] <target>" >&2
+    echo "Options:" >&2
+    echo " --debug : Enable verbose debug logs" >&2
+    echo " --ext4-images : Force EROFS target partitions to be built as ext4" >&2
     echo "Available devices:" >&2
     printf '%s\n' "${TARGETS[@]}" >&2
 }
@@ -132,6 +135,7 @@ fi
 unset -f _GET_SRC_DIR
 
 export DEBUG=false
+export FORCE_EXT4_IMAGES="${FORCE_EXT4_IMAGES:-false}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
 export TMP_DIR="$OUT_DIR/tmp"
@@ -149,6 +153,8 @@ done < <(find "$SRC_DIR/target" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" |
 while [[ "$1" == "-"* ]]; do
     if [[ "$1" == "--debug" ]]; then
         export DEBUG=true
+    elif [[ "$1" == "--ext4-images" ]]; then
+        export FORCE_EXT4_IMAGES=true
     elif [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
         _PRINT_USAGE
         return 0
@@ -187,7 +193,10 @@ export WORK_DIR="$OUT_DIR/target/$SELECTED_TARGET/work_dir"
 
 mkdir -p "$OUT_DIR/target/$SELECTED_TARGET"
 # shellcheck disable=SC2046
+_SAVED_FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES"
 [ -f "$OUT_DIR/config.sh" ] && unset $(sed "/Automatically/d" "$OUT_DIR/config.sh" | cut -d "=" -f 1)
+export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
+unset _SAVED_FORCE_EXT4_IMAGES
 "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport
 
