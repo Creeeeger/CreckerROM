@@ -583,9 +583,6 @@ PRINT_HEADER()
     echo -n 'ui_print("'
     echo -n "Welcome to creckerRom $ROM_CODENAME $ROM_VERSION for $TARGET_NAME!"
     echo    '");'
-    echo    'ui_print("ExtremeROM developed by ExtremeXT @XDAforums");'
-    echo    'ui_print("Initial UN1CA build system coded by salvo_giangri @XDAforums");'
-    echo    'ui_print("Special thanks to all ExtremeROM Maintainers, Contribuitors and Testers");'
     echo    'ui_print("****************************************************");'
     echo -n 'ui_print("'
     echo -n "One UI version: $ONEUI_VERSION"
@@ -607,13 +604,6 @@ PRINT_HEADER()
     echo    'ui_print("Otherwise, hold the Volume DOWN + POWER buttons for 7 seconds to force reboot.");'
     echo    'assert(run_program("/sbin/sh", "-c", "while true; do getevent -lc 1 | grep -q -m1 '\''KEY_VOLUMEUP'\'' && exit 0; sleep 1; done"));'
     echo    'ui_print("Volume UP detected. Proceeding!");'
-    echo    'ui_print("****************************************************");'
-    echo    'ui_print("   ____     __                    ___  ____  __  ___");'
-    echo    'ui_print("  / __/_ __/ /________ __ _  ___ / _ \/ __ \/  |/  /");'
-    echo    "ui_print(\" / _/ \ \ / __/ __/ -_)  ' \/ -_) , _/ /_/ / /|_/ / \");"
-    echo    'ui_print("/___//_\_\\\__/_/  \__/_/_/_/\__/_/|_|\____/_/  /_/  ");'
-    echo    'ui_print("                                                    ");'
-    echo    'ui_print("****************************************************");'
 }
 # ]
 
