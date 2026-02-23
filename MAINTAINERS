@@ -1,12 +1,6 @@
 List of maintainers
 -------------------
 
-Exynos 9820
-M: ExtremeXT (@ExtremeXT)
-S: Maintained
-F: platform/exynos9820/*
-F: target/beyond*/*
-
 Exynos 990
 M: ExtremeXT (@ExtremeXT)
 S: Maintained
@@ -35,4 +29,3 @@ F: target/b0s/*
 F: target/g0s/*
 F: target/r0s/*
 F: target/r11s/*
-
