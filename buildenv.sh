@@ -51,6 +51,9 @@ _PRINT_USAGE()
     echo "Options:" >&2
     echo " --debug : Enable verbose debug logs" >&2
     echo " --ext4-images : Force EROFS target partitions to be built as ext4" >&2
+    echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
+    echo " --no-debloat : Alias for --debloat none" >&2
+    echo " --ultra-debloat : Alias for --debloat ultra" >&2
     echo "Available devices:" >&2
     printf '%s\n' "${TARGETS[@]}" >&2
 }
@@ -136,6 +139,7 @@ unset -f _GET_SRC_DIR
 
 export DEBUG=false
 export FORCE_EXT4_IMAGES="${FORCE_EXT4_IMAGES:-false}"
+export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
 export TMP_DIR="$OUT_DIR/tmp"
@@ -155,6 +159,20 @@ while [[ "$1" == "-"* ]]; do
         export DEBUG=true
     elif [[ "$1" == "--ext4-images" ]]; then
         export FORCE_EXT4_IMAGES=true
+    elif [[ "$1" == "--no-debloat" ]]; then
+        export ROM_DEBLOAT_LEVEL="none"
+    elif [[ "$1" == "--ultra-debloat" ]]; then
+        export ROM_DEBLOAT_LEVEL="ultra"
+    elif [[ "$1" == "--debloat" ]]; then
+        shift
+        if [ ! "$1" ]; then
+            echo "--debloat requires an argument (default|none|ultra)" >&2
+            _PRINT_USAGE
+            return 1
+        fi
+        export ROM_DEBLOAT_LEVEL="$1"
+    elif [[ "$1" == "--debloat="* ]]; then
+        export ROM_DEBLOAT_LEVEL="${1#--debloat=}"
     elif [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
         _PRINT_USAGE
         return 0
@@ -165,6 +183,14 @@ while [[ "$1" == "-"* ]]; do
     fi
     shift
 done
+
+if [[ "$ROM_DEBLOAT_LEVEL" != "default" ]] && \
+        [[ "$ROM_DEBLOAT_LEVEL" != "none" ]] && \
+        [[ "$ROM_DEBLOAT_LEVEL" != "ultra" ]]; then
+    echo "Invalid --debloat value: $ROM_DEBLOAT_LEVEL (expected: default|none|ultra)" >&2
+    _PRINT_USAGE
+    return 1
+fi
 
 if [ "$#" -ne 1 ]; then
     echo "No target specified. Please choose from the available devices below:"
@@ -194,9 +220,12 @@ export WORK_DIR="$OUT_DIR/target/$SELECTED_TARGET/work_dir"
 mkdir -p "$OUT_DIR/target/$SELECTED_TARGET"
 # shellcheck disable=SC2046
 _SAVED_FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES"
+_SAVED_ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL"
 [ -f "$OUT_DIR/config.sh" ] && unset $(sed "/Automatically/d" "$OUT_DIR/config.sh" | cut -d "=" -f 1)
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
+export ROM_DEBLOAT_LEVEL="$_SAVED_ROM_DEBLOAT_LEVEL"
 unset _SAVED_FORCE_EXT4_IMAGES
+unset _SAVED_ROM_DEBLOAT_LEVEL
 "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport
 

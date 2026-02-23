@@ -32,8 +32,22 @@ TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" 
 
 GET_WORK_DIR_HASH()
 {
-    find "$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" -type f -print0 | \
-        sort -z | xargs -0 sha1sum | sha1sum | cut -d " " -f 1
+    local TREE_HASH
+    local OPTS_HASH
+    TREE_HASH="$(
+        find "$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" -type f -print0 | \
+            sort -z | xargs -0 sha1sum | sha1sum | cut -d " " -f 1
+    )"
+
+    # Include buildenv-generated options that impact the work dir but aren't part of the source tree.
+    OPTS_HASH="$(
+        printf '%s\n' \
+            "FORCE_EXT4_IMAGES=${FORCE_EXT4_IMAGES:-false}" \
+            "ROM_DEBLOAT_LEVEL=${ROM_DEBLOAT_LEVEL:-default}" | \
+            sha1sum | cut -d " " -f 1
+    )"
+
+    printf '%s\n' "${TREE_HASH}${OPTS_HASH}" | sha1sum | cut -d " " -f 1
 }
 
 PREPARE_SCRIPT()

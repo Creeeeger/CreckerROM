@@ -64,6 +64,14 @@ if [[ "$FORCE_EXT4_IMAGES" != "true" ]] && [[ "$FORCE_EXT4_IMAGES" != "false" ]]
     exit 1
 fi
 
+ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
+if [[ "$ROM_DEBLOAT_LEVEL" != "default" ]] && \
+        [[ "$ROM_DEBLOAT_LEVEL" != "none" ]] && \
+        [[ "$ROM_DEBLOAT_LEVEL" != "ultra" ]]; then
+    LOGE "ROM_DEBLOAT_LEVEL must be \"default\", \"none\" or \"ultra\" (got: $ROM_DEBLOAT_LEVEL)"
+    exit 1
+fi
+
 if [ ! -f "$SRC_DIR/unica/configs/$SINGLE_SYSTEM_IMAGE.sh" ]; then
     LOGE "\"$SINGLE_SYSTEM_IMAGE\" is not a valid system image"
     exit 1
@@ -95,6 +103,8 @@ fi
     echo "ROM_IS_OFFICIAL=\"$(IS_EXTREMEROM_CERT_AVAILABLE)\""
     GET_BUILD_VAR "ROM_VERSION"
     GET_BUILD_VAR "ROM_CODENAME"
+    GET_BUILD_VAR "ROM_TYPE"
+    GET_BUILD_VAR "ROM_DEBLOAT_LEVEL" "default"
     GET_BUILD_VAR "ROM_BUILD_TIMESTAMP" "$(date +%s)"
     GET_BUILD_VAR "SOURCE_FIRMWARE"
     if [ "${#SOURCE_EXTRA_FIRMWARES[@]}" -ge 1 ]; then
