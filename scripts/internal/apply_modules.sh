@@ -24,7 +24,6 @@ source "$SRC_DIR/scripts/utils/module_utils.sh" || exit 1
 APPLY_MODULE()
 {
     local MODPATH="$1"
-    local MODID
     local MODNAME
     local MODAUTH
 
@@ -43,15 +42,8 @@ APPLY_MODULE()
     elif [ -f "$MODPATH/disable" ]; then
         return 0
     else
-        MODID="$(grep "^id=" "$MODPATH/module.prop" | sed "s/id=//")"
         MODNAME="$(grep "^name" "$MODPATH/module.prop" | sed "s/name=//")"
         MODAUTH="$(grep "^author" "$MODPATH/module.prop" | sed "s/author=//" | sed "s/, /, @/")"
-    fi
-
-    # Allow "stock"/no-debloat builds by skipping the debloat module.
-    if [[ "${ROM_DEBLOAT_LEVEL:-default}" == "none" ]] && [[ "$MODID" == "debloat" ]]; then
-        LOGW "- Skipping \"$MODNAME\" (ROM_DEBLOAT_LEVEL=none)"
-        return 0
     fi
 
     LOG_STEP_IN "- Processing \"$MODNAME\" by @$MODAUTH"

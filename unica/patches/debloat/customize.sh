@@ -1,12 +1,19 @@
-[ -f "$SRC_DIR/unica/debloat.sh" ] && source "$SRC_DIR/unica/debloat.sh"
-[ -f "$SRC_DIR/platform/$TARGET_PLATFORM/debloat.sh" ] && source "$SRC_DIR/platform/$TARGET_PLATFORM/debloat.sh"
-[ -f "$SRC_DIR/target/$TARGET_CODENAME/debloat.sh" ] && source "$SRC_DIR/target/$TARGET_CODENAME/debloat.sh"
+if [[ "${ROM_DEBLOAT_LEVEL:-default}" != "none" ]]; then
+    [ -f "$SRC_DIR/unica/debloat.sh" ] && source "$SRC_DIR/unica/debloat.sh"
+    [ -f "$SRC_DIR/platform/$TARGET_PLATFORM/debloat.sh" ] && source "$SRC_DIR/platform/$TARGET_PLATFORM/debloat.sh"
+    [ -f "$SRC_DIR/target/$TARGET_CODENAME/debloat.sh" ] && source "$SRC_DIR/target/$TARGET_CODENAME/debloat.sh"
+fi
 
 if [[ "${ROM_DEBLOAT_LEVEL:-default}" == "ultra" ]]; then
     [ -f "$SRC_DIR/unica/debloat_ultra.sh" ] && source "$SRC_DIR/unica/debloat_ultra.sh"
     [ -f "$SRC_DIR/platform/$TARGET_PLATFORM/debloat_ultra.sh" ] && source "$SRC_DIR/platform/$TARGET_PLATFORM/debloat_ultra.sh"
     [ -f "$SRC_DIR/target/$TARGET_CODENAME/debloat_ultra.sh" ] && source "$SRC_DIR/target/$TARGET_CODENAME/debloat_ultra.sh"
 fi
+
+# Always apply a small "essential" list, even when ROM_DEBLOAT_LEVEL=none.
+[ -f "$SRC_DIR/unica/debloat_essential.sh" ] && source "$SRC_DIR/unica/debloat_essential.sh"
+[ -f "$SRC_DIR/platform/$TARGET_PLATFORM/debloat_essential.sh" ] && source "$SRC_DIR/platform/$TARGET_PLATFORM/debloat_essential.sh"
+[ -f "$SRC_DIR/target/$TARGET_CODENAME/debloat_essential.sh" ] && source "$SRC_DIR/target/$TARGET_CODENAME/debloat_essential.sh"
 
 ODM_DEBLOAT="$(sed "/^$/d" <<< "$ODM_DEBLOAT" | sort)"
 PRODUCT_DEBLOAT="$(sed "/^$/d" <<< "$PRODUCT_DEBLOAT" | sort)"
