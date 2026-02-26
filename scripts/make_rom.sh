@@ -43,6 +43,7 @@ GET_WORK_DIR_HASH()
     OPTS_HASH="$(
         printf '%s\n' \
             "FORCE_EXT4_IMAGES=${FORCE_EXT4_IMAGES:-false}" \
+            "TARGET_ENABLE_ENCRYPTION=${TARGET_ENABLE_ENCRYPTION:-false}" \
             "ROM_DEBLOAT_LEVEL=${ROM_DEBLOAT_LEVEL:-default}" | \
             sha1sum | cut -d " " -f 1
     )"

@@ -64,6 +64,14 @@ if [[ "$FORCE_EXT4_IMAGES" != "true" ]] && [[ "$FORCE_EXT4_IMAGES" != "false" ]]
     exit 1
 fi
 
+ROM_ENABLE_ENCRYPTION="${ROM_ENABLE_ENCRYPTION:-false}"
+if [[ "$ROM_ENABLE_ENCRYPTION" != "true" ]] && \
+        [[ "$ROM_ENABLE_ENCRYPTION" != "false" ]]; then
+    LOGE "ROM_ENABLE_ENCRYPTION must be \"true\" or \"false\" (got: $ROM_ENABLE_ENCRYPTION)"
+    exit 1
+fi
+TARGET_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION"
+
 ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
 if [[ "$ROM_DEBLOAT_LEVEL" != "default" ]] && \
         [[ "$ROM_DEBLOAT_LEVEL" != "none" ]] && \
