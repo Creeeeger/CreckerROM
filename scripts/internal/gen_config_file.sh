@@ -55,6 +55,10 @@ else
     source "$SRC_DIR/target/$1/config.sh" || exit 1
 fi
 
+if [ "$TARGET_PLATFORM" = "exynos990" ]; then
+    TARGET_PRODUCT_FIRST_API_LEVEL=30
+fi
+
 SINGLE_SYSTEM_IMAGE="$TARGET_SINGLE_SYSTEM_IMAGE"
 [[ "$TARGET_SINGLE_SYSTEM_IMAGE" == "essi" ]] && SINGLE_SYSTEM_IMAGE="essi_64"
 

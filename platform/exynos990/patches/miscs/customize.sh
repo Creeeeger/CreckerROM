@@ -45,6 +45,11 @@ SET_PROP "vendor" "ro.hwui.use_vulkan" "true"
 SET_PROP "vendor" "debug.hwui.use_hint_manager" "true"
 LOG_STEP_OUT
 
+LOG_STEP_IN "- Setting first API level"
+SET_PROP "vendor" "ro.product.first_api_level" "$TARGET_PRODUCT_FIRST_API_LEVEL"
+SET_PROP "vendor" "ro.board.first_api_level" "$TARGET_PRODUCT_FIRST_API_LEVEL"
+LOG_STEP_OUT
+
 LINE=$(sed -n "/^\/dev\/block\/by-name\/userdata/=" "$WORK_DIR/vendor/etc/fstab.exynos990")
 if [[ "${TARGET_ENABLE_ENCRYPTION:-false}" == "true" ]]; then
     LOG "- Enabling FBE v2 encryption for Exynos 990"
