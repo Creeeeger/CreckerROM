@@ -127,7 +127,7 @@ Original UN1CA credits:
 - *All the UN1CA project contributors and testers ❤️*
 
 # Kernel sources and device trees
-- 990 Kernel Source Code (Maintainer: @ExtremeXT): https://github.com/ExtremeXT/990_upstream_v2
+- 990 Kernel Source Code (Maintainer: @Creeeeger): https://github.com/Creeeeger/exynos990Kernel
 - 990 Device Tree Code (Maintainer: @ExtremeXT): https://github.com/ExtremeXT/android_device_samsung_exynos9820
 - 2100 Kernel Source Code (Maintainer: @xfwdrev/@maximusXZ): https://github.com/xfwdrev/android_kernel_samsung_ex2100
 - 2100 Device Tree Code (Maintainer: @xfwdrev/@maximusXZ): https://github.com/xfwdrev/android_device_samsung_exynos2100
