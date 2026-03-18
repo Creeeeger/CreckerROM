@@ -98,6 +98,10 @@ EXTRACT_OS_PARTITIONS()
             else
                 EVAL "lpunpack -p \"${p}\" \"$FW_DIR/${MODEL}_${CSC}/super.img\" \"$FW_DIR/${MODEL}_${CSC}\"" || exit 1
             fi
+
+            if [ -f "$FW_DIR/${MODEL}_${CSC}/${p}.img" ]; then
+                STORE_OS_PARTITION_METADATA "$FW_DIR/${MODEL}_${CSC}/${p}.img"
+            fi
         done
 
         rm -f "$FW_DIR/${MODEL}_${CSC}/super.img"
@@ -245,6 +249,7 @@ PRINT_USAGE()
 STORE_KERNEL_IMAGE_METADATA()
 {
     local FILE="$1"
+    local PARTITION_SIZE
 
     if [ ! -f "$FILE" ]; then
         LOGE "File not found: ${TAR//$SRC_DIR\//}"
@@ -252,7 +257,8 @@ STORE_KERNEL_IMAGE_METADATA()
     fi
 
     if avbtool info_image --image "$FILE" &> /dev/null; then
-        echo "partition_size=$(wc -c "$FILE" | cut -d " " -f 1)" >> "$FW_DIR/${MODEL}_${CSC}/${f}_metadata.txt"
+        PARTITION_SIZE="$(GET_IMAGE_SIZE "$FILE")"
+        echo "partition_size=$PARTITION_SIZE" >> "$FW_DIR/${MODEL}_${CSC}/${f}_metadata.txt"
     fi
 
     if [[ "$f" == *"boot.img" ]]; then
@@ -331,7 +337,7 @@ STORE_OS_PARTITION_METADATA()
     fi
 
     local PARTITION_SIZE
-    PARTITION_SIZE="$(wc -c "$FILE" | cut -d " " -f 1)"
+    PARTITION_SIZE="$(GET_IMAGE_SIZE "$FILE")"
 
     if [[ "$FILE" == *"super.img" ]]; then
         local LPDUMP
@@ -410,9 +416,19 @@ for i in "${FIRMWARES[@]}"; do
     mkdir -p "$FW_DIR/${MODEL}_${CSC}"
 
     DOWNLOADED_FIRMWARE="$(cat "$ODIN_DIR/${MODEL}_${CSC}/.downloaded")"
+    DOWNLOADED_MODEL="$(cut -d "/" -f 1 -s <<< "$DOWNLOADED_FIRMWARE")"
+    DOWNLOADED_MODEL_ALT="${DOWNLOADED_MODEL#SM-}"
 
-    BL_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "BL_$(cut -d "/" -f 1 -s <<< "$DOWNLOADED_FIRMWARE")*.md5" | sort -r | head -n 1)"
-    AP_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "AP_$(cut -d "/" -f 1 -s <<< "$DOWNLOADED_FIRMWARE")*.md5" | sort -r | head -n 1)"
+    BL_TAR=""
+    AP_TAR=""
+    for PATTERN in "BL_${DOWNLOADED_MODEL}*.md5" "BL_${DOWNLOADED_MODEL_ALT}*.md5" "BL_*.md5"; do
+        BL_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "$PATTERN" | sort -r | head -n 1)"
+        [ -n "$BL_TAR" ] && break
+    done
+    for PATTERN in "AP_${DOWNLOADED_MODEL}*.md5" "AP_${DOWNLOADED_MODEL_ALT}*.md5" "AP_*.md5"; do
+        AP_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "$PATTERN" | sort -r | head -n 1)"
+        [ -n "$AP_TAR" ] && break
+    done
     CSC_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "CSC_*.md5" | sort -r | head -n 1)"
 
     if [ ! "$BL_TAR" ]; then

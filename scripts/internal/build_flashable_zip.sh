@@ -28,6 +28,18 @@ TMP_DIR="$OUT_DIR/zip"
 TARGET_BUILD_FLASHABLE_ZIP="${TARGET_BUILD_FLASHABLE_ZIP:-false}"
 TARGET_BUILD_ODIN_PACKAGE="${TARGET_BUILD_ODIN_PACKAGE:-true}"
 TARGET_ODIN_USE_SUPER_IMAGE="${TARGET_ODIN_USE_SUPER_IMAGE:-false}"
+TARGET_ROM_ZIP_COMPRESSION_LEVEL="${TARGET_ROM_ZIP_COMPRESSION_LEVEL:-5}"
+TARGET_BROTLI_QUALITY="${TARGET_BROTLI_QUALITY:-4}"
+
+if ! [[ "$TARGET_ROM_ZIP_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
+    LOGW "Invalid TARGET_ROM_ZIP_COMPRESSION_LEVEL: $TARGET_ROM_ZIP_COMPRESSION_LEVEL (expected 0-9). Using 5."
+    TARGET_ROM_ZIP_COMPRESSION_LEVEL="5"
+fi
+
+if ! [[ "$TARGET_BROTLI_QUALITY" =~ ^([0-9]|1[01])$ ]]; then
+    LOGW "Invalid TARGET_BROTLI_QUALITY: $TARGET_BROTLI_QUALITY (expected 0-11). Using 4."
+    TARGET_BROTLI_QUALITY="4"
+fi
 
 ROM_STATUS="CreckerROM"
 
@@ -771,7 +783,7 @@ if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
     GENERATE_OP_LIST
 fi
 
-BROTLI_QUALITY=6
+BROTLI_QUALITY="$TARGET_BROTLI_QUALITY"
 $DEBUG && BROTLI_QUALITY=0
 
 while IFS= read -r f; do
@@ -815,7 +827,7 @@ find . -type f \( -name "*.new.dat.br" -o -name "*.patch.dat" -o -name "META-INF
 META_INF="./META-INF"
 
 # Add batches
-EVAL "7z a -tzip -mx=9 -mmt=$(nproc --all) \"$TMP_DIR/rom.zip\" @\"compressed.txt\""
+EVAL "7z a -tzip -mx=$TARGET_ROM_ZIP_COMPRESSION_LEVEL -mmt=$(nproc --all) \"$TMP_DIR/rom.zip\" @\"compressed.txt\""
 EVAL "7z a -tzip -mx=0 -mmt=$(nproc --all) \"$TMP_DIR/rom.zip\" @\"stored.txt\" \"$META_INF\""
 
 if ! $DEBUG; then

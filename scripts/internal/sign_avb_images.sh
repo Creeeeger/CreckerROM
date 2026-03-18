@@ -18,7 +18,13 @@ source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
 
 TMP_IMG_DIR="$1"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
-BL_TAR="$(find "$ODIN_DIR/$TARGET_FIRMWARE_PATH" -name "BL_$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")*.md5" | sort -r | head -n 1)"
+TARGET_MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
+TARGET_MODEL_ALT="${TARGET_MODEL#SM-}"
+BL_TAR=""
+for PATTERN in "BL_${TARGET_MODEL}*.md5" "BL_${TARGET_MODEL_ALT}*.md5" "BL_*.md5"; do
+    BL_TAR="$(find "$ODIN_DIR/$TARGET_FIRMWARE_PATH" -name "$PATTERN" | sort -r | head -n 1)"
+    [ -n "$BL_TAR" ] && break
+done
 PACK_DIR="${TARGET_AVB_IMAGE_PACK_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_images}"
 PACK_ZIP="${TARGET_AVB_IMAGE_PACK_ZIP:-$OUT_DIR/${TARGET_CODENAME}_signed_images.zip}"
 STAGING_DIR="$(mktemp -d "$TMP_DIR/avb_sign.XXXXXX")"
@@ -69,6 +75,44 @@ APPEND_UNIQUE()
     fi
 }
 
+REMOVE_ITEM()
+{
+    local VAR_NAME="$1"
+    local ITEM="$2"
+    local CURRENT
+    local UPDATED=""
+    local ENTRY
+
+    eval "CURRENT=\${$VAR_NAME}"
+
+    for ENTRY in $CURRENT; do
+        [ "$ENTRY" = "$ITEM" ] && continue
+
+        if [ -n "$UPDATED" ]; then
+            UPDATED="$UPDATED $ENTRY"
+        else
+            UPDATED="$ENTRY"
+        fi
+    done
+
+    eval "$VAR_NAME=\"\$UPDATED\""
+}
+
+SET_PARTITION_SIGN_KIND()
+{
+    local PARTITION="$1"
+    local KIND="$2"
+
+    REMOVE_ITEM "HASH_PARTITIONS" "$PARTITION"
+    REMOVE_ITEM "HASHTREE_PARTITIONS" "$PARTITION"
+
+    if [ "$KIND" = "hashtree" ]; then
+        APPEND_UNIQUE "HASHTREE_PARTITIONS" "$PARTITION"
+    else
+        APPEND_UNIQUE "HASH_PARTITIONS" "$PARTITION"
+    fi
+}
+
 GET_KV_VALUE()
 {
     local KEY="$1"
@@ -101,6 +145,18 @@ INIT_DEFAULTS()
     TARGET_AVB_CHAIN_PARTITIONS="${TARGET_AVB_CHAIN_PARTITIONS:-recovery=6 dtbo=7 prism=12 optics=13}"
     TARGET_AVB_BOOTLOADER_IMAGE_MAP="${TARGET_AVB_BOOTLOADER_IMAGE_MAP:-bootloader=sboot.bin ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin fld=fld.bin}"
     TARGET_AVB_ORIGINAL_VBMETA_PATH="${TARGET_AVB_ORIGINAL_VBMETA_PATH:-none}"
+    TARGET_AVB_ALLOW_HASHTREE_FALLBACK="${TARGET_AVB_ALLOW_HASHTREE_FALLBACK:-true}"
+    TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL="${TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL:-1}"
+    TARGET_AVB_CREATE_IMAGE_PACK_ZIP="${TARGET_AVB_CREATE_IMAGE_PACK_ZIP:-false}"
+
+    if ! [[ "$TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
+        LOGW "Invalid TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL: $TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL (expected 0-9). Using 1."
+        TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL="1"
+    fi
+    if [ "$TARGET_AVB_CREATE_IMAGE_PACK_ZIP" != "true" ] && [ "$TARGET_AVB_CREATE_IMAGE_PACK_ZIP" != "false" ]; then
+        LOGW "Invalid TARGET_AVB_CREATE_IMAGE_PACK_ZIP: $TARGET_AVB_CREATE_IMAGE_PACK_ZIP (expected true|false). Using false."
+        TARGET_AVB_CREATE_IMAGE_PACK_ZIP="false"
+    fi
 }
 
 GET_ORIGINAL_VBMETA_PATH()
@@ -273,37 +329,299 @@ GET_METADATA_VALUE()
     sed -n "s/^$KEY=//p" "$FILE" | head -n 1
 }
 
-GET_PARTITION_SIZE()
+ROUND_UP_TO_4K()
+{
+    local VALUE="$1"
+
+    echo "$((((VALUE + 4095) / 4096) * 4096))"
+}
+
+GET_EXPLICIT_PARTITION_SIZE()
+{
+    local PARTITION="$1"
+    local VAR_NAME
+    local VALUE
+
+    VAR_NAME="TARGET_$(tr '[:lower:]' '[:upper:]' <<< "$PARTITION" | tr '-' '_')_PARTITION_SIZE"
+    eval "VALUE=\${$VAR_NAME:-}"
+
+    [ -n "$VALUE" ] && [ "$VALUE" != "none" ] && echo "$VALUE"
+}
+
+GET_STOCK_IMAGE_PATH()
+{
+    local PARTITION="$1"
+    local CANDIDATE
+    local CANDIDATES=()
+
+    case "$PARTITION" in
+        "boot" | "dtbo" | "init_boot" | "vendor_boot" | "recovery")
+            CANDIDATES+=(
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/kernel/$PARTITION.img"
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/$PARTITION.img"
+            )
+            ;;
+        *)
+            CANDIDATES+=(
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/$PARTITION.img"
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/kernel/$PARTITION.img"
+            )
+            ;;
+    esac
+
+    for CANDIDATE in "${CANDIDATES[@]}"; do
+        [ -f "$CANDIDATE" ] && echo "$CANDIDATE" && return 0
+    done
+}
+
+GET_METADATA_PARTITION_SIZE()
 {
     local PARTITION="$1"
     local VALUE=""
 
     case "$PARTITION" in
-        "boot")
-            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/boot.img_metadata.txt" "partition_size")"
-            [ -z "$VALUE" ] && [ "$TARGET_BOOT_PARTITION_SIZE" != "none" ] && VALUE="$TARGET_BOOT_PARTITION_SIZE"
-            ;;
-        "dtbo")
-            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/dtbo.img_metadata.txt" "partition_size")"
-            [ -z "$VALUE" ] && [ "$TARGET_DTBO_PARTITION_SIZE" != "none" ] && VALUE="$TARGET_DTBO_PARTITION_SIZE"
-            ;;
-        "init_boot")
-            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/init_boot.img_metadata.txt" "partition_size")"
-            [ -z "$VALUE" ] && [ "$TARGET_INIT_BOOT_PARTITION_SIZE" != "none" ] && VALUE="$TARGET_INIT_BOOT_PARTITION_SIZE"
-            ;;
-        "vendor_boot")
-            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor_boot.img_metadata.txt" "partition_size")"
-            [ -z "$VALUE" ] && [ "$TARGET_VENDOR_BOOT_PARTITION_SIZE" != "none" ] && VALUE="$TARGET_VENDOR_BOOT_PARTITION_SIZE"
-            ;;
-        "recovery")
-            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/recovery.img_metadata.txt" "partition_size")"
+        "boot" | "dtbo" | "init_boot" | "vendor_boot" | "recovery")
+            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/$PARTITION.img_metadata.txt" "partition_size")"
             ;;
         *)
-            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/os_partitions_metadata.txt" "${PARTITION}_size")"
+            VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/$PARTITION.img_metadata.txt" "partition_size")"
+            [ -z "$VALUE" ] && VALUE="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/os_partitions_metadata.txt" "${PARTITION}_size")"
             ;;
     esac
 
     [ -n "$VALUE" ] && echo "$VALUE"
+}
+
+GET_STOCK_IMAGE_PARTITION_SIZE()
+{
+    local PARTITION="$1"
+    local IMAGE
+
+    IMAGE="$(GET_STOCK_IMAGE_PATH "$PARTITION")"
+    [ -f "$IMAGE" ] || return 0
+
+    GET_IMAGE_SIZE "$IMAGE"
+}
+
+IS_DYNAMIC_AVB_PARTITION()
+{
+    local PARTITION="$1"
+
+    [ "${TARGET_SUPER_PARTITION_SIZE:-0}" -ne 0 ] || return 1
+
+    case "$PARTITION" in
+        "system" | "vendor" | "product" | "system_ext" | "odm" | "vendor_dlkm" | "odm_dlkm" | "system_dlkm")
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+ESTIMATE_PARTITION_SIZE_FROM_BUILT_IMAGE()
+{
+    local PARTITION="$1"
+    local IMAGE="$TMP_IMG_DIR/$PARTITION.img"
+    local KIND="$2"
+    local IMAGE_SIZE
+    local EXTRA_SIZE
+
+    [ -f "$IMAGE" ] || return 0
+
+    IMAGE_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || return 1
+    IMAGE_SIZE="$(ROUND_UP_TO_4K "$IMAGE_SIZE")"
+
+    if [ "$KIND" = "hashtree" ]; then
+        EXTRA_SIZE="$((IMAGE_SIZE / 64))"
+        [ "$EXTRA_SIZE" -lt $((16 * 1024 * 1024)) ] && EXTRA_SIZE=$((16 * 1024 * 1024))
+    else
+        EXTRA_SIZE=$((4 * 1024 * 1024))
+    fi
+
+    echo "$(ROUND_UP_TO_4K "$((IMAGE_SIZE + EXTRA_SIZE))")"
+}
+
+CALCULATE_AVB_MAX_IMAGE_SIZE()
+{
+    local PARTITION="$1"
+    local KIND="$2"
+    local PARTITION_SIZE="$3"
+    local CMD=()
+    local OUTPUT=""
+
+    if [ "$KIND" = "hashtree" ]; then
+        CMD=(
+            add_hashtree_footer
+            --calc_max_image_size
+            --partition_size "$PARTITION_SIZE"
+            --partition_name "$PARTITION"
+            --algorithm "$TARGET_AVB_ALGORITHM"
+            --key "$TARGET_AVB_KEY_PATH"
+        )
+    else
+        CMD=(
+            add_hash_footer
+            --calc_max_image_size
+            --partition_size "$PARTITION_SIZE"
+            --partition_name "$PARTITION"
+            --algorithm "$TARGET_AVB_ALGORITHM"
+            --key "$TARGET_AVB_KEY_PATH"
+        )
+    fi
+
+    OUTPUT="$(RUN_AVBTOOL "${CMD[@]}" 2> /dev/null | tail -n 1 | tr -d '[:space:]')" || return 1
+    [[ "$OUTPUT" =~ ^[0-9]+$ ]] || return 1
+
+    echo "$OUTPUT"
+}
+
+CALCULATE_MIN_AVB_PARTITION_SIZE()
+{
+    local PARTITION="$1"
+    local KIND="$2"
+    local IMAGE="$TMP_IMG_DIR/$PARTITION.img"
+    local IMAGE_SIZE
+    local LOWER_BOUND
+    local UPPER_BOUND
+    local MID
+    local MAX_IMAGE_SIZE
+
+    [ -f "$IMAGE" ] || return 0
+
+    IMAGE_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || return 1
+    IMAGE_SIZE="$(ROUND_UP_TO_4K "$IMAGE_SIZE")"
+    LOWER_BOUND="$IMAGE_SIZE"
+    UPPER_BOUND="$(ESTIMATE_PARTITION_SIZE_FROM_BUILT_IMAGE "$PARTITION" "$KIND")"
+    [ -n "$UPPER_BOUND" ] || return 1
+    UPPER_BOUND="$(ROUND_UP_TO_4K "$UPPER_BOUND")"
+    [ "$UPPER_BOUND" -lt "$LOWER_BOUND" ] && UPPER_BOUND="$LOWER_BOUND"
+
+    while true; do
+        MAX_IMAGE_SIZE="$(CALCULATE_AVB_MAX_IMAGE_SIZE "$PARTITION" "$KIND" "$UPPER_BOUND")" || return 1
+        [ "$MAX_IMAGE_SIZE" -ge "$IMAGE_SIZE" ] && break
+
+        UPPER_BOUND="$(ROUND_UP_TO_4K "$((UPPER_BOUND * 2))")"
+        [ "$UPPER_BOUND" -gt $((128 * 1024 * 1024 * 1024)) ] && return 1
+    done
+
+    while [ "$LOWER_BOUND" -lt "$UPPER_BOUND" ]; do
+        MID="$((((LOWER_BOUND + UPPER_BOUND) / 2) / 4096 * 4096))"
+        [ "$MID" -le "$LOWER_BOUND" ] && MID="$((LOWER_BOUND + 4096))"
+
+        MAX_IMAGE_SIZE="$(CALCULATE_AVB_MAX_IMAGE_SIZE "$PARTITION" "$KIND" "$MID")" || return 1
+        if [ "$MAX_IMAGE_SIZE" -ge "$IMAGE_SIZE" ]; then
+            UPPER_BOUND="$MID"
+        else
+            LOWER_BOUND="$(ROUND_UP_TO_4K "$((MID + 1))")"
+        fi
+    done
+
+    echo "$UPPER_BOUND"
+}
+
+CAN_SIGN_IMAGE_WITH_PARTITION_SIZE()
+{
+    local PARTITION="$1"
+    local KIND="$2"
+    local PARTITION_SIZE="$3"
+    local IMAGE="$TMP_IMG_DIR/$PARTITION.img"
+    local IMAGE_SIZE
+    local MAX_IMAGE_SIZE
+
+    [ -f "$IMAGE" ] || return 0
+
+    IMAGE_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || return 1
+    IMAGE_SIZE="$(ROUND_UP_TO_4K "$IMAGE_SIZE")"
+
+    MAX_IMAGE_SIZE="$(CALCULATE_AVB_MAX_IMAGE_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE")" || return 1
+    [ "$MAX_IMAGE_SIZE" -ge "$IMAGE_SIZE" ]
+}
+
+RESOLVE_SIGN_PARTITION_SIZE()
+{
+    local PARTITION="$1"
+    local KIND="$2"
+    local PARTITION_SIZE="$3"
+    local VALUE
+    local LIMIT=0
+    local ATTEMPTS=0
+
+    if CAN_SIGN_IMAGE_WITH_PARTITION_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE"; then
+        echo "$PARTITION_SIZE"
+        return 0
+    fi
+
+    if IS_DYNAMIC_AVB_PARTITION "$PARTITION"; then
+        LIMIT="${TARGET_SUPER_GROUP_SIZE:-0}"
+        [ "$LIMIT" -le 0 ] && LIMIT="${TARGET_SUPER_PARTITION_SIZE:-0}"
+        VALUE="$PARTITION_SIZE"
+
+        while [ "$ATTEMPTS" -lt 16 ]; do
+            ATTEMPTS="$((ATTEMPTS + 1))"
+            VALUE="$(ROUND_UP_TO_4K "$((VALUE + (64 * 1024 * 1024)))")"
+
+            if [ "$LIMIT" -gt 0 ] && [ "$VALUE" -gt "$LIMIT" ]; then
+                VALUE="$LIMIT"
+            fi
+
+            if CAN_SIGN_IMAGE_WITH_PARTITION_SIZE "$PARTITION" "$KIND" "$VALUE"; then
+                LOGW "Increasing AVB partition size for dynamic partition $PARTITION: $PARTITION_SIZE -> $VALUE" >&2
+                echo "$VALUE"
+                return 0
+            fi
+
+            if [ "$LIMIT" -gt 0 ] && [ "$VALUE" -ge "$LIMIT" ]; then
+                break
+            fi
+        done
+
+        VALUE="$(CALCULATE_MIN_AVB_PARTITION_SIZE "$PARTITION" "$KIND")"
+        if [ -n "$VALUE" ] && [ "$VALUE" -gt "$PARTITION_SIZE" ]; then
+            LOGW "Increasing AVB partition size for dynamic partition $PARTITION: $PARTITION_SIZE -> $VALUE" >&2
+            echo "$VALUE"
+            return 0
+        fi
+    fi
+
+    echo "$PARTITION_SIZE"
+}
+
+GET_PARTITION_SIZE()
+{
+    local PARTITION="$1"
+    local VALUE=""
+    local KIND
+
+    VALUE="$(GET_EXPLICIT_PARTITION_SIZE "$PARTITION")"
+    [ -n "$VALUE" ] && echo "$VALUE" && return 0
+
+    VALUE="$(GET_METADATA_PARTITION_SIZE "$PARTITION")"
+    [ -n "$VALUE" ] && echo "$VALUE" && return 0
+
+    VALUE="$(GET_STOCK_IMAGE_PARTITION_SIZE "$PARTITION")"
+    [ -n "$VALUE" ] && echo "$VALUE" && return 0
+
+    KIND="$(GET_SIGN_KIND "$PARTITION")"
+    if IS_DYNAMIC_AVB_PARTITION "$PARTITION"; then
+        LOG "- Resolving dynamic AVB partition size for $PARTITION from the built image" >&2
+
+        VALUE="$(ESTIMATE_PARTITION_SIZE_FROM_BUILT_IMAGE "$PARTITION" "$KIND")"
+        if [ -n "$VALUE" ]; then
+            LOGW "Estimated AVB partition size for dynamic partition $PARTITION: $VALUE" >&2
+            echo "$VALUE"
+            return 0
+        fi
+
+        VALUE="$(CALCULATE_MIN_AVB_PARTITION_SIZE "$PARTITION" "$KIND")"
+        if [ -n "$VALUE" ]; then
+            LOGW "Calculated AVB partition size for dynamic partition $PARTITION from the built image: $VALUE" >&2
+            echo "$VALUE"
+            return 0
+        fi
+    fi
+
+    LOGE "Unable to determine a fixed partition size for $PARTITION. Re-extract firmware metadata or set TARGET_$(tr '[:lower:]' '[:upper:]' <<< "$PARTITION" | tr '-' '_')_PARTITION_SIZE"
+    return 1
 }
 
 GET_SIGN_KIND()
@@ -365,13 +683,36 @@ SIGN_BUILT_PARTITION()
     [ -f "$IMAGE" ] || return 0
     LIST_HAS_ITEM "$PARTITION" "$SIGNED_PARTITIONS" && return 0
 
+    LOG "- Resolving AVB partition size for $PARTITION"
     PARTITION_SIZE="$(GET_PARTITION_SIZE "$PARTITION")"
     if [ -z "$PARTITION_SIZE" ]; then
+        if ! LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASH_PARTITIONS" && \
+                ! LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASHTREE_PARTITIONS"; then
+            LOGW "Skipping optional AVB partition $PARTITION due missing partition size metadata"
+            REMOVE_ITEM "HASH_PARTITIONS" "$PARTITION"
+            REMOVE_ITEM "HASHTREE_PARTITIONS" "$PARTITION"
+            return 0
+        fi
+
         LOGE "Unable to determine partition size for $PARTITION"
         exit 1
     fi
 
     KIND="$(GET_SIGN_KIND "$PARTITION")"
+    PARTITION_SIZE="$(RESOLVE_SIGN_PARTITION_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE")"
+
+    if ! CAN_SIGN_IMAGE_WITH_PARTITION_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE"; then
+        if [ "$KIND" = "hashtree" ] && [ "$TARGET_AVB_ALLOW_HASHTREE_FALLBACK" = "true" ] && \
+                CAN_SIGN_IMAGE_WITH_PARTITION_SIZE "$PARTITION" "hash" "$PARTITION_SIZE"; then
+            LOGW "Falling back to AVB hash footer for $PARTITION (hashtree does not fit within $PARTITION_SIZE bytes)"
+            KIND="hash"
+            SET_PARTITION_SIGN_KIND "$PARTITION" "$KIND"
+        else
+            LOGE "Unable to fit AVB $KIND footer for $PARTITION within partition size $PARTITION_SIZE"
+            exit 1
+        fi
+    fi
+
     LOG "- Signing $PARTITION.img ($KIND)"
     SIGN_IMAGE "$IMAGE" "$PARTITION" "$KIND" "$PARTITION_SIZE"
 
@@ -545,10 +886,15 @@ CREATE_IMAGE_PACK()
         done
     } > "$PACK_DIR/avb_manifest.txt"
 
-    rm -f "$PACK_ZIP"
-    pushd "$PACK_DIR" > /dev/null
-    EVAL "7z a -tzip -mx=9 \"$PACK_ZIP\" ./*" || exit 1
-    popd > /dev/null
+    if [ "$TARGET_AVB_CREATE_IMAGE_PACK_ZIP" = "true" ]; then
+        rm -f "$PACK_ZIP"
+        pushd "$PACK_DIR" > /dev/null
+        EVAL "7z a -tzip -mx=$TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL \"$PACK_ZIP\" ./*" || exit 1
+        popd > /dev/null
+    else
+        rm -f "$PACK_ZIP"
+        LOG "- Skipping signed image zip compression (TARGET_AVB_CREATE_IMAGE_PACK_ZIP=false)"
+    fi
 }
 
 PRINT_USAGE()

@@ -38,6 +38,9 @@ BUILD_IMAGE_MKFS()
 
     case "$FS_TYPE" in
         "ext4")
+            local DEFAULT_SELABEL
+            local FALLBACK_CTX
+
             BUILD_CMD+="mkuserimg_mke2fs "
             BUILD_CMD+="\"$INPUT_DIR\" \"$OUTPUT_FILE\" \"ext4\" \"$MOUNT_POINT\" "
             BUILD_CMD+="\"$IMAGE_SIZE\" "
@@ -57,12 +60,21 @@ BUILD_IMAGE_MKFS()
             BUILD_CMD+="\"$FILE_CONTEXT_FILE\""
 
             # Avoid build failures if lost+found entry is not in file_context/fs_config
+            DEFAULT_SELABEL="$(awk 'NF && $1 !~ /^#/ {print $2; exit}' "$FILE_CONTEXT_FILE")"
+            [ -z "$DEFAULT_SELABEL" ] && DEFAULT_SELABEL="u:object_r:system_file:s0"
+
             if ! grep -q -F "lost+found" "$FILE_CONTEXT_FILE"; then
                 if [[ "$PARTITION" == "system" ]]; then
                     echo "/lost\+found u:object_r:rootfs:s0" >> "$FILE_CONTEXT_FILE"
                 else
-                    echo "/$PARTITION/lost\+found $(head -n 1 "$FILE_CONTEXT_FILE" | cut -f 2 -d " ")" >> "$FILE_CONTEXT_FILE"
+                    echo "/$PARTITION/lost\+found $DEFAULT_SELABEL" >> "$FILE_CONTEXT_FILE"
                 fi
+            fi
+
+            # Ensure a partition-wide fallback context exists for files not explicitly listed.
+            if [[ "$PARTITION" != "system" ]]; then
+                FALLBACK_CTX="/$PARTITION(/.*)? $DEFAULT_SELABEL"
+                grep -qxF "$FALLBACK_CTX" "$FILE_CONTEXT_FILE" || echo "$FALLBACK_CTX" >> "$FILE_CONTEXT_FILE"
             fi
 
             if ! grep -q -F "lost+found" "$FS_CONFIG_FILE"; then
