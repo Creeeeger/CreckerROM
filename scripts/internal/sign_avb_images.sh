@@ -23,6 +23,9 @@ PACK_DIR="${TARGET_AVB_IMAGE_PACK_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_i
 PACK_ZIP="${TARGET_AVB_IMAGE_PACK_ZIP:-$OUT_DIR/${TARGET_CODENAME}_signed_images.zip}"
 STAGING_DIR="$(mktemp -d "$TMP_DIR/avb_sign.XXXXXX")"
 PUBLIC_KEY_BLOB="$STAGING_DIR/avb_public_key.bin"
+AOSP_AVB_PEM="$OUT_DIR/security/aosp_platform_avb.pem"
+AOSP_PLATFORM_PK8="$SRC_DIR/security/aosp_platform.pk8"
+AOSP_PLATFORM_KEY_SENTINEL="auto_aosp_platform"
 DIRECT_DESCRIPTOR_IMAGES=""
 ACTIVE_CHAIN_PARTITIONS=""
 ORIGINAL_HASH_PARTITIONS=""
@@ -83,8 +86,14 @@ GET_KV_VALUE()
 INIT_DEFAULTS()
 {
     TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT="${TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT:-true}"
-    TARGET_AVB_KEY_PATH="${TARGET_AVB_KEY_PATH:-none}"
-    TARGET_AVB_ALGORITHM="${TARGET_AVB_ALGORITHM:-SHA256_RSA4096}"
+    TARGET_AVB_KEY_PATH="${TARGET_AVB_KEY_PATH:-$AOSP_PLATFORM_KEY_SENTINEL}"
+    if [ -z "${TARGET_AVB_ALGORITHM:-}" ]; then
+        if [ "$TARGET_AVB_KEY_PATH" = "$AOSP_PLATFORM_KEY_SENTINEL" ] || [ "$TARGET_AVB_KEY_PATH" = "none" ]; then
+            TARGET_AVB_ALGORITHM="SHA256_RSA2048"
+        else
+            TARGET_AVB_ALGORITHM="SHA256_RSA4096"
+        fi
+    fi
     TARGET_AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-none}"
     TARGET_AVBTOOL_PYTHON="${TARGET_AVBTOOL_PYTHON:-none}"
     TARGET_AVB_HASH_PARTITIONS="${TARGET_AVB_HASH_PARTITIONS:-boot vendor_boot init_boot bootloader ldfw tzsw keystorage harx fld}"
@@ -193,11 +202,6 @@ MERGE_LAYOUT()
 
 SETUP_AVBTOOL()
 {
-    if [ "$TARGET_AVB_KEY_PATH" = "none" ] || [ ! -f "$TARGET_AVB_KEY_PATH" ]; then
-        LOGE "TARGET_AVB_KEY_PATH must point to a readable AVB private key"
-        exit 1
-    fi
-
     if [ "$TARGET_AVBTOOL_PATH" != "none" ]; then
         AVBTOOL_PATH="$TARGET_AVBTOOL_PATH"
     elif [ -x "$SRC_DIR/tools/bin/avbtool" ]; then
@@ -221,6 +225,35 @@ SETUP_AVBTOOL()
 
     if ! "${AVBTOOL_CMD[@]}" version &> /dev/null; then
         LOGE "Configured avbtool could not be executed. Check TARGET_AVBTOOL_PATH/TARGET_AVBTOOL_PYTHON"
+        exit 1
+    fi
+
+    if [ "$TARGET_AVB_KEY_PATH" = "none" ] || [ "$TARGET_AVB_KEY_PATH" = "$AOSP_PLATFORM_KEY_SENTINEL" ]; then
+        if [ ! -f "$AOSP_PLATFORM_PK8" ]; then
+            LOGE "AOSP platform private key not found: $AOSP_PLATFORM_PK8"
+            exit 1
+        fi
+        if ! command -v openssl &> /dev/null; then
+            LOGE "openssl is required to extract an AVB PEM key from aosp_platform.pk8"
+            exit 1
+        fi
+        mkdir -p "$(dirname "$AOSP_AVB_PEM")"
+        if [ ! -f "$AOSP_AVB_PEM" ] || [ "$AOSP_PLATFORM_PK8" -nt "$AOSP_AVB_PEM" ]; then
+            LOG "- Extracting AVB PEM key from aosp_platform.pk8"
+            openssl pkcs8 -inform DER -nocrypt \
+                -in "$AOSP_PLATFORM_PK8" \
+                -out "$AOSP_AVB_PEM" || exit 1
+            chmod 600 "$AOSP_AVB_PEM"
+        fi
+        if [ "$TARGET_AVB_ALGORITHM" != "SHA256_RSA2048" ]; then
+            LOG "- Using auto AOSP AVB key, forcing algorithm to SHA256_RSA2048"
+            TARGET_AVB_ALGORITHM="SHA256_RSA2048"
+        fi
+        TARGET_AVB_KEY_PATH="$AOSP_AVB_PEM"
+    fi
+
+    if [ ! -f "$TARGET_AVB_KEY_PATH" ]; then
+        LOGE "TARGET_AVB_KEY_PATH must point to a readable AVB private key"
         exit 1
     fi
 }

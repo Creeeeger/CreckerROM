@@ -66,6 +66,24 @@ GET_DEFAULT_ODIN_SUPER_IMAGE()
         echo "false"
     fi
 }
+
+GET_DEFAULT_AVB_KEY_PATH()
+{
+    if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
+        echo "auto_aosp_platform"
+    else
+        echo "none"
+    fi
+}
+
+GET_DEFAULT_AVB_ALGORITHM()
+{
+    if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
+        echo "SHA256_RSA2048"
+    else
+        echo "SHA256_RSA4096"
+    fi
+}
 # ]
 
 if [ $# -ne 1 ]; then
@@ -104,6 +122,13 @@ if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && \
     exit 1
 fi
 
+ROM_ENABLE_AVB="${ROM_ENABLE_AVB:-false}"
+if [[ "$ROM_ENABLE_AVB" != "true" ]] && \
+        [[ "$ROM_ENABLE_AVB" != "false" ]]; then
+    LOGE "ROM_ENABLE_AVB must be \"true\" or \"false\" (got: $ROM_ENABLE_AVB)"
+    exit 1
+fi
+
 if [ ! -f "$SRC_DIR/unica/configs/$SINGLE_SYSTEM_IMAGE.sh" ]; then
     LOGE "\"$SINGLE_SYSTEM_IMAGE\" is not a valid system image"
     exit 1
@@ -128,6 +153,7 @@ fi
 TARGET_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
 TARGET_BUILD_ODIN_PACKAGE="true"
 TARGET_ODIN_USE_SUPER_IMAGE="$(GET_DEFAULT_ODIN_SUPER_IMAGE)"
+TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 
 if [ -f "$OUT_DIR/config.sh" ]; then
     LOGW "config.sh already exists. Regenerating"
@@ -178,17 +204,17 @@ fi
     GET_BUILD_VAR "TARGET_BUILD_FLASHABLE_ZIP" "$TARGET_BUILD_FLASHABLE_ZIP"
     GET_BUILD_VAR "TARGET_BUILD_ODIN_PACKAGE" "$TARGET_BUILD_ODIN_PACKAGE"
     GET_BUILD_VAR "TARGET_ODIN_USE_SUPER_IMAGE" "$TARGET_ODIN_USE_SUPER_IMAGE"
-    GET_BUILD_VAR "TARGET_ENABLE_CUSTOM_AVB" "false"
+    GET_BUILD_VAR "TARGET_ENABLE_CUSTOM_AVB" "$ROM_ENABLE_AVB"
     GET_BUILD_VAR "TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT" "true"
-    GET_BUILD_VAR "TARGET_AVB_KEY_PATH" "none"
-    GET_BUILD_VAR "TARGET_AVB_ALGORITHM" "SHA256_RSA4096"
+    GET_BUILD_VAR "TARGET_AVB_KEY_PATH" "$(GET_DEFAULT_AVB_KEY_PATH)"
+    GET_BUILD_VAR "TARGET_AVB_ALGORITHM" "$(GET_DEFAULT_AVB_ALGORITHM)"
     GET_BUILD_VAR "TARGET_AVBTOOL_PATH" "none"
     GET_BUILD_VAR "TARGET_AVBTOOL_PYTHON" "none"
     GET_BUILD_VAR "TARGET_AVB_HASH_PARTITIONS" "boot vendor_boot init_boot bootloader ldfw tzsw keystorage harx fld"
     GET_BUILD_VAR "TARGET_AVB_HASHTREE_PARTITIONS" "system vendor product odm system_ext vendor_dlkm odm_dlkm system_dlkm prism optics"
     GET_BUILD_VAR "TARGET_AVB_CHAIN_PARTITIONS" "recovery=6 dtbo=7 prism=12 optics=13"
     GET_BUILD_VAR "TARGET_AVB_BOOTLOADER_IMAGE_MAP" "bootloader=sboot.bin ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin fld=fld.bin"
-    GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_PATH" "none"
+    GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_PATH" "$OUT_DIR/fw/$TARGET_FIRMWARE_PATH/avb/vbmeta.img"
     GET_BUILD_VAR "TARGET_AVB_FLASH_VBMETA_IN_ZIP" "true"
     GET_BUILD_VAR "TARGET_BOOT_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_DTBO_PARTITION_SIZE" "none"

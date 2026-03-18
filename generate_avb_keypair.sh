@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Generate an AVB private key (PEM) and the matching AVB public key blob.
-# Optionally update a CreckerROM target config to use the generated key.
+# Extract the repo AOSP platform key into AVB PEM/public-key form by default.
+# Optionally generate a new keypair instead and/or update a target config.
 
 set -euo pipefail
 
@@ -9,8 +9,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_OUTPUT_DIR="$ROOT_DIR/security/avb"
 DEFAULT_AVBTOOL="$ROOT_DIR/tools/bin/avbtool"
 DEFAULT_OUT_AVBTOOL="$ROOT_DIR/out/tools/bin/avbtool"
+DEFAULT_AOSP_PK8="$ROOT_DIR/security/aosp_platform.pk8"
 
-NAME="custom_avb"
+NAME="aosp_platform_avb"
 OUTPUT_DIR="$DEFAULT_OUTPUT_DIR"
 OPENSSL_BIN="${OPENSSL_BIN:-openssl}"
 AVBTOOL_PATH=""
@@ -18,6 +19,8 @@ AVBTOOL_PYTHON=""
 FORCE=false
 TARGET_NAME=""
 TARGET_CONFIG=""
+GENERATE_NEW_KEY=false
+AOSP_PK8_PATH="$DEFAULT_AOSP_PK8"
 
 AVBTOOL_CMD=()
 
@@ -31,6 +34,8 @@ Options:
   --openssl PATH         Path to openssl. Default: $OPENSSL_BIN
   --avbtool PATH         avbtool binary or script. Default: $DEFAULT_AVBTOOL
   --avbtool-python PATH  Interpreter used to launch avbtool when needed
+  --aosp-pk8 PATH        PKCS#8 DER key used for AVB extraction. Default: $DEFAULT_AOSP_PK8
+  --generate             Generate a new RSA-4096 AVB key instead of extracting the repo AOSP key
   --target NAME          Update target/<name>/config.sh with the generated key path
   --target-config PATH   Update the specified target config file
   --force                Overwrite existing output files
@@ -161,6 +166,11 @@ update_target_config() {
 
     set_or_append_assignment "$TARGET_CONFIG" "TARGET_ENABLE_CUSTOM_AVB" "true"
     set_or_append_assignment "$TARGET_CONFIG" "TARGET_AVB_KEY_PATH" "$PRIVATE_KEY_PATH"
+    if $GENERATE_NEW_KEY; then
+        set_or_append_assignment "$TARGET_CONFIG" "TARGET_AVB_ALGORITHM" "SHA256_RSA4096"
+    else
+        set_or_append_assignment "$TARGET_CONFIG" "TARGET_AVB_ALGORITHM" "SHA256_RSA2048"
+    fi
     set_or_append_assignment "$TARGET_CONFIG" "TARGET_AVBTOOL_PATH" "$AVBTOOL_PATH"
     if [ -n "$AVBTOOL_PYTHON" ]; then
         set_or_append_assignment "$TARGET_CONFIG" "TARGET_AVBTOOL_PYTHON" "$AVBTOOL_PYTHON"
@@ -190,6 +200,13 @@ while [[ $# -gt 0 ]]; do
         --avbtool-python)
             shift
             AVBTOOL_PYTHON="${1:-}"
+            ;;
+        --aosp-pk8)
+            shift
+            AOSP_PK8_PATH="${1:-}"
+            ;;
+        --generate)
+            GENERATE_NEW_KEY=true
             ;;
         --target)
             shift
@@ -228,13 +245,22 @@ PUBLIC_KEY_PATH="$OUTPUT_DIR/${NAME}_public.bin"
 require_tool "$OPENSSL_BIN" "openssl"
 prepare_avbtool_command
 
+if ! $GENERATE_NEW_KEY; then
+    [ -f "$AOSP_PK8_PATH" ] || die "AOSP pk8 key not found: $AOSP_PK8_PATH"
+fi
+
 if ! $FORCE; then
     [ ! -e "$PRIVATE_KEY_PATH" ] || die "private key already exists: $PRIVATE_KEY_PATH"
     [ ! -e "$PUBLIC_KEY_PATH" ] || die "public key blob already exists: $PUBLIC_KEY_PATH"
 fi
 
-print_command "$OPENSSL_BIN" genrsa -out "$PRIVATE_KEY_PATH" 4096
-"$OPENSSL_BIN" genrsa -out "$PRIVATE_KEY_PATH" 4096
+if $GENERATE_NEW_KEY; then
+    print_command "$OPENSSL_BIN" genrsa -out "$PRIVATE_KEY_PATH" 4096
+    "$OPENSSL_BIN" genrsa -out "$PRIVATE_KEY_PATH" 4096
+else
+    print_command "$OPENSSL_BIN" pkcs8 -inform DER -nocrypt -in "$AOSP_PK8_PATH" -out "$PRIVATE_KEY_PATH"
+    "$OPENSSL_BIN" pkcs8 -inform DER -nocrypt -in "$AOSP_PK8_PATH" -out "$PRIVATE_KEY_PATH"
+fi
 chmod 600 "$PRIVATE_KEY_PATH"
 
 print_command "${AVBTOOL_CMD[@]}" extract_public_key --key "$PRIVATE_KEY_PATH" --output "$PUBLIC_KEY_PATH"
@@ -247,6 +273,9 @@ echo "Generated:"
 echo "  Private key : $PRIVATE_KEY_PATH"
 echo "  Public blob : $PUBLIC_KEY_PATH"
 echo "  avbtool     : $AVBTOOL_PATH"
+if ! $GENERATE_NEW_KEY; then
+    echo "  Source pk8  : $AOSP_PK8_PATH"
+fi
 if [ -n "$TARGET_CONFIG" ]; then
     echo "  Target cfg  : $TARGET_CONFIG (updated)"
 fi
@@ -255,6 +284,11 @@ echo
 echo "CreckerROM config:"
 echo "  TARGET_ENABLE_CUSTOM_AVB=\"true\""
 echo "  TARGET_AVB_KEY_PATH=\"$PRIVATE_KEY_PATH\""
+if $GENERATE_NEW_KEY; then
+    echo "  TARGET_AVB_ALGORITHM=\"SHA256_RSA4096\""
+else
+    echo "  TARGET_AVB_ALGORITHM=\"SHA256_RSA2048\""
+fi
 echo "  TARGET_AVBTOOL_PATH=\"$AVBTOOL_PATH\""
 if [ -n "$AVBTOOL_PYTHON" ]; then
     echo "  TARGET_AVBTOOL_PYTHON=\"$AVBTOOL_PYTHON\""
