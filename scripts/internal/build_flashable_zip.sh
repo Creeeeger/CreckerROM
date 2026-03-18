@@ -37,6 +37,9 @@ while [ -f "$OUT_DIR/$FILE_NAME" ]; do
     FILE_NAME="creckerRom_${ROM_VERSION}_$(date +%Y%m%d)-${INCREMENTAL}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
 done
 
+export TARGET_AVB_IMAGE_PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
+export TARGET_AVB_IMAGE_PACK_ZIP="$OUT_DIR/${FILE_NAME%.zip}-images.zip"
+
 PRIVATE_KEY_PATH="$SRC_DIR/security/"
 PUBLIC_KEY_PATH="$SRC_DIR/security/"
 if $ROM_IS_OFFICIAL; then
@@ -92,6 +95,84 @@ BUILD_SUPER_EMPTY()
     CMD+=" --output \"$TMP_DIR/unsparse_super_empty.img\""
 
     EVAL "$CMD" || exit 1
+}
+
+BUILD_SIGNED_SUPER_IMAGE()
+{
+    local OUTPUT_FILE="$1"
+    local CMD
+    local PARTITION
+    local PARTITION_SIZE
+    local SUPER_PARTITIONS="system vendor product system_ext odm vendor_dlkm odm_dlkm system_dlkm"
+
+    CMD="lpmake"
+    CMD+=" --metadata-size \"65536\""
+    CMD+=" --super-name \"super\""
+    CMD+=" --metadata-slots \"2\""
+    if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/os_partitions_metadata.txt" ] && \
+            grep -q "^virtual_ab=true$" "$FW_DIR/$TARGET_FIRMWARE_PATH/os_partitions_metadata.txt"; then
+        CMD+=" --virtual-ab"
+    fi
+    CMD+=" --device \"super:$TARGET_SUPER_PARTITION_SIZE\""
+    CMD+=" --group \"$TARGET_SUPER_GROUP_NAME:$TARGET_SUPER_GROUP_SIZE\""
+
+    for PARTITION in $SUPER_PARTITIONS; do
+        if [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" ]; then
+            PARTITION_SIZE="$(GET_IMAGE_SIZE "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img")"
+            CMD+=" --partition \"$PARTITION:readonly:$PARTITION_SIZE:$TARGET_SUPER_GROUP_NAME\""
+            CMD+=" --image \"$PARTITION=$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img\""
+        fi
+    done
+
+    CMD+=" --sparse"
+    CMD+=" --output \"$OUTPUT_FILE\""
+
+    EVAL "$CMD" || exit 1
+}
+
+BUILD_ODIN_AP_PACKAGE()
+{
+    local AP_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_ap"
+    local AP_TAR="$OUT_DIR/AP_${FILE_NAME%.zip}.tar"
+    local AP_TAR_MD5="$OUT_DIR/AP_${FILE_NAME%.zip}.tar.md5"
+    local AP_CHECKSUM
+    local PARTITION
+    local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
+
+    [ -d "$AP_DIR" ] && rm -rf "$AP_DIR"
+    mkdir -p "$AP_DIR"
+
+    if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
+        LOG "- Building super.img for Odin"
+        BUILD_SIGNED_SUPER_IMAGE "$AP_DIR/super.img"
+    else
+        while IFS= read -r f; do
+            PARTITION="$(basename "$f")"
+            IS_VALID_PARTITION_NAME "$PARTITION" || continue
+            [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" ] || continue
+            cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+        done < <(find "$WORK_DIR" -maxdepth 1 -type d)
+    fi
+
+    for PARTITION in $STATIC_PARTITIONS; do
+        [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" ] || continue
+        cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+    done
+
+    if [ -f "$TMP_DIR/up_param.bin" ]; then
+        cp -fa "$TMP_DIR/up_param.bin" "$AP_DIR/up_param.bin"
+    fi
+
+    rm -f "$AP_TAR" "$AP_TAR_MD5"
+    pushd "$AP_DIR" > /dev/null
+    EVAL "tar -cf \"$AP_TAR\" ./*" || exit 1
+    popd > /dev/null
+
+    pushd "$OUT_DIR" > /dev/null
+    AP_CHECKSUM="$(md5sum -t "$(basename "$AP_TAR")" | awk '{print $1}')" || exit 1
+    printf "%s" "$AP_CHECKSUM" >> "$(basename "$AP_TAR")"
+    mv -f "$(basename "$AP_TAR")" "$(basename "$AP_TAR_MD5")"
+    popd > /dev/null
 }
 
 GENERATE_BUILD_INFO()
@@ -266,6 +347,7 @@ GENERATE_UPDATER_SCRIPT()
     local HAS_DTBO=false
     local HAS_INIT_BOOT=false
     local HAS_VENDOR_BOOT=false
+    local HAS_VBMETA=false
     local HAS_SUPER_EMPTY=false
     local HAS_SYSTEM=false
     local HAS_VENDOR=false
@@ -285,6 +367,7 @@ GENERATE_UPDATER_SCRIPT()
     [ -f "$TMP_DIR/dtbo.img" ] && HAS_DTBO=true
     [ -f "$TMP_DIR/init_boot.img" ] && HAS_INIT_BOOT=true
     [ -f "$TMP_DIR/vendor_boot.img" ] && HAS_VENDOR_BOOT=true
+    [ -f "$TMP_DIR/vbmeta.img" ] && $TARGET_ENABLE_CUSTOM_AVB && $TARGET_AVB_FLASH_VBMETA_IN_ZIP && HAS_VBMETA=true
     [ -f "$TMP_DIR/unsparse_super_empty.img" ] && HAS_SUPER_EMPTY=true
     [ -f "$TMP_DIR/system.new.dat${BROTLI_EXTENSION}" ] && HAS_SYSTEM=true
     [ -f "$TMP_DIR/vendor.new.dat${BROTLI_EXTENSION}" ] && HAS_VENDOR=true && PARTITION_COUNT=$((PARTITION_COUNT + 1))
@@ -535,6 +618,12 @@ GENERATE_UPDATER_SCRIPT()
             echo -n "$TARGET_BOOT_DEVICE_PATH"
             echo    '/boot");'
         fi
+        if $HAS_VBMETA; then
+            echo    'ui_print("Installing vbmeta image...");'
+            echo -n 'package_extract_file("vbmeta.img", "'
+            echo -n "$TARGET_BOOT_DEVICE_PATH"
+            echo    '/vbmeta");'
+        fi
         if $HAS_UP_PARAM; then
             echo    'ui_print("Installing up_param image...");'
             echo -n 'package_extract_file("up_param.bin", "'
@@ -636,36 +725,6 @@ LOG_STEP_OUT
 # shellcheck disable=SC2046
 wait $(jobs -p) || exit 1
 
-if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
-    LOG "- Building unsparse_super_empty.img"
-    BUILD_SUPER_EMPTY
-
-    LOG "- Generating dynamic_partitions_op_list"
-    GENERATE_OP_LIST
-fi
-
-BROTLI_QUALITY=6
-$DEBUG && BROTLI_QUALITY=0
-
-while IFS= read -r f; do
-    PARTITION="$(basename "$f" | sed "s/.img//g")"
-    IS_VALID_PARTITION_NAME "$PARTITION" || continue
-
-    (
-        LOG "- Converting $PARTITION.img to $PARTITION.new.dat"
-        EVAL "img2sdat -o \"$TMP_DIR\" \"$f\"" || exit 1
-        rm -f "$f"
-
-        LOG "- Compressing $PARTITION.new.dat"
-        # https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/tools/releasetools/common.py#3585
-        EVAL "brotli --quality=\"$BROTLI_QUALITY\" --output=\"$TMP_DIR/$PARTITION.new.dat.br\" \"$TMP_DIR/$PARTITION.new.dat\"" || exit 1
-        rm -f "$TMP_DIR/$PARTITION.new.dat"
-    ) &
-done < <(find "$TMP_DIR" -maxdepth 1 -type f -name "*.img")
-
-# shellcheck disable=SC2046
-wait $(jobs -p) || exit 1
-
 if [ -d "$WORK_DIR/kernel" ]; then
     while IFS= read -r f; do
         IMG="$(basename "$f")"
@@ -678,6 +737,46 @@ if [ -f "$WORK_DIR/up_param.bin" ]; then
     LOG "- Copying up_param.bin"
     cp -fa "$WORK_DIR/up_param.bin" "$TMP_DIR/up_param.bin"
 fi
+
+if $TARGET_ENABLE_CUSTOM_AVB; then
+    LOG_STEP_IN "- Signing AVB images"
+    "$SRC_DIR/scripts/internal/sign_avb_images.sh" "$TMP_DIR" || exit 1
+    LOG_STEP_OUT
+    LOG_STEP_IN "- Building Odin AP package"
+    BUILD_ODIN_AP_PACKAGE
+    LOG_STEP_OUT
+fi
+
+if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
+    LOG "- Building unsparse_super_empty.img"
+    BUILD_SUPER_EMPTY
+
+    LOG "- Generating dynamic_partitions_op_list"
+    GENERATE_OP_LIST
+fi
+
+BROTLI_QUALITY=6
+$DEBUG && BROTLI_QUALITY=0
+
+while IFS= read -r f; do
+    PARTITION="$(basename "$f")"
+    IS_VALID_PARTITION_NAME "$PARTITION" || continue
+    [ -f "$TMP_DIR/$PARTITION.img" ] || continue
+
+    (
+        LOG "- Converting $PARTITION.img to $PARTITION.new.dat"
+        EVAL "img2sdat -o \"$TMP_DIR\" \"$TMP_DIR/$PARTITION.img\"" || exit 1
+        rm -f "$TMP_DIR/$PARTITION.img"
+
+        LOG "- Compressing $PARTITION.new.dat"
+        # https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/tools/releasetools/common.py#3585
+        EVAL "brotli --quality=\"$BROTLI_QUALITY\" --output=\"$TMP_DIR/$PARTITION.new.dat.br\" \"$TMP_DIR/$PARTITION.new.dat\"" || exit 1
+        rm -f "$TMP_DIR/$PARTITION.new.dat"
+    ) &
+done < <(find "$WORK_DIR" -maxdepth 1 -type d)
+
+# shellcheck disable=SC2046
+wait $(jobs -p) || exit 1
 
 LOG "- Generating updater-script"
 GENERATE_UPDATER_SCRIPT
