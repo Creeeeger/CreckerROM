@@ -42,6 +42,30 @@ IS_EXTREMEROM_CERT_AVAILABLE()
     [ -s "$SRC_DIR/security/extremerom_platform.pk8" ] && USES_EXTREMEROM_CERT="true"
     echo "$USES_EXTREMEROM_CERT"
 }
+
+SANITIZE_CONFIG_ENV()
+{
+    local VAR
+
+    while IFS= read -r VAR; do
+        case "$VAR" in
+            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_TYPE|ROM_BUILD_TIMESTAMP|ROM_IS_OFFICIAL)
+                unset "$VAR"
+                ;;
+        esac
+    done < <(compgen -v)
+}
+
+GET_DEFAULT_ODIN_SUPER_IMAGE()
+{
+    if [ "${TARGET_SUPER_PARTITION_SIZE:-0}" -eq 0 ]; then
+        echo "false"
+    elif [[ "$TARGET_NAME" == Galaxy\ S20* ]] || [[ "$TARGET_NAME" == Galaxy\ S21* ]]; then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
 # ]
 
 if [ $# -ne 1 ]; then
@@ -51,6 +75,7 @@ elif [ ! -f "$SRC_DIR/target/$1/config.sh" ]; then
     LOGE "File not found: target/$1/config.sh"
     exit 1
 else
+    SANITIZE_CONFIG_ENV
     source "$SRC_DIR/unica/configs/version.sh" || exit 1
     source "$SRC_DIR/target/$1/config.sh" || exit 1
 fi
@@ -69,6 +94,13 @@ if [[ "$ROM_DEBLOAT_LEVEL" != "default" ]] && \
         [[ "$ROM_DEBLOAT_LEVEL" != "none" ]] && \
         [[ "$ROM_DEBLOAT_LEVEL" != "ultra" ]]; then
     LOGE "ROM_DEBLOAT_LEVEL must be \"default\", \"none\" or \"ultra\" (got: $ROM_DEBLOAT_LEVEL)"
+    exit 1
+fi
+
+ROM_BUILD_FLASHABLE_ZIP="${ROM_BUILD_FLASHABLE_ZIP:-false}"
+if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && \
+        [[ "$ROM_BUILD_FLASHABLE_ZIP" != "false" ]]; then
+    LOGE "ROM_BUILD_FLASHABLE_ZIP must be \"true\" or \"false\" (got: $ROM_BUILD_FLASHABLE_ZIP)"
     exit 1
 fi
 
@@ -92,6 +124,10 @@ elif [[ "$FINAL_TARGET_OS_FILE_SYSTEM" != "ext4" ]] && \
     LOGE "Unsupported TARGET_OS_FILE_SYSTEM: $FINAL_TARGET_OS_FILE_SYSTEM"
     exit 1
 fi
+
+TARGET_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
+TARGET_BUILD_ODIN_PACKAGE="true"
+TARGET_ODIN_USE_SUPER_IMAGE="$(GET_DEFAULT_ODIN_SUPER_IMAGE)"
 
 if [ -f "$OUT_DIR/config.sh" ]; then
     LOGW "config.sh already exists. Regenerating"
@@ -139,6 +175,9 @@ fi
     GET_BUILD_VAR "TARGET_BOOT_DEVICE_PATH" "/dev/block/by-name"
     GET_BUILD_VAR "TARGET_INCLUDE_PATCHED_VBMETA" "false"
     GET_BUILD_VAR "TARGET_KEEP_ORIGINAL_SIGN" "false"
+    GET_BUILD_VAR "TARGET_BUILD_FLASHABLE_ZIP" "$TARGET_BUILD_FLASHABLE_ZIP"
+    GET_BUILD_VAR "TARGET_BUILD_ODIN_PACKAGE" "$TARGET_BUILD_ODIN_PACKAGE"
+    GET_BUILD_VAR "TARGET_ODIN_USE_SUPER_IMAGE" "$TARGET_ODIN_USE_SUPER_IMAGE"
     GET_BUILD_VAR "TARGET_ENABLE_CUSTOM_AVB" "false"
     GET_BUILD_VAR "TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT" "true"
     GET_BUILD_VAR "TARGET_AVB_KEY_PATH" "none"

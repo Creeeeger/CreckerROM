@@ -54,6 +54,7 @@ _PRINT_USAGE()
     echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
     echo " --no-debloat : Alias for --debloat none" >&2
     echo " --ultra-debloat : Alias for --debloat ultra" >&2
+    echo " --zip : Build the flashable zip in addition to the default Odin package" >&2
     echo "Available devices:" >&2
     printf '%s\n' "${TARGETS[@]}" >&2
 }
@@ -80,14 +81,14 @@ run_cmd()
     if [ -x "$SRC_DIR/scripts/$CMD.sh" ]; then
         shift
         mkdir -p "$(dirname "$WORK_DIR")"
-        (set -o pipefail; "$SRC_DIR/scripts/$CMD.sh" "$@" |& tee \
+        (set -o pipefail; "$SRC_DIR/scripts/$CMD.sh" "$@" 2>&1 | tee \
             >(sed -r -e "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" -e "/#/d" > "$(dirname "$WORK_DIR")/$CMD-$(date +%Y%m%d_%H%M%S).log"))
         return $?
     else
         local CMDS=()
         while IFS= read -r f; do
             CMDS+=("$f")
-        done < <(find "$SRC_DIR/scripts" -maxdepth 1 ! -type d -printf '%f\n' | sort | sed "s/.sh//")
+        done < <(find "$SRC_DIR/scripts" -maxdepth 1 ! -type d -exec basename {} \; | sort | sed "s/.sh//")
 
         if [ "$CMD" ]; then
             if [[ "$CMD" == "--help" ]] || [[ "$CMD" == "-h" ]]; then
@@ -106,6 +107,19 @@ run_cmd()
         printf '%s\n' "${CMDS[@]}" >&2
         return 1
     fi
+}
+
+_CLEAR_GENERATED_CONFIG_ENV()
+{
+    local VAR
+
+    while IFS= read -r VAR; do
+        case "$VAR" in
+            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_TYPE|ROM_BUILD_TIMESTAMP|ROM_IS_OFFICIAL)
+                unset "$VAR"
+                ;;
+        esac
+    done < <(set | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p')
 }
 
 alias unica=run_cmd
@@ -140,6 +154,7 @@ unset -f _GET_SRC_DIR
 export DEBUG=false
 export FORCE_EXT4_IMAGES="${FORCE_EXT4_IMAGES:-false}"
 export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
+export ROM_BUILD_FLASHABLE_ZIP="false"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
 export TMP_DIR="$OUT_DIR/tmp"
@@ -152,7 +167,7 @@ export PATH="$TOOLS_DIR/bin:$PATH"
 TARGETS=()
 while IFS= read -r t; do
     TARGETS+=("$t")
-done < <(find "$SRC_DIR/target" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | sort)
+done < <(find "$SRC_DIR/target" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
 
 while [[ "$1" == "-"* ]]; do
     if [[ "$1" == "--debug" ]]; then
@@ -173,6 +188,8 @@ while [[ "$1" == "-"* ]]; do
         export ROM_DEBLOAT_LEVEL="$1"
     elif [[ "$1" == "--debloat="* ]]; then
         export ROM_DEBLOAT_LEVEL="${1#--debloat=}"
+    elif [[ "$1" == "--zip" ]]; then
+        export ROM_BUILD_FLASHABLE_ZIP="true"
     elif [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
         _PRINT_USAGE
         return 0
@@ -188,6 +205,13 @@ if [[ "$ROM_DEBLOAT_LEVEL" != "default" ]] && \
         [[ "$ROM_DEBLOAT_LEVEL" != "none" ]] && \
         [[ "$ROM_DEBLOAT_LEVEL" != "ultra" ]]; then
     echo "Invalid --debloat value: $ROM_DEBLOAT_LEVEL (expected: default|none|ultra)" >&2
+    _PRINT_USAGE
+    return 1
+fi
+
+if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && \
+        [[ "$ROM_BUILD_FLASHABLE_ZIP" != "false" ]]; then
+    echo "Invalid zip flag state: $ROM_BUILD_FLASHABLE_ZIP (expected: true|false)" >&2
     _PRINT_USAGE
     return 1
 fi
@@ -221,15 +245,29 @@ mkdir -p "$OUT_DIR/target/$SELECTED_TARGET"
 # shellcheck disable=SC2046
 _SAVED_FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES"
 _SAVED_ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL"
-[ -f "$OUT_DIR/config.sh" ] && unset $(sed "/Automatically/d" "$OUT_DIR/config.sh" | cut -d "=" -f 1)
+_SAVED_ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
+_CLEAR_GENERATED_CONFIG_ENV
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
 export ROM_DEBLOAT_LEVEL="$_SAVED_ROM_DEBLOAT_LEVEL"
+export ROM_BUILD_FLASHABLE_ZIP="$_SAVED_ROM_BUILD_FLASHABLE_ZIP"
 unset _SAVED_FORCE_EXT4_IMAGES
 unset _SAVED_ROM_DEBLOAT_LEVEL
-"$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
+unset _SAVED_ROM_BUILD_FLASHABLE_ZIP
+env -i \
+    PATH="$PATH" \
+    HOME="${HOME:-}" \
+    USER="${USER:-}" \
+    SHELL="${SHELL:-}" \
+    SRC_DIR="$SRC_DIR" \
+    OUT_DIR="$OUT_DIR" \
+    FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES" \
+    ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL" \
+    ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP" \
+    "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport
 
 unset TARGETS SELECTED_TARGET
+unset -f _CLEAR_GENERATED_CONFIG_ENV
 
 echo "=============================="
 sed "/Automatically/d" "$OUT_DIR/config.sh"

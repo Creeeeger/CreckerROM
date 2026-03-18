@@ -25,6 +25,9 @@ TARGET_FINGERPRINT="$(GET_PROP "$WORK_DIR/vendor/build.prop" "ro.vendor.build.fi
 TARGET_FINGERPRINT="${TARGET_FINGERPRINT//$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.build.product")/$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/build.prop" "ro.product.vendor.device")}"
 
 TMP_DIR="$OUT_DIR/zip"
+TARGET_BUILD_FLASHABLE_ZIP="${TARGET_BUILD_FLASHABLE_ZIP:-false}"
+TARGET_BUILD_ODIN_PACKAGE="${TARGET_BUILD_ODIN_PACKAGE:-true}"
+TARGET_ODIN_USE_SUPER_IMAGE="${TARGET_ODIN_USE_SUPER_IMAGE:-false}"
 
 ROM_STATUS="CreckerROM"
 
@@ -97,9 +100,10 @@ BUILD_SUPER_EMPTY()
     EVAL "$CMD" || exit 1
 }
 
-BUILD_SIGNED_SUPER_IMAGE()
+BUILD_ODIN_SUPER_IMAGE()
 {
     local OUTPUT_FILE="$1"
+    local IMAGE_DIR="$2"
     local CMD
     local PARTITION
     local PARTITION_SIZE
@@ -117,10 +121,10 @@ BUILD_SIGNED_SUPER_IMAGE()
     CMD+=" --group \"$TARGET_SUPER_GROUP_NAME:$TARGET_SUPER_GROUP_SIZE\""
 
     for PARTITION in $SUPER_PARTITIONS; do
-        if [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" ]; then
-            PARTITION_SIZE="$(GET_IMAGE_SIZE "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img")"
+        if [ -f "$IMAGE_DIR/$PARTITION.img" ]; then
+            PARTITION_SIZE="$(GET_IMAGE_SIZE "$IMAGE_DIR/$PARTITION.img")"
             CMD+=" --partition \"$PARTITION:readonly:$PARTITION_SIZE:$TARGET_SUPER_GROUP_NAME\""
-            CMD+=" --image \"$PARTITION=$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img\""
+            CMD+=" --image \"$PARTITION=$IMAGE_DIR/$PARTITION.img\""
         fi
     done
 
@@ -138,25 +142,30 @@ BUILD_ODIN_AP_PACKAGE()
     local AP_CHECKSUM
     local PARTITION
     local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
+    local IMAGE_DIR="$TMP_DIR"
+
+    if $TARGET_ENABLE_CUSTOM_AVB; then
+        IMAGE_DIR="$TARGET_AVB_IMAGE_PACK_DIR"
+    fi
 
     [ -d "$AP_DIR" ] && rm -rf "$AP_DIR"
     mkdir -p "$AP_DIR"
 
-    if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
+    if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ] && $TARGET_ODIN_USE_SUPER_IMAGE; then
         LOG "- Building super.img for Odin"
-        BUILD_SIGNED_SUPER_IMAGE "$AP_DIR/super.img"
+        BUILD_ODIN_SUPER_IMAGE "$AP_DIR/super.img" "$IMAGE_DIR"
     else
         while IFS= read -r f; do
             PARTITION="$(basename "$f")"
             IS_VALID_PARTITION_NAME "$PARTITION" || continue
-            [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" ] || continue
-            cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+            [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
+            cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
         done < <(find "$WORK_DIR" -maxdepth 1 -type d)
     fi
 
     for PARTITION in $STATIC_PARTITIONS; do
-        [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" ] || continue
-        cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+        [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
+        cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
     done
 
     if [ -f "$TMP_DIR/up_param.bin" ]; then
@@ -742,9 +751,16 @@ if $TARGET_ENABLE_CUSTOM_AVB; then
     LOG_STEP_IN "- Signing AVB images"
     "$SRC_DIR/scripts/internal/sign_avb_images.sh" "$TMP_DIR" || exit 1
     LOG_STEP_OUT
+fi
+
+if $TARGET_BUILD_ODIN_PACKAGE; then
     LOG_STEP_IN "- Building Odin AP package"
     BUILD_ODIN_AP_PACKAGE
     LOG_STEP_OUT
+fi
+
+if ! $TARGET_BUILD_FLASHABLE_ZIP; then
+    exit 0
 fi
 
 if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
