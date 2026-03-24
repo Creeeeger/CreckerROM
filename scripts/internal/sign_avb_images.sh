@@ -24,15 +24,20 @@ TARGET_FIRMWARE_MODEL_ALT="${TARGET_FIRMWARE_MODEL#SM-}"
 PACK_DIR="${TARGET_AVB_IMAGE_PACK_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_images}"
 PACK_ZIP="${TARGET_AVB_IMAGE_PACK_ZIP:-$OUT_DIR/${TARGET_CODENAME}_signed_images.zip}"
 STAGING_DIR="$(mktemp -d "$TMP_DIR/avb_sign.XXXXXX")"
-AOSP_AVB_PEM="$OUT_DIR/security/aosp_platform_avb.pem"
-AOSP_PLATFORM_PK8="$SRC_DIR/security/aosp_platform.pk8"
-AOSP_PLATFORM_KEY_SENTINEL="auto_aosp_platform"
+DEFAULT_CUSTOM_AVB_KEY_DIR="$SRC_DIR/security/avb"
+DEFAULT_CUSTOM_AVB_KEY_NAME="creckerrom_avb"
+DEFAULT_CUSTOM_AVB_KEY_PATH="$DEFAULT_CUSTOM_AVB_KEY_DIR/${DEFAULT_CUSTOM_AVB_KEY_NAME}_private.pem"
 UPSTREAM_AVBTOOL_PATH="$SRC_DIR/platform_external_avb-master/avbtool.py"
 DIRECT_DESCRIPTOR_IMAGES=""
 ACTIVE_CHAIN_PARTITIONS=""
 ORIGINAL_HASH_PARTITIONS=""
 ORIGINAL_HASHTREE_PARTITIONS=""
 ORIGINAL_CHAIN_PARTITIONS=""
+ORIGINAL_VBMETA_PROPS=""
+ORIGINAL_VBMETA_ALGORITHM=""
+ORIGINAL_VBMETA_ROLLBACK_INDEX=""
+ORIGINAL_VBMETA_ROLLBACK_INDEX_LOCATION=""
+ORIGINAL_VBMETA_RELEASE_STRING=""
 HASH_PARTITIONS=""
 HASHTREE_PARTITIONS=""
 CHAIN_PARTITIONS=""
@@ -56,6 +61,9 @@ BL_TAR_PATH=""
 EXCLUDED_VBMETA_PARTITIONS="bootloader"
 KNOWN_FIRMWARE_DESCRIPTOR_PARTITIONS="ldfw tzsw keystorage harx"
 REQUIRED_RE_SIGN_PARTITIONS="boot init_boot vendor_boot dtbo recovery"
+INCLUDED_HASH_PARTITIONS=""
+INCLUDED_HASHTREE_PARTITIONS=""
+INCLUDED_CHAIN_PARTITIONS=""
 # ]
 
 LIST_HAS_ITEM()
@@ -270,13 +278,16 @@ IS_ENABLED_FIRMWARE_DESCRIPTOR_PARTITION()
 INIT_DEFAULTS()
 {
     TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT="${TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT:-true}"
-    TARGET_AVB_KEY_PATH="${TARGET_AVB_KEY_PATH:-$AOSP_PLATFORM_KEY_SENTINEL}"
-    if [ -z "${TARGET_AVB_ALGORITHM:-}" ]; then
-        if [ "$TARGET_AVB_KEY_PATH" = "$AOSP_PLATFORM_KEY_SENTINEL" ] || [ "$TARGET_AVB_KEY_PATH" = "none" ]; then
-            TARGET_AVB_ALGORITHM="SHA256_RSA2048"
-        else
-            TARGET_AVB_ALGORITHM="SHA256_RSA4096"
-        fi
+    TARGET_AVB_KEY_PATH="${TARGET_AVB_KEY_PATH:-$DEFAULT_CUSTOM_AVB_KEY_PATH}"
+    case "$TARGET_AVB_KEY_PATH" in
+        "auto_aosp_platform" | "$OUT_DIR/security/aosp_platform_avb.pem" | */aosp_platform_avb.pem)
+            LOGW "AOSP AVB key fallback is no longer used. Switching to generated custom AVB key at $DEFAULT_CUSTOM_AVB_KEY_PATH"
+            TARGET_AVB_KEY_PATH="$DEFAULT_CUSTOM_AVB_KEY_PATH"
+            ;;
+    esac
+    if [ -z "${TARGET_AVB_ALGORITHM:-}" ] || \
+            { [ "$TARGET_AVB_KEY_PATH" = "$DEFAULT_CUSTOM_AVB_KEY_PATH" ] && [ "$TARGET_AVB_ALGORITHM" = "SHA256_RSA2048" ]; }; then
+        TARGET_AVB_ALGORITHM="SHA256_RSA4096"
     fi
     TARGET_AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-$UPSTREAM_AVBTOOL_PATH}"
     TARGET_AVBTOOL_PYTHON="${TARGET_AVBTOOL_PYTHON:-none}"
@@ -293,6 +304,7 @@ INIT_DEFAULTS()
     TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS="${TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS:-}"
     TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS="${TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS:-}"
     TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin}"
+    TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS="${TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS:-true}"
 
     TARGET_SUPPORTS_FIRMWARE_DESCRIPTOR_PARTITIONS || TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS=""
 
@@ -320,6 +332,9 @@ GET_ORIGINAL_VBMETA_PATH()
 PARSE_ORIGINAL_VBMETA_LAYOUT()
 {
     local ORIGINAL_VBMETA
+    local KIND
+    local KEY
+    local VALUE
 
     $TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT || return 0
 
@@ -330,16 +345,31 @@ PARSE_ORIGINAL_VBMETA_LAYOUT()
 
     DUMP_AVB_INFO_IMAGE "$ORIGINAL_VBMETA" "original vbmeta"
 
-    while IFS=' ' read -r KIND VALUE; do
+    while IFS=$'\t' read -r KIND KEY VALUE; do
         case "$KIND" in
+            "meta_algorithm")
+                ORIGINAL_VBMETA_ALGORITHM="$KEY"
+                ;;
+            "meta_rollback_index")
+                ORIGINAL_VBMETA_ROLLBACK_INDEX="$KEY"
+                ;;
+            "meta_rollback_index_location")
+                ORIGINAL_VBMETA_ROLLBACK_INDEX_LOCATION="$KEY"
+                ;;
+            "meta_release_string")
+                ORIGINAL_VBMETA_RELEASE_STRING="$KEY"
+                ;;
+            "prop")
+                APPEND_UNIQUE "ORIGINAL_VBMETA_PROPS" "$KEY=$VALUE"
+                ;;
             "hash")
-                APPEND_UNIQUE "ORIGINAL_HASH_PARTITIONS" "$VALUE"
+                APPEND_UNIQUE "ORIGINAL_HASH_PARTITIONS" "$KEY"
                 ;;
             "hashtree")
-                APPEND_UNIQUE "ORIGINAL_HASHTREE_PARTITIONS" "$VALUE"
+                APPEND_UNIQUE "ORIGINAL_HASHTREE_PARTITIONS" "$KEY"
                 ;;
             "chain")
-                APPEND_UNIQUE "ORIGINAL_CHAIN_PARTITIONS" "$VALUE"
+                APPEND_UNIQUE "ORIGINAL_CHAIN_PARTITIONS" "$KEY=$VALUE"
                 ;;
         esac
     done < <(
@@ -354,21 +384,48 @@ spec.loader.exec_module(module)
 
 avb = module.Avb()
 image = module.ImageHandler(image_path, read_only=True)
-_, _, descriptors, _ = avb._parse_image(image)
+_, header, descriptors, _ = avb._parse_image(image)
+alg_name, _ = module.lookup_algorithm_by_type(header.algorithm_type)
+
+print(f'meta_algorithm\t{alg_name}')
+print(f'meta_rollback_index\t{header.rollback_index}')
+print(f'meta_rollback_index_location\t{header.rollback_index_location}')
+print(f'meta_release_string\t{header.release_string}')
 
 for desc in descriptors:
-    if isinstance(desc, module.AvbHashtreeDescriptor):
-        print(f'hashtree {desc.partition_name}')
+    if isinstance(desc, module.AvbPropertyDescriptor):
+        value = desc.value.decode('utf-8', errors='replace')
+        print(f'prop\t{desc.key}\t{value}')
+    elif isinstance(desc, module.AvbHashtreeDescriptor):
+        print(f'hashtree\t{desc.partition_name}')
     elif isinstance(desc, module.AvbHashDescriptor):
-        print(f'hash {desc.partition_name}')
+        print(f'hash\t{desc.partition_name}')
     elif isinstance(desc, module.AvbChainPartitionDescriptor):
-        print(f'chain {desc.partition_name}={desc.rollback_index_location}')
+        print(f'chain\t{desc.partition_name}\t{desc.rollback_index_location}')
 PY
     )
 
+    LOG_PARTITION_SET "Original vbmeta props" "$ORIGINAL_VBMETA_PROPS"
+    [ -n "$ORIGINAL_VBMETA_ALGORITHM" ] && AVB_DEBUG_LOG "Original vbmeta algorithm: $ORIGINAL_VBMETA_ALGORITHM"
     LOG_PARTITION_SET "Original vbmeta hash partitions" "$ORIGINAL_HASH_PARTITIONS"
     LOG_PARTITION_SET "Original vbmeta hashtree partitions" "$ORIGINAL_HASHTREE_PARTITIONS"
     LOG_PARTITION_SET "Original vbmeta chain partitions" "$ORIGINAL_CHAIN_PARTITIONS"
+}
+
+ADOPT_ORIGINAL_VBMETA_DEFAULTS()
+{
+    if [ -n "$ORIGINAL_VBMETA_ALGORITHM" ] && [ "$TARGET_AVB_KEY_PATH" = "$DEFAULT_CUSTOM_AVB_KEY_PATH" ] && \
+            [ "$TARGET_AVB_ALGORITHM" != "$ORIGINAL_VBMETA_ALGORITHM" ]; then
+        LOG "- Adopting original vbmeta signing algorithm: $ORIGINAL_VBMETA_ALGORITHM"
+        TARGET_AVB_ALGORITHM="$ORIGINAL_VBMETA_ALGORITHM"
+    fi
+
+    if [ "$TARGET_AVB_ROLLBACK_INDEX" = "0" ] && [ -n "$ORIGINAL_VBMETA_ROLLBACK_INDEX" ]; then
+        TARGET_AVB_ROLLBACK_INDEX="$ORIGINAL_VBMETA_ROLLBACK_INDEX"
+    fi
+    if [ "$TARGET_AVB_ROLLBACK_INDEX_LOCATION" = "0" ] && [ -n "$ORIGINAL_VBMETA_ROLLBACK_INDEX_LOCATION" ]; then
+        TARGET_AVB_ROLLBACK_INDEX_LOCATION="$ORIGINAL_VBMETA_ROLLBACK_INDEX_LOCATION"
+    fi
 }
 
 MERGE_LAYOUT()
@@ -426,7 +483,7 @@ MERGE_LAYOUT()
             LOG "- Ignoring original vbmeta hash descriptor for $ENTRY; this firmware partition is not enabled for this target"
             continue
         fi
-        APPEND_UNIQUE "HASH_PARTITIONS" "$ENTRY"
+        SET_PARTITION_SIGN_KIND "$ENTRY" "hash"
     done
 
     for ENTRY in $ORIGINAL_HASHTREE_PARTITIONS; do
@@ -438,7 +495,7 @@ MERGE_LAYOUT()
             LOG "- Ignoring original vbmeta hashtree descriptor for $ENTRY; this firmware partition is not enabled for this target"
             continue
         fi
-        APPEND_UNIQUE "HASHTREE_PARTITIONS" "$ENTRY"
+        SET_PARTITION_SIGN_KIND "$ENTRY" "hashtree"
     done
 
     for ENTRY in $ORIGINAL_CHAIN_PARTITIONS; do
@@ -458,6 +515,19 @@ MERGE_LAYOUT()
     LOG_PARTITION_SET "Merged AVB hashtree partitions" "$HASHTREE_PARTITIONS"
     LOG_PARTITION_SET "Merged AVB chain partitions" "$CHAIN_PARTITIONS"
     LOG_PARTITION_SET "Enabled firmware descriptor partitions" "$TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS"
+}
+
+IS_PRESENT_IN_ORIGINAL_VBMETA()
+{
+    local PARTITION="$1"
+
+    if [ -z "$ORIGINAL_HASH_PARTITIONS$ORIGINAL_HASHTREE_PARTITIONS$ORIGINAL_CHAIN_PARTITIONS" ]; then
+        return 0
+    fi
+
+    LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASH_PARTITIONS" && return 0
+    LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASHTREE_PARTITIONS" && return 0
+    [ -n "$(GET_KV_VALUE "$PARTITION" "$ORIGINAL_CHAIN_PARTITIONS")" ]
 }
 
 ASSERT_REQUIRED_RE_SIGN_COVERAGE()
@@ -523,41 +593,79 @@ SETUP_AVBTOOL()
     fi
 }
 
-ENSURE_AOSP_AVB_KEY()
+GET_AVB_KEY_BITS()
 {
-    if [ ! -f "$AOSP_PLATFORM_PK8" ]; then
-        LOGE "AOSP platform private key not found: $AOSP_PLATFORM_PK8"
-        exit 1
+    case "$1" in
+        SHA256_RSA2048 | SHA512_RSA2048)
+            echo "2048"
+            ;;
+        SHA256_RSA4096 | SHA512_RSA4096)
+            echo "4096"
+            ;;
+        SHA256_RSA8192 | SHA512_RSA8192)
+            echo "8192"
+            ;;
+        *)
+            LOGE "Unsupported AVB signing algorithm for auto-generated key: $1"
+            exit 1
+            ;;
+    esac
+}
+
+GET_AVB_PUBLIC_KEY_OUTPUT_PATH()
+{
+    local PRIVATE_KEY_PATH="$1"
+
+    if [[ "$PRIVATE_KEY_PATH" == *_private.pem ]]; then
+        echo "${PRIVATE_KEY_PATH%_private.pem}_public.bin"
+    elif [[ "$PRIVATE_KEY_PATH" == *.pem ]]; then
+        echo "${PRIVATE_KEY_PATH%.pem}_public.bin"
+    else
+        echo "${PRIVATE_KEY_PATH}.public.bin"
     fi
+}
+
+ENSURE_GENERATED_AVB_KEY()
+{
+    local KEY_PATH="$1"
+    local ALGORITHM="$2"
+    local KEY_BITS
+    local PUBLIC_KEY_PATH
+
+    [ -n "$KEY_PATH" ] && [ "$KEY_PATH" != "none" ] || {
+        LOGE "Missing AVB key path for custom AVB flow"
+        exit 1
+    }
+    [ "$ALGORITHM" != "NONE" ] || return 0
+
     if ! command -v openssl &> /dev/null; then
-        LOGE "openssl is required to extract an AVB PEM key from aosp_platform.pk8"
+        LOGE "openssl is required to generate the custom AVB key"
         exit 1
     fi
-    mkdir -p "$(dirname "$AOSP_AVB_PEM")"
-    if [ ! -f "$AOSP_AVB_PEM" ] || [ "$AOSP_PLATFORM_PK8" -nt "$AOSP_AVB_PEM" ]; then
-        LOG "- Extracting AVB PEM key from aosp_platform.pk8"
-        openssl pkcs8 -inform DER -nocrypt \
-            -in "$AOSP_PLATFORM_PK8" \
-            -out "$AOSP_AVB_PEM" || exit 1
-        chmod 600 "$AOSP_AVB_PEM"
+
+    KEY_BITS="$(GET_AVB_KEY_BITS "$ALGORITHM")"
+    mkdir -p "$(dirname "$KEY_PATH")"
+
+    if [ ! -f "$KEY_PATH" ]; then
+        LOG "- Generating custom AVB key ($ALGORITHM) at $KEY_PATH"
+        openssl genrsa -out "$KEY_PATH" "$KEY_BITS" || exit 1
+        chmod 600 "$KEY_PATH"
+    fi
+
+    PUBLIC_KEY_PATH="$(GET_AVB_PUBLIC_KEY_OUTPUT_PATH "$KEY_PATH")"
+    if [ ! -f "$PUBLIC_KEY_PATH" ] || [ "$KEY_PATH" -nt "$PUBLIC_KEY_PATH" ]; then
+        LOG "- Extracting AVB public key blob to $PUBLIC_KEY_PATH"
+        RUN_AVBTOOL extract_public_key --key "$KEY_PATH" --output "$PUBLIC_KEY_PATH" || exit 1
     fi
 }
 
 RESOLVE_AVB_KEY_PATH()
 {
     local KEY_VALUE="$1"
-
-    if [ "$KEY_VALUE" = "$AOSP_PLATFORM_KEY_SENTINEL" ]; then
-        ENSURE_AOSP_AVB_KEY
-        echo "$AOSP_AVB_PEM"
-        return 0
-    fi
+    local ALGORITHM="$2"
 
     if [ -n "$KEY_VALUE" ] && [ "$KEY_VALUE" != "none" ]; then
-        [ -f "$KEY_VALUE" ] || {
-            LOGE "AVB key not found: $KEY_VALUE"
-            exit 1
-        }
+        [ -f "$KEY_VALUE" ] || ENSURE_GENERATED_AVB_KEY "$KEY_VALUE" "$ALGORITHM"
         echo "$KEY_VALUE"
     fi
 }
@@ -567,13 +675,7 @@ RESOLVE_TOPLEVEL_SIGNING_CONFIG()
     local KEY_VALUE="$TARGET_AVB_KEY_PATH"
 
     VBMETA_SIGN_ALGORITHM="$TARGET_AVB_ALGORITHM"
-    if [ "$KEY_VALUE" = "$AOSP_PLATFORM_KEY_SENTINEL" ] && [ "$VBMETA_SIGN_ALGORITHM" != "NONE" ] && \
-            [ "$VBMETA_SIGN_ALGORITHM" != "SHA256_RSA2048" ]; then
-        LOG "- Using auto AOSP AVB key for top-level vbmeta, forcing algorithm to SHA256_RSA2048"
-        VBMETA_SIGN_ALGORITHM="SHA256_RSA2048"
-    fi
-
-    VBMETA_SIGN_KEY_PATH="$(RESOLVE_AVB_KEY_PATH "$KEY_VALUE")"
+    VBMETA_SIGN_KEY_PATH="$(RESOLVE_AVB_KEY_PATH "$KEY_VALUE" "$VBMETA_SIGN_ALGORITHM")"
     if [ "$VBMETA_SIGN_ALGORITHM" = "NONE" ]; then
         LOGE "Top-level vbmeta must be signed with a real AVB key"
         exit 1
@@ -697,12 +799,7 @@ RESOLVE_PARTITION_SIGNING_CONFIG()
 
     KEY_VALUE="$(GET_PARTITION_VAR_VALUE "$PARTITION" "KEY_PATH")"
     [ -z "$KEY_VALUE" ] && KEY_VALUE="$TARGET_AVB_KEY_PATH"
-    if [ "$KEY_VALUE" = "$AOSP_PLATFORM_KEY_SENTINEL" ] && [ "$PARTITION_SIGN_ALGORITHM" != "NONE" ] && \
-            [ "$PARTITION_SIGN_ALGORITHM" != "SHA256_RSA2048" ]; then
-        LOG "- Using auto AOSP AVB key for $PARTITION, forcing algorithm to SHA256_RSA2048"
-        PARTITION_SIGN_ALGORITHM="SHA256_RSA2048"
-    fi
-    PARTITION_SIGN_KEY_PATH="$(RESOLVE_AVB_KEY_PATH "$KEY_VALUE")"
+    PARTITION_SIGN_KEY_PATH="$(RESOLVE_AVB_KEY_PATH "$KEY_VALUE" "$PARTITION_SIGN_ALGORITHM")"
 
     if [ "$PARTITION_SIGN_ALGORITHM" = "NONE" ]; then
         LOGE "Partition $PARTITION must use a real AVB signing algorithm"
@@ -1387,6 +1484,7 @@ SIGN_BUILT_PARTITION()
     local PARTITION_SIZE_SOURCE=""
     local KIND
     local CHAIN_LOCATION
+    local INCLUDE_IN_TOPLEVEL="false"
 
     [ -f "$IMAGE" ] || return 0
     LIST_HAS_ITEM "$PARTITION" "$SIGNED_PARTITIONS" && return 0
@@ -1433,11 +1531,20 @@ SIGN_BUILT_PARTITION()
     LOG "- Signing $PARTITION.img ($KIND)"
     SIGN_IMAGE "$IMAGE" "$PARTITION" "$KIND" "$PARTITION_SIZE"
 
+    IS_PRESENT_IN_ORIGINAL_VBMETA "$PARTITION" && INCLUDE_IN_TOPLEVEL="true"
     CHAIN_LOCATION="$(GET_CHAIN_LOCATION "$PARTITION")"
-    if [ -n "$CHAIN_LOCATION" ]; then
+    if [ "$INCLUDE_IN_TOPLEVEL" = "true" ] && [ -n "$CHAIN_LOCATION" ] && [ -n "$(GET_KV_VALUE "$PARTITION" "$ORIGINAL_CHAIN_PARTITIONS")" ]; then
         APPEND_UNIQUE "ACTIVE_CHAIN_PARTITIONS" "$PARTITION=$CHAIN_LOCATION"
-    else
+        APPEND_UNIQUE "INCLUDED_CHAIN_PARTITIONS" "$PARTITION=$CHAIN_LOCATION"
+    elif [ "$INCLUDE_IN_TOPLEVEL" = "true" ]; then
         APPEND_UNIQUE "DIRECT_DESCRIPTOR_IMAGES" "$IMAGE"
+        if [ "$KIND" = "hashtree" ]; then
+            APPEND_UNIQUE "INCLUDED_HASHTREE_PARTITIONS" "$PARTITION"
+        else
+            APPEND_UNIQUE "INCLUDED_HASH_PARTITIONS" "$PARTITION"
+        fi
+    else
+        LOG "- Signed $PARTITION.img but not adding it to top-level vbmeta because it is not present in the original vbmeta"
     fi
     APPEND_UNIQUE "SIGNED_PARTITIONS" "$PARTITION"
 }
@@ -1450,6 +1557,7 @@ SIGN_FIRMWARE_DESCRIPTOR_PARTITIONS()
     local SOURCE_SIZE
     local PARTITION_SIZE
     local IMAGE
+    local INCLUDE_IN_TOPLEVEL="false"
 
     for PARTITION in $TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS; do
         if ! LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS" && ! LIST_HAS_ITEM "$PARTITION" "$HASHTREE_PARTITIONS"; then
@@ -1483,14 +1591,94 @@ SIGN_FIRMWARE_DESCRIPTOR_PARTITIONS()
         LOG "- Preparing firmware AVB descriptor for $PARTITION from $(basename "$SOURCE_PATH"): source_image=$(FORMAT_SIZE "$SOURCE_SIZE") estimated_partition=$(FORMAT_SIZE "$PARTITION_SIZE")"
         SIGN_DESCRIPTOR_IMAGE "$IMAGE" "$PARTITION" "$KIND" "$PARTITION_SIZE"
 
-        APPEND_UNIQUE "DIRECT_DESCRIPTOR_IMAGES" "$IMAGE"
+        IS_PRESENT_IN_ORIGINAL_VBMETA "$PARTITION" && INCLUDE_IN_TOPLEVEL="true"
+        if [ "$INCLUDE_IN_TOPLEVEL" = "true" ]; then
+            APPEND_UNIQUE "DIRECT_DESCRIPTOR_IMAGES" "$IMAGE"
+            if [ "$KIND" = "hashtree" ]; then
+                APPEND_UNIQUE "INCLUDED_HASHTREE_PARTITIONS" "$PARTITION"
+            else
+                APPEND_UNIQUE "INCLUDED_HASH_PARTITIONS" "$PARTITION"
+            fi
+        else
+            LOG "- Prepared firmware descriptor image for $PARTITION but not adding it to top-level vbmeta because it is not present in the original vbmeta"
+        fi
         APPEND_UNIQUE "SIGNED_PARTITIONS" "$PARTITION"
         APPEND_UNIQUE "FIRMWARE_DESCRIPTOR_PACK_FILES" "$SOURCE_PATH"
     done
 }
 
+DETECT_EXISTING_AVB_SIGN_KIND()
+{
+    local IMAGE="$1"
+    local KIND=""
+
+    [ -f "$IMAGE" ] || return 0
+
+    KIND="$("$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$IMAGE" <<'PY'
+import importlib.util
+import sys
+
+avbtool_path, image_path = sys.argv[1:3]
+spec = importlib.util.spec_from_file_location('crecker_avbtool', avbtool_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+avb = module.Avb()
+image = module.ImageHandler(image_path, read_only=True)
+footer, _, descriptors, _ = avb._parse_image(image)
+if footer:
+    for desc in descriptors:
+        if isinstance(desc, module.AvbHashtreeDescriptor):
+            print('hashtree')
+            raise SystemExit(0)
+        if isinstance(desc, module.AvbHashDescriptor):
+            print('hash')
+            raise SystemExit(0)
+PY
+)" || true
+
+    [ -n "$KIND" ] && echo "$KIND"
+}
+
+RESOLVE_CHAIN_PARTITION_SIGN_KIND()
+{
+    local PARTITION="$1"
+    local IMAGE="$TMP_IMG_DIR/$PARTITION.img"
+    local KIND=""
+
+    KIND="$(GET_SIGN_KIND "$PARTITION")"
+    if LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS" || LIST_HAS_ITEM "$PARTITION" "$HASHTREE_PARTITIONS"; then
+        echo "$KIND"
+        return 0
+    fi
+
+    KIND="$(DETECT_EXISTING_AVB_SIGN_KIND "$IMAGE")"
+    [ -n "$KIND" ] && echo "$KIND" || echo "hash"
+}
+
+SIGN_CHAIN_PARTITIONS()
+{
+    local ENTRY
+    local PARTITION
+    local KIND
+
+    for ENTRY in $CHAIN_PARTITIONS; do
+        PARTITION="${ENTRY%%=*}"
+        [ -f "$TMP_IMG_DIR/$PARTITION.img" ] || continue
+        LIST_HAS_ITEM "$PARTITION" "$SIGNED_PARTITIONS" && continue
+
+        KIND="$(RESOLVE_CHAIN_PARTITION_SIGN_KIND "$PARTITION")"
+        SET_PARTITION_SIGN_KIND "$PARTITION" "$KIND"
+        LOG "- Signing chained AVB partition $PARTITION using $KIND footer"
+        SIGN_BUILT_PARTITION "$PARTITION"
+    done
+}
+
 BUILD_OPTIONAL_PROPS()
 {
+    local ENTRY
+    local KEY
+    local VALUE
     local BOOT_OS_VERSION
     local BOOT_PATCH
     local SYSTEM_OS_VERSION
@@ -1499,6 +1687,16 @@ BUILD_OPTIONAL_PROPS()
     local VENDOR_PATCH
 
     VBMETA_PROPS=()
+
+    if [ "$TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS" = "true" ] && [ -n "$ORIGINAL_VBMETA_PROPS" ]; then
+        for ENTRY in $ORIGINAL_VBMETA_PROPS; do
+            KEY="${ENTRY%%=*}"
+            VALUE="${ENTRY#*=}"
+            VBMETA_PROPS+=("--prop" "$KEY:$VALUE")
+        done
+        LOG_PARTITION_SET "Using original vbmeta props" "$ORIGINAL_VBMETA_PROPS"
+        return 0
+    fi
 
     BOOT_OS_VERSION="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/boot.img_metadata.txt" "os_version")"
     BOOT_PATCH="$(GET_METADATA_VALUE "$FW_DIR/$TARGET_FIRMWARE_PATH/boot.img_metadata.txt" "os_patch_level")"
@@ -1557,6 +1755,10 @@ MAKE_TOPLEVEL_VBMETA()
 
     if [ "${#VBMETA_PROPS[@]}" -gt 0 ]; then
         CMD+=("${VBMETA_PROPS[@]}")
+    fi
+
+    if [ -n "$ORIGINAL_VBMETA_RELEASE_STRING" ]; then
+        CMD+=(--internal_release_string "$ORIGINAL_VBMETA_RELEASE_STRING")
     fi
 
     APPEND_ARGS_FROM_STRING CMD "$TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS"
@@ -1693,15 +1895,13 @@ CREATE_IMAGE_PACK()
         if [ -f "$STAGING_DIR/keys/vbmeta.avbpubkey" ]; then
             echo "vbmeta_public_key_sha256=$(CALCULATE_SHA256 "$STAGING_DIR/keys/vbmeta.avbpubkey")"
         fi
-        for PARTITION in $HASH_PARTITIONS; do
-            KIND="$(GET_SIGN_KIND "$PARTITION")"
-            [ "$KIND" = "hash" ] && echo "hash_partition=$PARTITION"
+        for PARTITION in $INCLUDED_HASH_PARTITIONS; do
+            echo "hash_partition=$PARTITION"
         done
-        for PARTITION in $HASHTREE_PARTITIONS; do
-            KIND="$(GET_SIGN_KIND "$PARTITION")"
-            [ "$KIND" = "hashtree" ] && echo "hashtree_partition=$PARTITION"
+        for PARTITION in $INCLUDED_HASHTREE_PARTITIONS; do
+            echo "hashtree_partition=$PARTITION"
         done
-        for PARTITION in $ACTIVE_CHAIN_PARTITIONS; do
+        for PARTITION in $INCLUDED_CHAIN_PARTITIONS; do
             echo "chain_partition=$PARTITION"
         done
         for ENTRY in $FIRMWARE_DESCRIPTOR_PACK_FILES; do
@@ -1743,6 +1943,7 @@ fi
 INIT_DEFAULTS
 SETUP_AVBTOOL
 PARSE_ORIGINAL_VBMETA_LAYOUT
+ADOPT_ORIGINAL_VBMETA_DEFAULTS
 MERGE_LAYOUT
 ASSERT_REQUIRED_RE_SIGN_COVERAGE
 RESOLVE_TOPLEVEL_SIGNING_CONFIG
@@ -1752,6 +1953,7 @@ for PARTITION in $HASH_PARTITIONS $HASHTREE_PARTITIONS; do
     SIGN_BUILT_PARTITION "$PARTITION"
 done
 
+SIGN_CHAIN_PARTITIONS
 SIGN_FIRMWARE_DESCRIPTOR_PARTITIONS
 MAKE_TOPLEVEL_VBMETA
 VERIFY_SIGNED_AVB

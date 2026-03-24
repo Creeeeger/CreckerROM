@@ -78,7 +78,7 @@ GET_DEFAULT_ODIN_SUPER_IMAGE()
 GET_DEFAULT_AVB_KEY_PATH()
 {
     if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
-        echo "auto_aosp_platform"
+        echo "$SRC_DIR/security/avb/creckerrom_avb_private.pem"
     else
         echo "none"
     fi
@@ -87,7 +87,7 @@ GET_DEFAULT_AVB_KEY_PATH()
 GET_DEFAULT_AVB_ALGORITHM()
 {
     if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
-        echo "SHA256_RSA2048"
+        echo "SHA256_RSA4096"
     else
         echo "SHA256_RSA4096"
     fi
