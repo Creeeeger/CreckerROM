@@ -34,6 +34,7 @@ HASH_PARTITIONS=""
 HASHTREE_PARTITIONS=""
 CHAIN_PARTITIONS=""
 AVBTOOL_PATH=""
+AVB_PYTHON_BIN=""
 AVBTOOL_CMD=()
 SIGNED_PARTITIONS=""
 VBMETA_SIGN_KEY_PATH=""
@@ -48,6 +49,7 @@ PARTITION_SIGN_EXTRA_ARGS=""
 KEY_EXPORT_LABELS=""
 KEY_EXPORT_REPORT="$STAGING_DIR/avb_keys.txt"
 EXCLUDED_VBMETA_PARTITIONS="bootloader ldfw tzsw keystorage harx fld"
+REQUIRED_RE_SIGN_PARTITIONS="boot init_boot vendor_boot dtbo recovery"
 # ]
 
 LIST_HAS_ITEM()
@@ -214,7 +216,7 @@ INIT_DEFAULTS()
             TARGET_AVB_ALGORITHM="SHA256_RSA4096"
         fi
     fi
-    TARGET_AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-none}"
+    TARGET_AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-$UPSTREAM_AVBTOOL_PATH}"
     TARGET_AVBTOOL_PYTHON="${TARGET_AVBTOOL_PYTHON:-none}"
     TARGET_AVB_HASH_PARTITIONS="${TARGET_AVB_HASH_PARTITIONS:-boot vendor_boot init_boot}"
     TARGET_AVB_HASHTREE_PARTITIONS="${TARGET_AVB_HASHTREE_PARTITIONS:-system vendor product odm system_ext vendor_dlkm odm_dlkm system_dlkm prism optics}"
@@ -257,7 +259,8 @@ PARSE_ORIGINAL_VBMETA_LAYOUT()
 
     ORIGINAL_VBMETA="$(GET_ORIGINAL_VBMETA_PATH)"
     [ -f "$ORIGINAL_VBMETA" ] || return 0
-    [ -f "$UPSTREAM_AVBTOOL_PATH" ] || return 0
+    [ -n "$AVB_PYTHON_BIN" ] || return 0
+    [ -f "$AVBTOOL_PATH" ] || return 0
 
     while IFS=' ' read -r KIND VALUE; do
         case "$KIND" in
@@ -272,7 +275,7 @@ PARSE_ORIGINAL_VBMETA_LAYOUT()
                 ;;
         esac
     done < <(
-        python3 - "$UPSTREAM_AVBTOOL_PATH" "$ORIGINAL_VBMETA" <<'PY'
+        "$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$ORIGINAL_VBMETA" <<'PY'
 import importlib.util
 import sys
 
@@ -348,37 +351,59 @@ MERGE_LAYOUT()
     done
 }
 
+ASSERT_REQUIRED_RE_SIGN_COVERAGE()
+{
+    local PARTITION
+
+    for PARTITION in $REQUIRED_RE_SIGN_PARTITIONS; do
+        [ -f "$TMP_IMG_DIR/$PARTITION.img" ] || continue
+
+        if LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS" || \
+                LIST_HAS_ITEM "$PARTITION" "$HASHTREE_PARTITIONS" || \
+                [ -n "$(GET_CHAIN_LOCATION "$PARTITION")" ]; then
+            continue
+        fi
+
+        LOGE "AVB-relevant image $PARTITION.img is present but not configured for custom AVB re-signing. Add it to TARGET_AVB_HASH_PARTITIONS, TARGET_AVB_HASHTREE_PARTITIONS or TARGET_AVB_CHAIN_PARTITIONS."
+        exit 1
+    done
+}
+
 SETUP_AVBTOOL()
 {
-    if [ "$TARGET_AVBTOOL_PATH" != "none" ]; then
-        AVBTOOL_PATH="$TARGET_AVBTOOL_PATH"
-    elif [ -f "$UPSTREAM_AVBTOOL_PATH" ]; then
-        AVBTOOL_PATH="$UPSTREAM_AVBTOOL_PATH"
-    elif [ -x "$SRC_DIR/tools/bin/avbtool" ]; then
-        AVBTOOL_PATH="$SRC_DIR/tools/bin/avbtool"
-    elif [ -x "$OUT_DIR/tools/bin/avbtool" ]; then
-        AVBTOOL_PATH="$OUT_DIR/tools/bin/avbtool"
-    elif command -v avbtool &> /dev/null; then
-        AVBTOOL_PATH="$(command -v avbtool)"
-    elif [ -f "$SRC_DIR/../scripts/security/avbtool" ]; then
-        AVBTOOL_PATH="$SRC_DIR/../scripts/security/avbtool"
-    else
-        LOGE "Unable to locate avbtool. Set TARGET_AVBTOOL_PATH in your target config"
+    if [ ! -f "$UPSTREAM_AVBTOOL_PATH" ]; then
+        LOGE "Official AVB reference not found: $UPSTREAM_AVBTOOL_PATH"
         exit 1
     fi
 
-    AVBTOOL_CMD=()
+    if [ "$TARGET_AVBTOOL_PATH" != "none" ] && [ "$TARGET_AVBTOOL_PATH" != "$UPSTREAM_AVBTOOL_PATH" ]; then
+        LOGW "Ignoring TARGET_AVBTOOL_PATH=$TARGET_AVBTOOL_PATH. Using official AVB reference: $UPSTREAM_AVBTOOL_PATH"
+    fi
+
+    TARGET_AVBTOOL_PATH="$UPSTREAM_AVBTOOL_PATH"
+    AVBTOOL_PATH="$UPSTREAM_AVBTOOL_PATH"
+
     if [ "$TARGET_AVBTOOL_PYTHON" != "none" ]; then
-        AVBTOOL_CMD+=("$TARGET_AVBTOOL_PYTHON")
-    elif [[ "$AVBTOOL_PATH" == *.py ]] || [ ! -x "$AVBTOOL_PATH" ]; then
+        if [[ "$TARGET_AVBTOOL_PYTHON" == */* ]]; then
+            [ -x "$TARGET_AVBTOOL_PYTHON" ] || {
+                LOGE "Configured AVB python is not executable: $TARGET_AVBTOOL_PYTHON"
+                exit 1
+            }
+        elif ! command -v "$TARGET_AVBTOOL_PYTHON" &> /dev/null; then
+            LOGE "Configured AVB python not found in PATH: $TARGET_AVBTOOL_PYTHON"
+            exit 1
+        fi
+        AVB_PYTHON_BIN="$TARGET_AVBTOOL_PYTHON"
+    else
         if ! command -v python3 &> /dev/null; then
             LOGE "python3 is required to execute avbtool script: $AVBTOOL_PATH"
             exit 1
         fi
-        TARGET_AVBTOOL_PYTHON="$(command -v python3)"
-        AVBTOOL_CMD+=("$TARGET_AVBTOOL_PYTHON")
+        AVB_PYTHON_BIN="$(command -v python3)"
+        TARGET_AVBTOOL_PYTHON="$AVB_PYTHON_BIN"
     fi
-    AVBTOOL_CMD+=("$AVBTOOL_PATH")
+
+    AVBTOOL_CMD=("$AVB_PYTHON_BIN" "$AVBTOOL_PATH")
 
     if ! "${AVBTOOL_CMD[@]}" version &> /dev/null; then
         LOGE "Configured avbtool could not be executed. Check TARGET_AVBTOOL_PATH/TARGET_AVBTOOL_PYTHON"
@@ -503,7 +528,7 @@ ASSERT_IMAGE_VBMETA_FLAGS_ZERO()
     local LABEL="$2"
     local FLAGS=""
 
-    FLAGS="$(python3 - "$UPSTREAM_AVBTOOL_PATH" "$IMAGE" <<'PY'
+    FLAGS="$("$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$IMAGE" <<'PY'
 import importlib.util
 import sys
 
@@ -612,6 +637,17 @@ ROUND_UP_TO_4K()
     local VALUE="$1"
 
     echo "$((((VALUE + 4095) / 4096) * 4096))"
+}
+
+FORMAT_SIZE()
+{
+    local VALUE="$1"
+
+    if command -v numfmt &> /dev/null; then
+        printf '%s (%s)' "$VALUE" "$(numfmt --to=iec --suffix=B "$VALUE")"
+    else
+        printf '%s bytes' "$VALUE"
+    fi
 }
 
 GET_EXPLICIT_PARTITION_SIZE()
@@ -726,11 +762,31 @@ CALCULATE_AVB_MAX_IMAGE_SIZE()
     local PARTITION_SIZE="$3"
     local CMD=()
     local OUTPUT=""
+    local STDERR_FILE="$STAGING_DIR/calc_max_${PARTITION}_${KIND}.stderr"
+    local CMD_STRING=""
+    local ARG
 
     BUILD_SIGN_IMAGE_CMD CMD "" "$PARTITION" "$KIND" "$PARTITION_SIZE" "calc"
 
-    OUTPUT="$(RUN_AVBTOOL "${CMD[@]}" 2> /dev/null | tail -n 1 | tr -d '[:space:]')" || return 1
-    [[ "$OUTPUT" =~ ^[0-9]+$ ]] || return 1
+    rm -f "$STDERR_FILE"
+    OUTPUT="$(RUN_AVBTOOL "${CMD[@]}" 2> "$STDERR_FILE" | tail -n 1 | tr -d '[:space:]')" || true
+
+    if ! [[ "$OUTPUT" =~ ^[0-9]+$ ]]; then
+        for ARG in "${AVBTOOL_CMD[@]}" "${CMD[@]}"; do
+            if [ -n "$CMD_STRING" ]; then
+                CMD_STRING+=" "
+            fi
+            CMD_STRING+="$(printf '%q' "$ARG")"
+        done
+
+        if [ -s "$STDERR_FILE" ]; then
+            LOGE "Official AVB calc_max_image_size failed for $PARTITION ($KIND): $(tr '\n' ' ' < "$STDERR_FILE" | sed 's/[[:space:]]\\+/ /g')"
+        else
+            LOGE "Official AVB calc_max_image_size returned no numeric output for $PARTITION ($KIND)"
+        fi
+        LOGE "Failing AVB command: $CMD_STRING"
+        return 1
+    fi
 
     echo "$OUTPUT"
 }
@@ -846,20 +902,20 @@ RESOLVE_SIGN_PARTITION_SIZE()
     echo "$PARTITION_SIZE"
 }
 
-GET_PARTITION_SIZE()
+GET_PARTITION_SIZE_INFO()
 {
     local PARTITION="$1"
     local VALUE=""
     local KIND
 
     VALUE="$(GET_EXPLICIT_PARTITION_SIZE "$PARTITION")"
-    [ -n "$VALUE" ] && echo "$VALUE" && return 0
+    [ -n "$VALUE" ] && echo "$VALUE|explicit" && return 0
 
     VALUE="$(GET_METADATA_PARTITION_SIZE "$PARTITION")"
-    [ -n "$VALUE" ] && echo "$VALUE" && return 0
+    [ -n "$VALUE" ] && echo "$VALUE|metadata" && return 0
 
     VALUE="$(GET_STOCK_IMAGE_PARTITION_SIZE "$PARTITION")"
-    [ -n "$VALUE" ] && echo "$VALUE" && return 0
+    [ -n "$VALUE" ] && echo "$VALUE|stock_image_size" && return 0
 
     KIND="$(GET_SIGN_KIND "$PARTITION")"
     if IS_DYNAMIC_AVB_PARTITION "$PARTITION"; then
@@ -868,20 +924,32 @@ GET_PARTITION_SIZE()
         VALUE="$(ESTIMATE_PARTITION_SIZE_FROM_BUILT_IMAGE "$PARTITION" "$KIND")"
         if [ -n "$VALUE" ]; then
             LOGW "Estimated AVB partition size for dynamic partition $PARTITION: $VALUE" >&2
-            echo "$VALUE"
+            echo "$VALUE|dynamic_estimate"
             return 0
         fi
 
         VALUE="$(CALCULATE_MIN_AVB_PARTITION_SIZE "$PARTITION" "$KIND")"
         if [ -n "$VALUE" ]; then
             LOGW "Calculated AVB partition size for dynamic partition $PARTITION from the built image: $VALUE" >&2
-            echo "$VALUE"
+            echo "$VALUE|dynamic_calculated"
             return 0
         fi
     fi
 
-    LOGE "Unable to determine a fixed partition size for $PARTITION. Re-extract firmware metadata or set TARGET_$(tr '[:lower:]' '[:upper:]' <<< "$PARTITION" | tr '-' '_')_PARTITION_SIZE"
     return 1
+}
+
+GET_PARTITION_SIZE()
+{
+    local PARTITION="$1"
+    local INFO=""
+
+    INFO="$(GET_PARTITION_SIZE_INFO "$PARTITION")" || {
+        LOGE "Unable to determine a fixed partition size for $PARTITION. Re-extract firmware metadata or set TARGET_$(tr '[:lower:]' '[:upper:]' <<< "$PARTITION" | tr '-' '_')_PARTITION_SIZE"
+        return 1
+    }
+
+    echo "${INFO%%|*}"
 }
 
 GET_SIGN_KIND()
@@ -905,23 +973,23 @@ BUILD_SIGN_IMAGE_CMD()
     local KIND="$4"
     local PARTITION_SIZE="$5"
     local MODE="$6"
-    local CMD=()
+    local BUILT_CMD=()
 
     RESOLVE_PARTITION_SIGNING_CONFIG "$PARTITION" "$KIND"
 
     if [ "$KIND" = "hashtree" ]; then
-        CMD=(add_hashtree_footer)
+        BUILT_CMD=(add_hashtree_footer)
     else
-        CMD=(add_hash_footer)
+        BUILT_CMD=(add_hash_footer)
     fi
 
     if [ "$MODE" = "calc" ]; then
-        CMD+=(--calc_max_image_size)
+        BUILT_CMD+=(--calc_max_image_size)
     else
-        CMD+=(--image "$IMAGE")
+        BUILT_CMD+=(--image "$IMAGE")
     fi
 
-    CMD+=(
+    BUILT_CMD+=(
         --partition_name "$PARTITION"
         --partition_size "$PARTITION_SIZE"
         --hash_algorithm "$PARTITION_SIGN_HASH_ALGORITHM"
@@ -930,15 +998,15 @@ BUILD_SIGN_IMAGE_CMD()
     )
 
     if [ "$PARTITION_SIGN_ALGORITHM" = "NONE" ]; then
-        CMD+=(--algorithm NONE)
+        BUILT_CMD+=(--algorithm NONE)
     else
-        CMD+=(--algorithm "$PARTITION_SIGN_ALGORITHM" --key "$PARTITION_SIGN_KEY_PATH")
+        BUILT_CMD+=(--algorithm "$PARTITION_SIGN_ALGORITHM" --key "$PARTITION_SIGN_KEY_PATH")
     fi
 
-    [ "$PARTITION_SIGN_DO_NOT_USE_AB" = "true" ] && CMD+=(--do_not_use_ab)
-    APPEND_ARGS_FROM_STRING CMD "$PARTITION_SIGN_EXTRA_ARGS"
+    [ "$PARTITION_SIGN_DO_NOT_USE_AB" = "true" ] && BUILT_CMD+=(--do_not_use_ab)
+    APPEND_ARGS_FROM_STRING BUILT_CMD "$PARTITION_SIGN_EXTRA_ARGS"
 
-    eval "$ARRAY_NAME=(\"\${CMD[@]}\")"
+    eval "$ARRAY_NAME=(\"\${BUILT_CMD[@]}\")"
 }
 
 ERASE_FOOTER_IF_PRESENT()
@@ -946,8 +1014,104 @@ ERASE_FOOTER_IF_PRESENT()
     local IMAGE="$1"
 
     if RUN_AVBTOOL info_image --image "$IMAGE" &> /dev/null; then
+        LOG "- Removing existing AVB footer from $(basename "$IMAGE") before re-signing"
         RUN_AVBTOOL erase_footer --image "$IMAGE" || exit 1
     fi
+}
+
+REMOVE_SAMSUNG_SIGNATURES_IF_PRESENT()
+{
+    local IMAGE="$1"
+    local BEFORE_SIZE
+    local AFTER_SIZE
+    local TRIM_SIZE=0
+    local CHANGED=false
+
+    BEFORE_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || exit 1
+
+    if head -c 4096 "$IMAGE" | grep -a -q "SignerVer"; then
+        LOG "- Removing Samsung header signature from $(basename "$IMAGE") before custom AVB re-signing"
+        dd if="/dev/zero" of="$IMAGE" bs=256 seek=0 count=1 conv=notrunc &> /dev/null
+        dd if="/dev/zero" of="$IMAGE" bs=256 seek=3 count=1 conv=notrunc &> /dev/null
+        CHANGED=true
+    fi
+
+    if tail -c 4096 "$IMAGE" | grep -a -q "SignerVer03"; then
+        TRIM_SIZE=784
+    elif tail -c 4096 "$IMAGE" | grep -a -q "SignerVer02"; then
+        TRIM_SIZE=512
+    fi
+
+    if [ "$TRIM_SIZE" -gt 0 ]; then
+        LOG "- Removing Samsung footer signature from $(basename "$IMAGE") before custom AVB re-signing"
+        truncate -s "-$TRIM_SIZE" "$IMAGE" || exit 1
+        CHANGED=true
+    fi
+
+    if $CHANGED; then
+        AFTER_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || exit 1
+        LOG "- Samsung signature cleanup result for $(basename "$IMAGE"): $(FORMAT_SIZE "$BEFORE_SIZE") -> $(FORMAT_SIZE "$AFTER_SIZE")"
+    fi
+}
+
+PREPARE_IMAGE_FOR_CUSTOM_AVB_SIGNING()
+{
+    local IMAGE="$1"
+
+    ERASE_FOOTER_IF_PRESENT "$IMAGE"
+    REMOVE_SAMSUNG_SIGNATURES_IF_PRESENT "$IMAGE"
+    ERASE_FOOTER_IF_PRESENT "$IMAGE"
+}
+
+LOG_PARTITION_SIZE_STATUS()
+{
+    local PARTITION="$1"
+    local KIND="$2"
+    local PARTITION_SIZE="$3"
+    local SOURCE="$4"
+    local IMAGE="$TMP_IMG_DIR/$PARTITION.img"
+    local IMAGE_SIZE
+    local ROUNDED_IMAGE_SIZE
+    local MAX_IMAGE_SIZE=""
+
+    [ -f "$IMAGE" ] || return 0
+
+    IMAGE_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || return 1
+    ROUNDED_IMAGE_SIZE="$(ROUND_UP_TO_4K "$IMAGE_SIZE")"
+    MAX_IMAGE_SIZE="$(CALCULATE_AVB_MAX_IMAGE_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE" || true)"
+
+    if [ -n "$MAX_IMAGE_SIZE" ]; then
+        LOG "- AVB size check for $PARTITION: partition=$(FORMAT_SIZE "$PARTITION_SIZE") source=$SOURCE image=$(FORMAT_SIZE "$IMAGE_SIZE") rounded_image=$(FORMAT_SIZE "$ROUNDED_IMAGE_SIZE") max_payload=$(FORMAT_SIZE "$MAX_IMAGE_SIZE")"
+    else
+        LOG "- AVB size check for $PARTITION: partition=$(FORMAT_SIZE "$PARTITION_SIZE") source=$SOURCE image=$(FORMAT_SIZE "$IMAGE_SIZE") rounded_image=$(FORMAT_SIZE "$ROUNDED_IMAGE_SIZE")"
+    fi
+}
+
+PRINT_AVB_SIZE_MISMATCH_DIAGNOSTICS()
+{
+    local PARTITION="$1"
+    local KIND="$2"
+    local PARTITION_SIZE="$3"
+    local SOURCE="$4"
+    local IMAGE="$TMP_IMG_DIR/$PARTITION.img"
+    local IMAGE_SIZE
+    local ROUNDED_IMAGE_SIZE
+    local MAX_IMAGE_SIZE=""
+    local MIN_PARTITION_SIZE=""
+    local STOCK_IMAGE_SIZE=""
+
+    [ -f "$IMAGE" ] || return 0
+
+    IMAGE_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || return 1
+    ROUNDED_IMAGE_SIZE="$(ROUND_UP_TO_4K "$IMAGE_SIZE")"
+    MAX_IMAGE_SIZE="$(CALCULATE_AVB_MAX_IMAGE_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE" || true)"
+    MIN_PARTITION_SIZE="$(CALCULATE_MIN_AVB_PARTITION_SIZE "$PARTITION" "$KIND" || true)"
+    STOCK_IMAGE_SIZE="$(GET_STOCK_IMAGE_PARTITION_SIZE "$PARTITION" || true)"
+
+    LOGE "AVB size mismatch for $PARTITION: partition=$(FORMAT_SIZE "$PARTITION_SIZE") source=$SOURCE image=$(FORMAT_SIZE "$IMAGE_SIZE") rounded_image=$(FORMAT_SIZE "$ROUNDED_IMAGE_SIZE")"
+    [ -n "$MAX_IMAGE_SIZE" ] && LOGE "AVB max payload for $PARTITION with current $KIND footer: $(FORMAT_SIZE "$MAX_IMAGE_SIZE")"
+    [ -n "$MIN_PARTITION_SIZE" ] && LOGE "Minimum partition size required for current $PARTITION image with $KIND footer: $(FORMAT_SIZE "$MIN_PARTITION_SIZE")"
+    [ -n "$STOCK_IMAGE_SIZE" ] && LOGE "Current stock $PARTITION image size on disk: $(FORMAT_SIZE "$STOCK_IMAGE_SIZE")"
 }
 
 SIGN_IMAGE()
@@ -958,7 +1122,7 @@ SIGN_IMAGE()
     local PARTITION_SIZE="$4"
     local CMD=()
 
-    ERASE_FOOTER_IF_PRESENT "$IMAGE"
+    PREPARE_IMAGE_FOR_CUSTOM_AVB_SIGNING "$IMAGE"
     BUILD_SIGN_IMAGE_CMD CMD "$IMAGE" "$PARTITION" "$KIND" "$PARTITION_SIZE" "sign"
     RUN_AVBTOOL "${CMD[@]}" || exit 1
 }
@@ -968,14 +1132,23 @@ SIGN_BUILT_PARTITION()
     local PARTITION="$1"
     local IMAGE="$TMP_IMG_DIR/$PARTITION.img"
     local PARTITION_SIZE
+    local PARTITION_SIZE_INFO=""
+    local PARTITION_SIZE_SOURCE=""
     local KIND
     local CHAIN_LOCATION
 
     [ -f "$IMAGE" ] || return 0
     LIST_HAS_ITEM "$PARTITION" "$SIGNED_PARTITIONS" && return 0
 
+    PREPARE_IMAGE_FOR_CUSTOM_AVB_SIGNING "$IMAGE"
+
     LOG "- Resolving AVB partition size for $PARTITION"
-    PARTITION_SIZE="$(GET_PARTITION_SIZE "$PARTITION")"
+    PARTITION_SIZE_INFO="$(GET_PARTITION_SIZE_INFO "$PARTITION")" || {
+        LOGE "Unable to determine partition size for $PARTITION"
+        exit 1
+    }
+    PARTITION_SIZE="${PARTITION_SIZE_INFO%%|*}"
+    PARTITION_SIZE_SOURCE="${PARTITION_SIZE_INFO#*|}"
     if [ -z "$PARTITION_SIZE" ]; then
         if ! LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASH_PARTITIONS" && \
                 ! LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASHTREE_PARTITIONS"; then
@@ -991,6 +1164,7 @@ SIGN_BUILT_PARTITION()
 
     KIND="$(GET_SIGN_KIND "$PARTITION")"
     PARTITION_SIZE="$(RESOLVE_SIGN_PARTITION_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE")"
+    LOG_PARTITION_SIZE_STATUS "$PARTITION" "$KIND" "$PARTITION_SIZE" "$PARTITION_SIZE_SOURCE"
 
     if ! CAN_SIGN_IMAGE_WITH_PARTITION_SIZE "$PARTITION" "$KIND" "$PARTITION_SIZE"; then
         if [ "$KIND" = "hashtree" ] && [ "$TARGET_AVB_ALLOW_HASHTREE_FALLBACK" = "true" ] && \
@@ -999,6 +1173,7 @@ SIGN_BUILT_PARTITION()
             KIND="hash"
             SET_PARTITION_SIGN_KIND "$PARTITION" "$KIND"
         else
+            PRINT_AVB_SIZE_MISMATCH_DIAGNOSTICS "$PARTITION" "$KIND" "$PARTITION_SIZE" "$PARTITION_SIZE_SOURCE"
             LOGE "Unable to fit AVB $KIND footer for $PARTITION within partition size $PARTITION_SIZE"
             exit 1
         fi
@@ -1253,9 +1428,10 @@ if [ "$#" -ne 1 ] || [ ! -d "$TMP_IMG_DIR" ]; then
 fi
 
 INIT_DEFAULTS
+SETUP_AVBTOOL
 PARSE_ORIGINAL_VBMETA_LAYOUT
 MERGE_LAYOUT
-SETUP_AVBTOOL
+ASSERT_REQUIRED_RE_SIGN_COVERAGE
 RESOLVE_TOPLEVEL_SIGNING_CONFIG
 REGISTER_KEY_USAGE "vbmeta" "$VBMETA_SIGN_KEY_PATH" "$VBMETA_SIGN_ALGORITHM"
 

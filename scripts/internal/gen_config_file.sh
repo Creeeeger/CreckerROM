@@ -177,6 +177,27 @@ if [[ "$ROM_ENABLE_AVB" != "true" ]] && \
     exit 1
 fi
 
+TARGET_ALLOW_LEGACY_UNSIGNED_BUILD="${TARGET_ALLOW_LEGACY_UNSIGNED_BUILD:-false}"
+if [[ "$TARGET_ALLOW_LEGACY_UNSIGNED_BUILD" != "true" ]] && \
+        [[ "$TARGET_ALLOW_LEGACY_UNSIGNED_BUILD" != "false" ]]; then
+    LOGE "TARGET_ALLOW_LEGACY_UNSIGNED_BUILD must be \"true\" or \"false\" (got: $TARGET_ALLOW_LEGACY_UNSIGNED_BUILD)"
+    exit 1
+fi
+
+TARGET_KEEP_ORIGINAL_SIGN="${TARGET_KEEP_ORIGINAL_SIGN:-false}"
+if [[ "$TARGET_KEEP_ORIGINAL_SIGN" != "true" ]] && \
+        [[ "$TARGET_KEEP_ORIGINAL_SIGN" != "false" ]]; then
+    LOGE "TARGET_KEEP_ORIGINAL_SIGN must be \"true\" or \"false\" (got: $TARGET_KEEP_ORIGINAL_SIGN)"
+    exit 1
+fi
+
+if [[ "$ROM_ENABLE_AVB" != "true" ]] && \
+        [[ "$TARGET_KEEP_ORIGINAL_SIGN" != "true" ]] && \
+        [[ "$TARGET_ALLOW_LEGACY_UNSIGNED_BUILD" != "true" ]]; then
+    LOGE "Legacy unsigned kernel/image stripping is now opt-in. Either set ROM_ENABLE_AVB=\"true\" for the official AVB re-sign flow, set TARGET_KEEP_ORIGINAL_SIGN=\"true\", or explicitly allow the legacy path with TARGET_ALLOW_LEGACY_UNSIGNED_BUILD=\"true\"."
+    exit 1
+fi
+
 if [ ! -f "$SRC_DIR/unica/configs/$SINGLE_SYSTEM_IMAGE.sh" ]; then
     LOGE "\"$SINGLE_SYSTEM_IMAGE\" is not a valid system image"
     exit 1
@@ -248,6 +269,7 @@ fi
     echo "TARGET_OS_FILE_SYSTEM=\"$FINAL_TARGET_OS_FILE_SYSTEM\""
     GET_BUILD_VAR "TARGET_BOOT_DEVICE_PATH" "/dev/block/by-name"
     GET_BUILD_VAR "TARGET_KEEP_ORIGINAL_SIGN" "false"
+    GET_BUILD_VAR "TARGET_ALLOW_LEGACY_UNSIGNED_BUILD" "false"
     GET_BUILD_VAR "TARGET_BUILD_FLASHABLE_ZIP" "$TARGET_BUILD_FLASHABLE_ZIP"
     GET_BUILD_VAR "TARGET_BUILD_ODIN_PACKAGE" "$TARGET_BUILD_ODIN_PACKAGE"
     GET_BUILD_VAR "TARGET_ODIN_USE_SUPER_IMAGE" "$TARGET_ODIN_USE_SUPER_IMAGE"
@@ -257,7 +279,7 @@ fi
     GET_BUILD_VAR "TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT" "true"
     GET_BUILD_VAR "TARGET_AVB_KEY_PATH" "$(GET_DEFAULT_AVB_KEY_PATH)"
     GET_BUILD_VAR "TARGET_AVB_ALGORITHM" "$(GET_DEFAULT_AVB_ALGORITHM)"
-    GET_BUILD_VAR "TARGET_AVBTOOL_PATH" "none"
+    GET_BUILD_VAR "TARGET_AVBTOOL_PATH" "$SRC_DIR/platform_external_avb-master/avbtool.py"
     GET_BUILD_VAR "TARGET_AVBTOOL_PYTHON" "none"
     GET_BUILD_VAR "TARGET_AVB_HASH_PARTITIONS" "boot vendor_boot init_boot"
     GET_BUILD_VAR "TARGET_AVB_HASHTREE_PARTITIONS" "system vendor product odm system_ext vendor_dlkm odm_dlkm system_dlkm prism optics"
