@@ -22,12 +22,10 @@ source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
 SOURCE_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$SOURCE_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$SOURCE_FIRMWARE")"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 
-TARGET_ALLOW_LEGACY_UNSIGNED_BUILD="${TARGET_ALLOW_LEGACY_UNSIGNED_BUILD:-false}"
-
 ASSERT_SIGNING_POLICY()
 {
-    if ! $TARGET_ENABLE_CUSTOM_AVB && ! $TARGET_KEEP_ORIGINAL_SIGN && [ "$TARGET_ALLOW_LEGACY_UNSIGNED_BUILD" != "true" ]; then
-        LOGE "Legacy unsigned kernel/image stripping is disabled by default. Enable custom AVB for the official re-sign flow, preserve original signatures with TARGET_KEEP_ORIGINAL_SIGN=\"true\", or explicitly opt into the legacy path with TARGET_ALLOW_LEGACY_UNSIGNED_BUILD=\"true\"."
+    if ! $TARGET_ENABLE_CUSTOM_AVB && ! $TARGET_KEEP_ORIGINAL_SIGN; then
+        LOGE "Modified kernel/image builds must either keep original signatures or use the official custom AVB re-sign flow."
         exit 1
     fi
 }
@@ -148,13 +146,6 @@ COPY_TARGET_KERNEL()
         EVAL "rsync -a --mkpath --delete \"$FW_DIR/$TARGET_FIRMWARE_PATH/kernel\" \"$WORK_DIR\"" || exit 1
         if $TARGET_ENABLE_CUSTOM_AVB; then
             LOG "- Custom AVB enabled: keeping copied kernel images intact here and re-signing them later with the official AVB flow"
-        elif ! $TARGET_KEEP_ORIGINAL_SIGN; then
-            if [ "$TARGET_ALLOW_LEGACY_UNSIGNED_BUILD" != "true" ]; then
-                LOGE "Refusing to use the legacy unsigned kernel path without TARGET_ALLOW_LEGACY_UNSIGNED_BUILD=\"true\"."
-                exit 1
-            fi
-            LOGW "Using insecure legacy unsigned kernel path (TARGET_ALLOW_LEGACY_UNSIGNED_BUILD=true)"
-            find "$WORK_DIR/kernel" -mindepth 1 -exec "$SRC_DIR/scripts/unsign_bin.sh" {} \;
         fi
         LOG_STEP_OUT
     else

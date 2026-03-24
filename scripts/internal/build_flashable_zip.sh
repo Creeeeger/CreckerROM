@@ -28,6 +28,8 @@ TMP_DIR="$OUT_DIR/zip"
 TARGET_BUILD_FLASHABLE_ZIP="${TARGET_BUILD_FLASHABLE_ZIP:-false}"
 TARGET_BUILD_ODIN_PACKAGE="${TARGET_BUILD_ODIN_PACKAGE:-true}"
 TARGET_ODIN_USE_SUPER_IMAGE="${TARGET_ODIN_USE_SUPER_IMAGE:-false}"
+TARGET_ODIN_EXTRA_PARTITIONS="${TARGET_ODIN_EXTRA_PARTITIONS:-}"
+TARGET_ODIN_EXTRA_IMAGE_MAP="${TARGET_ODIN_EXTRA_IMAGE_MAP:-${TARGET_AVB_FIRMWARE_IMAGE_MAP:-}}"
 TARGET_ROM_ZIP_COMPRESSION_LEVEL="${TARGET_ROM_ZIP_COMPRESSION_LEVEL:-5}"
 TARGET_BROTLI_QUALITY="${TARGET_BROTLI_QUALITY:-4}"
 
@@ -146,6 +148,20 @@ BUILD_ODIN_SUPER_IMAGE()
     EVAL "$CMD" || exit 1
 }
 
+GET_KV_VALUE()
+{
+    local KEY="$1"
+    local LIST="$2"
+    local ENTRY
+    local VALUE=""
+
+    for ENTRY in $LIST; do
+        [ "${ENTRY%%=*}" = "$KEY" ] && VALUE="${ENTRY#*=}"
+    done
+
+    [ -n "$VALUE" ] && echo "$VALUE"
+}
+
 BUILD_ODIN_AP_PACKAGE()
 {
     local AP_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_ap"
@@ -153,6 +169,7 @@ BUILD_ODIN_AP_PACKAGE()
     local AP_TAR_MD5="$OUT_DIR/AP_${FILE_NAME%.zip}.tar.md5"
     local AP_CHECKSUM
     local PARTITION
+    local FILE_NAME
     local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
     local IMAGE_DIR="$TMP_DIR"
 
@@ -178,6 +195,20 @@ BUILD_ODIN_AP_PACKAGE()
     for PARTITION in $STATIC_PARTITIONS; do
         [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
         cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+    done
+
+    for PARTITION in $TARGET_ODIN_EXTRA_PARTITIONS; do
+        if [ "$PARTITION" = "bootloader" ]; then
+            LOGW "Skipping bootloader in TARGET_ODIN_EXTRA_PARTITIONS; Odin extra packaging only supports ldfw/tzsw/keystorage/harx/fld."
+            continue
+        fi
+
+        FILE_NAME="$(GET_KV_VALUE "$PARTITION" "$TARGET_ODIN_EXTRA_IMAGE_MAP")"
+        [ -n "$FILE_NAME" ] || FILE_NAME="$PARTITION.img"
+        [ -f "$IMAGE_DIR/$FILE_NAME" ] || continue
+
+        LOG "- Copying Odin firmware component $FILE_NAME"
+        cp -fa "$IMAGE_DIR/$FILE_NAME" "$AP_DIR/$FILE_NAME"
     done
 
     if [ -f "$TMP_DIR/up_param.bin" ]; then
