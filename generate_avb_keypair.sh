@@ -7,7 +7,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_OUTPUT_DIR="$ROOT_DIR/security/avb"
-DEFAULT_AVBTOOL="$ROOT_DIR/tools/bin/avbtool"
+DEFAULT_AVBTOOL="$ROOT_DIR/platform_external_avb-master/avbtool.py"
 DEFAULT_OUT_AVBTOOL="$ROOT_DIR/out/tools/bin/avbtool"
 DEFAULT_AOSP_PK8="$ROOT_DIR/security/aosp_platform.pk8"
 
@@ -122,7 +122,7 @@ set_or_append_assignment() {
 
 prepare_avbtool_command() {
     if [ -z "$AVBTOOL_PATH" ]; then
-        if [ -x "$DEFAULT_AVBTOOL" ]; then
+        if [ -f "$DEFAULT_AVBTOOL" ]; then
             AVBTOOL_PATH="$DEFAULT_AVBTOOL"
         elif [ -x "$DEFAULT_OUT_AVBTOOL" ]; then
             AVBTOOL_PATH="$DEFAULT_OUT_AVBTOOL"
@@ -137,6 +137,10 @@ prepare_avbtool_command() {
 
     if [ -n "$AVBTOOL_PYTHON" ]; then
         require_tool "$AVBTOOL_PYTHON" "avbtool python"
+        AVBTOOL_CMD=("$AVBTOOL_PYTHON" "$AVBTOOL_PATH")
+    elif [[ "$AVBTOOL_PATH" == *.py ]] || [ ! -x "$AVBTOOL_PATH" ]; then
+        command -v python3 >/dev/null 2>&1 || die "python3 is required to execute avbtool script: $AVBTOOL_PATH"
+        AVBTOOL_PYTHON="$(command -v python3)"
         AVBTOOL_CMD=("$AVBTOOL_PYTHON" "$AVBTOOL_PATH")
     else
         require_executable_path "$AVBTOOL_PATH" "avbtool"

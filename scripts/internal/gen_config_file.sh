@@ -23,16 +23,24 @@ trap '[ $? -ne 0 ] && rm -f "$OUT_DIR/config.sh"' EXIT
 
 GET_BUILD_VAR()
 {
-    if [ "$2" ]; then
+    local VALUE
+
+    if [ "$#" -ge 2 ]; then
         if [ ! "${!1}" ]; then
-            echo "${1}=\"${2}\""
+            VALUE="$2"
+            VALUE="${VALUE//\\/\\\\}"
+            VALUE="${VALUE//\"/\\\"}"
+            echo "${1}=\"${VALUE}\""
             return 0
         fi
     else
         _CHECK_NON_EMPTY_PARAM "$1" "${!1}" || exit 1
     fi
 
-    echo "${1}=\"${!1}\""
+    VALUE="${!1}"
+    VALUE="${VALUE//\\/\\\\}"
+    VALUE="${VALUE//\"/\\\"}"
+    echo "${1}=\"${VALUE}\""
     return 0
 }
 
@@ -83,6 +91,44 @@ GET_DEFAULT_AVB_ALGORITHM()
     else
         echo "SHA256_RSA4096"
     fi
+}
+
+IS_DEFAULT_AVB_CONFIG_VAR()
+{
+    case "$1" in
+        "TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT" | \
+        "TARGET_AVB_KEY_PATH" | \
+        "TARGET_AVB_ALGORITHM" | \
+        "TARGET_AVBTOOL_PATH" | \
+        "TARGET_AVBTOOL_PYTHON" | \
+        "TARGET_AVB_HASH_PARTITIONS" | \
+        "TARGET_AVB_HASHTREE_PARTITIONS" | \
+        "TARGET_AVB_CHAIN_PARTITIONS" | \
+        "TARGET_AVB_BOOTLOADER_IMAGE_MAP" | \
+        "TARGET_AVB_ORIGINAL_VBMETA_PATH" | \
+        "TARGET_AVB_FLASH_VBMETA_IN_ZIP" | \
+        "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" | \
+        "TARGET_AVB_CREATE_IMAGE_PACK_ZIP" | \
+        "TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" | \
+        "TARGET_AVB_ROLLBACK_INDEX" | \
+        "TARGET_AVB_ROLLBACK_INDEX_LOCATION" | \
+        "TARGET_AVB_HASH_ALGORITHM" | \
+        "TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS")
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+EMIT_EXTRA_AVB_VARS()
+{
+    local VAR
+
+    while IFS= read -r VAR; do
+        IS_DEFAULT_AVB_CONFIG_VAR "$VAR" && continue
+        GET_BUILD_VAR "$VAR"
+    done < <(compgen -v | grep '^TARGET_AVB_' || true)
 }
 # ]
 
@@ -199,7 +245,6 @@ fi
     GET_BUILD_VAR "FORCE_EXT4_IMAGES" "false"
     echo "TARGET_OS_FILE_SYSTEM=\"$FINAL_TARGET_OS_FILE_SYSTEM\""
     GET_BUILD_VAR "TARGET_BOOT_DEVICE_PATH" "/dev/block/by-name"
-    GET_BUILD_VAR "TARGET_INCLUDE_PATCHED_VBMETA" "false"
     GET_BUILD_VAR "TARGET_KEEP_ORIGINAL_SIGN" "false"
     GET_BUILD_VAR "TARGET_BUILD_FLASHABLE_ZIP" "$TARGET_BUILD_FLASHABLE_ZIP"
     GET_BUILD_VAR "TARGET_BUILD_ODIN_PACKAGE" "$TARGET_BUILD_ODIN_PACKAGE"
@@ -218,9 +263,14 @@ fi
     GET_BUILD_VAR "TARGET_AVB_BOOTLOADER_IMAGE_MAP" "bootloader=sboot.bin ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin fld=fld.bin"
     GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_PATH" "$OUT_DIR/fw/$TARGET_FIRMWARE_PATH/avb/vbmeta.img"
     GET_BUILD_VAR "TARGET_AVB_FLASH_VBMETA_IN_ZIP" "true"
-    GET_BUILD_VAR "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" "true"
+    GET_BUILD_VAR "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" "false"
     GET_BUILD_VAR "TARGET_AVB_CREATE_IMAGE_PACK_ZIP" "false"
     GET_BUILD_VAR "TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" "1"
+    GET_BUILD_VAR "TARGET_AVB_ROLLBACK_INDEX" "0"
+    GET_BUILD_VAR "TARGET_AVB_ROLLBACK_INDEX_LOCATION" "0"
+    GET_BUILD_VAR "TARGET_AVB_HASH_ALGORITHM" "sha256"
+    GET_BUILD_VAR "TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS" ""
+    EMIT_EXTRA_AVB_VARS
     GET_BUILD_VAR "TARGET_BOOT_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_DTBO_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_INIT_BOOT_PARTITION_SIZE" "none"
