@@ -199,7 +199,7 @@ BUILD_ODIN_AP_PACKAGE()
 
     for PARTITION in $TARGET_ODIN_EXTRA_PARTITIONS; do
         if [ "$PARTITION" = "bootloader" ]; then
-            LOGW "Skipping bootloader in TARGET_ODIN_EXTRA_PARTITIONS; Odin extra packaging only supports ldfw/tzsw/keystorage/harx/fld."
+            LOGW "Skipping bootloader in TARGET_ODIN_EXTRA_PARTITIONS; Odin extra packaging only supports ldfw/tzsw/keystorage/harx."
             continue
         fi
 

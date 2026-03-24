@@ -96,7 +96,7 @@ GET_DEFAULT_AVB_ALGORITHM()
 GET_DEFAULT_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS()
 {
     if [[ "$TARGET_NAME" == Galaxy\ S20* ]] || [[ "$TARGET_NAME" == Galaxy\ S21* ]]; then
-        echo "ldfw tzsw keystorage harx fld"
+        echo "ldfw tzsw keystorage harx"
     else
         echo ""
     fi
@@ -104,7 +104,7 @@ GET_DEFAULT_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS()
 
 GET_DEFAULT_AVB_FIRMWARE_IMAGE_MAP()
 {
-    echo "ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin fld=fld.bin"
+    echo "ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin"
 }
 
 GET_DEFAULT_AVB_HASH_PARTITIONS()

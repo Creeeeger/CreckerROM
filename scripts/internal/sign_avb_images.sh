@@ -54,7 +54,7 @@ KEY_EXPORT_REPORT="$STAGING_DIR/avb_keys.txt"
 FIRMWARE_DESCRIPTOR_PACK_FILES=""
 BL_TAR_PATH=""
 EXCLUDED_VBMETA_PARTITIONS="bootloader"
-KNOWN_FIRMWARE_DESCRIPTOR_PARTITIONS="ldfw tzsw keystorage harx fld"
+KNOWN_FIRMWARE_DESCRIPTOR_PARTITIONS="ldfw tzsw keystorage harx"
 REQUIRED_RE_SIGN_PARTITIONS="boot init_boot vendor_boot dtbo recovery"
 # ]
 
@@ -292,7 +292,7 @@ INIT_DEFAULTS()
     TARGET_AVB_HASH_ALGORITHM="${TARGET_AVB_HASH_ALGORITHM:-sha256}"
     TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS="${TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS:-}"
     TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS="${TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS:-}"
-    TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin fld=fld.bin}"
+    TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin}"
 
     TARGET_SUPPORTS_FIRMWARE_DESCRIPTOR_PARTITIONS || TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS=""
 
@@ -1287,7 +1287,12 @@ GET_FIRMWARE_DESCRIPTOR_SOURCE_PATH()
     SOURCE_PATH="$STAGING_DIR/fw_odin/$FILE_NAME"
     if [ ! -f "$SOURCE_PATH" ]; then
         TAR_FILE="$(LOCATE_TARGET_BL_TAR)"
-        LOG "- Extracting $FILE_NAME from $(basename "$TAR_FILE") for $PARTITION"
+        # Keep function stdout clean: caller captures only SOURCE_PATH via command substitution.
+        LOG "- Extracting $FILE_NAME from $(basename "$TAR_FILE") for $PARTITION" >&2
+        if ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME" && ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME.lz4"; then
+            LOGW "Firmware descriptor source not found in $(basename "$TAR_FILE") for $PARTITION: $FILE_NAME(.lz4)"
+            return 1
+        fi
         EXTRACT_FILE_FROM_TAR_TO_PATH "$TAR_FILE" "$FILE_NAME" "$SOURCE_PATH"
     fi
 
@@ -1456,7 +1461,18 @@ SIGN_FIRMWARE_DESCRIPTOR_PARTITIONS()
         fi
 
         KIND="$(GET_SIGN_KIND "$PARTITION")"
-        SOURCE_PATH="$(GET_FIRMWARE_DESCRIPTOR_SOURCE_PATH "$PARTITION")"
+        SOURCE_PATH="$(GET_FIRMWARE_DESCRIPTOR_SOURCE_PATH "$PARTITION" || true)"
+        if [ -z "$SOURCE_PATH" ] || [ ! -f "$SOURCE_PATH" ]; then
+            if LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASH_PARTITIONS" || LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASHTREE_PARTITIONS"; then
+                LOGE "Unable to resolve firmware descriptor source for required partition $PARTITION"
+                exit 1
+            fi
+
+            LOGW "Skipping optional firmware descriptor partition $PARTITION because the source image is unavailable"
+            REMOVE_ITEM "HASH_PARTITIONS" "$PARTITION"
+            REMOVE_ITEM "HASHTREE_PARTITIONS" "$PARTITION"
+            continue
+        fi
         SOURCE_SIZE="$(GET_IMAGE_SIZE "$SOURCE_PATH")" || exit 1
         PARTITION_SIZE="$(ESTIMATE_PARTITION_SIZE_FROM_IMAGE_PATH "$SOURCE_PATH" "$KIND")" || exit 1
         IMAGE="$STAGING_DIR/firmware_descriptors/${PARTITION}.img"
