@@ -18,13 +18,6 @@ source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
 
 TMP_IMG_DIR="$1"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
-TARGET_MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
-TARGET_MODEL_ALT="${TARGET_MODEL#SM-}"
-BL_TAR=""
-for PATTERN in "BL_${TARGET_MODEL}*.md5" "BL_${TARGET_MODEL_ALT}*.md5" "BL_*.md5"; do
-    BL_TAR="$(find "$ODIN_DIR/$TARGET_FIRMWARE_PATH" -name "$PATTERN" | sort -r | head -n 1)"
-    [ -n "$BL_TAR" ] && break
-done
 PACK_DIR="${TARGET_AVB_IMAGE_PACK_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_images}"
 PACK_ZIP="${TARGET_AVB_IMAGE_PACK_ZIP:-$OUT_DIR/${TARGET_CODENAME}_signed_images.zip}"
 STAGING_DIR="$(mktemp -d "$TMP_DIR/avb_sign.XXXXXX")"
@@ -40,7 +33,6 @@ ORIGINAL_CHAIN_PARTITIONS=""
 HASH_PARTITIONS=""
 HASHTREE_PARTITIONS=""
 CHAIN_PARTITIONS=""
-BOOTLOADER_IMAGE_MAP=""
 AVBTOOL_PATH=""
 AVBTOOL_CMD=()
 SIGNED_PARTITIONS=""
@@ -55,6 +47,7 @@ PARTITION_SIGN_DO_NOT_USE_AB="false"
 PARTITION_SIGN_EXTRA_ARGS=""
 KEY_EXPORT_LABELS=""
 KEY_EXPORT_REPORT="$STAGING_DIR/avb_keys.txt"
+EXCLUDED_VBMETA_PARTITIONS="bootloader ldfw tzsw keystorage harx fld"
 # ]
 
 LIST_HAS_ITEM()
@@ -98,6 +91,29 @@ REMOVE_ITEM()
 
     for ENTRY in $CURRENT; do
         [ "$ENTRY" = "$ITEM" ] && continue
+
+        if [ -n "$UPDATED" ]; then
+            UPDATED="$UPDATED $ENTRY"
+        else
+            UPDATED="$ENTRY"
+        fi
+    done
+
+    eval "$VAR_NAME=\"\$UPDATED\""
+}
+
+REMOVE_KV_ITEM()
+{
+    local VAR_NAME="$1"
+    local KEY="$2"
+    local CURRENT
+    local UPDATED=""
+    local ENTRY
+
+    eval "CURRENT=\${$VAR_NAME}"
+
+    for ENTRY in $CURRENT; do
+        [ "${ENTRY%%=*}" = "$KEY" ] && continue
 
         if [ -n "$UPDATED" ]; then
             UPDATED="$UPDATED $ENTRY"
@@ -180,6 +196,13 @@ GET_CHAIN_LOCATION()
     [ -n "$VALUE" ] && echo "$VALUE"
 }
 
+IS_EXCLUDED_AVB_PARTITION()
+{
+    local PARTITION="$1"
+
+    LIST_HAS_ITEM "$PARTITION" "$EXCLUDED_VBMETA_PARTITIONS"
+}
+
 INIT_DEFAULTS()
 {
     TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT="${TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT:-true}"
@@ -193,10 +216,9 @@ INIT_DEFAULTS()
     fi
     TARGET_AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-none}"
     TARGET_AVBTOOL_PYTHON="${TARGET_AVBTOOL_PYTHON:-none}"
-    TARGET_AVB_HASH_PARTITIONS="${TARGET_AVB_HASH_PARTITIONS:-boot vendor_boot init_boot bootloader ldfw tzsw keystorage harx fld}"
+    TARGET_AVB_HASH_PARTITIONS="${TARGET_AVB_HASH_PARTITIONS:-boot vendor_boot init_boot}"
     TARGET_AVB_HASHTREE_PARTITIONS="${TARGET_AVB_HASHTREE_PARTITIONS:-system vendor product odm system_ext vendor_dlkm odm_dlkm system_dlkm prism optics}"
     TARGET_AVB_CHAIN_PARTITIONS="${TARGET_AVB_CHAIN_PARTITIONS:-recovery=6 dtbo=7 prism=12 optics=13}"
-    TARGET_AVB_BOOTLOADER_IMAGE_MAP="${TARGET_AVB_BOOTLOADER_IMAGE_MAP:-bootloader=sboot.bin ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin fld=fld.bin}"
     TARGET_AVB_ORIGINAL_VBMETA_PATH="${TARGET_AVB_ORIGINAL_VBMETA_PATH:-none}"
     TARGET_AVB_ALLOW_HASHTREE_FALLBACK="${TARGET_AVB_ALLOW_HASHTREE_FALLBACK:-false}"
     TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL="${TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL:-1}"
@@ -277,21 +299,51 @@ PY
 MERGE_LAYOUT()
 {
     local ENTRY
+    local PARTITION
+    local LOCATION
 
     HASH_PARTITIONS="$TARGET_AVB_HASH_PARTITIONS"
     HASHTREE_PARTITIONS="$TARGET_AVB_HASHTREE_PARTITIONS"
     CHAIN_PARTITIONS="$TARGET_AVB_CHAIN_PARTITIONS"
-    BOOTLOADER_IMAGE_MAP="$TARGET_AVB_BOOTLOADER_IMAGE_MAP"
+
+    for PARTITION in $EXCLUDED_VBMETA_PARTITIONS; do
+        if LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS"; then
+            LOGW "Removing $PARTITION from TARGET_AVB_HASH_PARTITIONS; verification for this partition is disabled"
+            REMOVE_ITEM "HASH_PARTITIONS" "$PARTITION"
+        fi
+        if LIST_HAS_ITEM "$PARTITION" "$HASHTREE_PARTITIONS"; then
+            LOGW "Removing $PARTITION from TARGET_AVB_HASHTREE_PARTITIONS; verification for this partition is disabled"
+            REMOVE_ITEM "HASHTREE_PARTITIONS" "$PARTITION"
+        fi
+        LOCATION="$(GET_KV_VALUE "$PARTITION" "$CHAIN_PARTITIONS")"
+        if [ -n "$LOCATION" ]; then
+            LOGW "Removing $PARTITION from TARGET_AVB_CHAIN_PARTITIONS; verification for this partition is disabled"
+            REMOVE_KV_ITEM "CHAIN_PARTITIONS" "$PARTITION"
+        fi
+    done
 
     for ENTRY in $ORIGINAL_HASH_PARTITIONS; do
+        if IS_EXCLUDED_AVB_PARTITION "$ENTRY"; then
+            LOG "- Ignoring original vbmeta hash descriptor for $ENTRY; verification for this partition is disabled"
+            continue
+        fi
         APPEND_UNIQUE "HASH_PARTITIONS" "$ENTRY"
     done
 
     for ENTRY in $ORIGINAL_HASHTREE_PARTITIONS; do
+        if IS_EXCLUDED_AVB_PARTITION "$ENTRY"; then
+            LOG "- Ignoring original vbmeta hashtree descriptor for $ENTRY; verification for this partition is disabled"
+            continue
+        fi
         APPEND_UNIQUE "HASHTREE_PARTITIONS" "$ENTRY"
     done
 
     for ENTRY in $ORIGINAL_CHAIN_PARTITIONS; do
+        PARTITION="${ENTRY%%=*}"
+        if IS_EXCLUDED_AVB_PARTITION "$PARTITION"; then
+            LOG "- Ignoring original vbmeta chain descriptor for $PARTITION; verification for this partition is disabled"
+            continue
+        fi
         APPEND_UNIQUE "CHAIN_PARTITIONS" "$ENTRY"
     done
 }
@@ -964,73 +1016,6 @@ SIGN_BUILT_PARTITION()
     APPEND_UNIQUE "SIGNED_PARTITIONS" "$PARTITION"
 }
 
-EXTRACT_BOOTLOADER_IMAGE()
-{
-    local PARTITION="$1"
-    local DEST="$2"
-    local SOURCE_NAME
-    local MEMBER=""
-    local CANDIDATE
-
-    [ -f "$BL_TAR" ] || return 1
-
-    SOURCE_NAME="$(GET_KV_VALUE "$PARTITION" "$BOOTLOADER_IMAGE_MAP")"
-    [ -n "$SOURCE_NAME" ] || return 1
-
-    for CANDIDATE in "$SOURCE_NAME" "$SOURCE_NAME.ext4" "$SOURCE_NAME.lz4" "$SOURCE_NAME.ext4.lz4"; do
-        if FILE_EXISTS_IN_TAR "$BL_TAR" "$CANDIDATE"; then
-            MEMBER="$CANDIDATE"
-            break
-        fi
-    done
-
-    [ -n "$MEMBER" ] || return 1
-
-    mkdir -p "$(dirname "$DEST")"
-
-    if [[ "$MEMBER" == *".lz4" ]]; then
-        local TMP_LZ4="$DEST.lz4"
-        EVAL "tar xf \"$BL_TAR\" -C \"$(dirname "$DEST")\" \"$MEMBER\"" || return 1
-        mv -f "$(dirname "$DEST")/$(basename "$MEMBER")" "$TMP_LZ4"
-        EVAL "lz4 -d --rm \"$TMP_LZ4\" \"$DEST\"" || return 1
-    else
-        EVAL "tar xf \"$BL_TAR\" -C \"$(dirname "$DEST")\" \"$MEMBER\"" || return 1
-        mv -f "$(dirname "$DEST")/$(basename "$MEMBER")" "$DEST"
-    fi
-
-    return 0
-}
-
-SIGN_BOOTLOADER_DESCRIPTORS()
-{
-    local PARTITION
-    local IMAGE
-    local KIND
-    local PARTITION_SIZE
-
-    for PARTITION in bootloader ldfw tzsw keystorage harx fld; do
-        if ! LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS" && ! LIST_HAS_ITEM "$PARTITION" "$HASHTREE_PARTITIONS"; then
-            continue
-        fi
-
-        IMAGE="$STAGING_DIR/bl/$PARTITION.img"
-        if ! EXTRACT_BOOTLOADER_IMAGE "$PARTITION" "$IMAGE"; then
-            if LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASH_PARTITIONS"; then
-                LOGE "Missing BL source image for $PARTITION in $BL_TAR"
-                exit 1
-            fi
-            continue
-        fi
-
-        PARTITION_SIZE="$(wc -c "$IMAGE" | awk '{print $1}')"
-        KIND="$(GET_SIGN_KIND "$PARTITION")"
-
-        LOG "- Adding $PARTITION descriptor from stock BL image"
-        SIGN_IMAGE "$IMAGE" "$PARTITION" "$KIND" "$PARTITION_SIZE"
-        APPEND_UNIQUE "DIRECT_DESCRIPTOR_IMAGES" "$IMAGE"
-    done
-}
-
 BUILD_OPTIONAL_PROPS()
 {
     local BOOT_OS_VERSION
@@ -1127,10 +1112,11 @@ VERIFY_SIGNED_AVB()
         ASSERT_IMAGE_VBMETA_FLAGS_ZERO "$TMP_IMG_DIR/$PARTITION.img" "$PARTITION.img"
     done
 
-    for PARTITION in bootloader ldfw tzsw keystorage harx fld; do
-        [ -f "$STAGING_DIR/bl/$PARTITION.img" ] || continue
-        ln -sf "$STAGING_DIR/bl/$PARTITION.img" "$VERIFY_DIR/$PARTITION.img"
-        ASSERT_IMAGE_VBMETA_FLAGS_ZERO "$STAGING_DIR/bl/$PARTITION.img" "$PARTITION.img"
+    for ENTRY in $DIRECT_DESCRIPTOR_IMAGES; do
+        PARTITION="$(basename "$ENTRY")"
+        [ -f "$ENTRY" ] || continue
+        [ -e "$VERIFY_DIR/$PARTITION" ] || ln -sf "$ENTRY" "$VERIFY_DIR/$PARTITION"
+        ASSERT_IMAGE_VBMETA_FLAGS_ZERO "$ENTRY" "$PARTITION"
     done
 
     ASSERT_IMAGE_VBMETA_FLAGS_ZERO "$TMP_IMG_DIR/vbmeta.img" "vbmeta.img"
@@ -1274,17 +1260,9 @@ RESOLVE_TOPLEVEL_SIGNING_CONFIG
 REGISTER_KEY_USAGE "vbmeta" "$VBMETA_SIGN_KEY_PATH" "$VBMETA_SIGN_ALGORITHM"
 
 for PARTITION in $HASH_PARTITIONS $HASHTREE_PARTITIONS; do
-    case "$PARTITION" in
-        "bootloader" | "ldfw" | "tzsw" | "keystorage" | "harx" | "fld")
-            continue
-            ;;
-        *)
-            SIGN_BUILT_PARTITION "$PARTITION"
-            ;;
-    esac
+    SIGN_BUILT_PARTITION "$PARTITION"
 done
 
-SIGN_BOOTLOADER_DESCRIPTORS
 MAKE_TOPLEVEL_VBMETA
 VERIFY_SIGNED_AVB
 CREATE_IMAGE_PACK

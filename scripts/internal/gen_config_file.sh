@@ -105,6 +105,8 @@ IS_DEFAULT_AVB_CONFIG_VAR()
         "TARGET_AVB_HASHTREE_PARTITIONS" | \
         "TARGET_AVB_CHAIN_PARTITIONS" | \
         "TARGET_AVB_BOOTLOADER_IMAGE_MAP" | \
+        "TARGET_AVB_MANUAL_DESCRIPTOR_PARTITIONS" | \
+        "TARGET_AVB_MANUAL_DESCRIPTOR_DIR" | \
         "TARGET_AVB_ORIGINAL_VBMETA_PATH" | \
         "TARGET_AVB_FLASH_VBMETA_IN_ZIP" | \
         "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" | \
@@ -257,10 +259,9 @@ fi
     GET_BUILD_VAR "TARGET_AVB_ALGORITHM" "$(GET_DEFAULT_AVB_ALGORITHM)"
     GET_BUILD_VAR "TARGET_AVBTOOL_PATH" "none"
     GET_BUILD_VAR "TARGET_AVBTOOL_PYTHON" "none"
-    GET_BUILD_VAR "TARGET_AVB_HASH_PARTITIONS" "boot vendor_boot init_boot bootloader ldfw tzsw keystorage harx fld"
+    GET_BUILD_VAR "TARGET_AVB_HASH_PARTITIONS" "boot vendor_boot init_boot"
     GET_BUILD_VAR "TARGET_AVB_HASHTREE_PARTITIONS" "system vendor product odm system_ext vendor_dlkm odm_dlkm system_dlkm prism optics"
     GET_BUILD_VAR "TARGET_AVB_CHAIN_PARTITIONS" "recovery=6 dtbo=7 prism=12 optics=13"
-    GET_BUILD_VAR "TARGET_AVB_BOOTLOADER_IMAGE_MAP" "bootloader=sboot.bin ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin fld=fld.bin"
     GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_PATH" "$OUT_DIR/fw/$TARGET_FIRMWARE_PATH/avb/vbmeta.img"
     GET_BUILD_VAR "TARGET_AVB_FLASH_VBMETA_IN_ZIP" "true"
     GET_BUILD_VAR "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" "false"
