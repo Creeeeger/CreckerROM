@@ -1,6 +1,3 @@
-# Disable OEM unlock toggle
-ro.oem_unlock_supported=0
-
 # Fix default ringtones
 ro.config.ringtone=ACH_Galaxy_Bells.ogg
 ro.config.notification_sound=ACH_Brightline.ogg
