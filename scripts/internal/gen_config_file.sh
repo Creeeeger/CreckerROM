@@ -46,7 +46,9 @@ GET_BUILD_VAR()
 
 GET_DEFAULT_ROM_IS_OFFICIAL()
 {
-    if [ "${ROM_TYPE:-default}" = "official" ]; then
+    if [ "${ROM_IS_OFFICIAL:-}" = "true" ] || [ "${ROM_IS_OFFICIAL:-}" = "false" ]; then
+        echo "$ROM_IS_OFFICIAL"
+    elif [ "${ROM_TYPE:-default}" = "official" ]; then
         echo "true"
     else
         echo "false"
@@ -59,7 +61,7 @@ SANITIZE_CONFIG_ENV()
 
     while IFS= read -r VAR; do
         case "$VAR" in
-            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_TYPE|ROM_BUILD_TIMESTAMP|ROM_IS_OFFICIAL)
+            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_TYPE|ROM_BUILD_TIMESTAMP)
                 unset "$VAR"
                 ;;
         esac
