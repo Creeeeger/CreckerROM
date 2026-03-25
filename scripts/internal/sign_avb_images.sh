@@ -38,6 +38,8 @@ ORIGINAL_VBMETA_ALGORITHM=""
 ORIGINAL_VBMETA_ROLLBACK_INDEX=""
 ORIGINAL_VBMETA_ROLLBACK_INDEX_LOCATION=""
 ORIGINAL_VBMETA_RELEASE_STRING=""
+ORIGINAL_VBMETA_KERNEL_CMDLINE_COUNT=0
+ORIGINAL_VBMETA_KERNEL_CMDLINES_FILE="$STAGING_DIR/original_vbmeta_kernel_cmdlines.tsv"
 HASH_PARTITIONS=""
 HASHTREE_PARTITIONS=""
 CHAIN_PARTITIONS=""
@@ -291,9 +293,9 @@ INIT_DEFAULTS()
     fi
     TARGET_AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-$UPSTREAM_AVBTOOL_PATH}"
     TARGET_AVBTOOL_PYTHON="${TARGET_AVBTOOL_PYTHON:-none}"
-    TARGET_AVB_HASH_PARTITIONS="${TARGET_AVB_HASH_PARTITIONS:-boot vendor_boot init_boot}"
-    TARGET_AVB_HASHTREE_PARTITIONS="${TARGET_AVB_HASHTREE_PARTITIONS:-system vendor product odm system_ext vendor_dlkm odm_dlkm system_dlkm prism optics}"
-    TARGET_AVB_CHAIN_PARTITIONS="${TARGET_AVB_CHAIN_PARTITIONS:-recovery=6 dtbo=7 prism=12 optics=13}"
+    TARGET_AVB_HASH_PARTITIONS="${TARGET_AVB_HASH_PARTITIONS:-}"
+    TARGET_AVB_HASHTREE_PARTITIONS="${TARGET_AVB_HASHTREE_PARTITIONS:-}"
+    TARGET_AVB_CHAIN_PARTITIONS="${TARGET_AVB_CHAIN_PARTITIONS:-}"
     TARGET_AVB_ORIGINAL_VBMETA_PATH="${TARGET_AVB_ORIGINAL_VBMETA_PATH:-none}"
     TARGET_AVB_ALLOW_HASHTREE_FALLBACK="${TARGET_AVB_ALLOW_HASHTREE_FALLBACK:-false}"
     TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL="${TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL:-1}"
@@ -306,8 +308,6 @@ INIT_DEFAULTS()
     TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin}"
     TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS="${TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS:-true}"
 
-    TARGET_SUPPORTS_FIRMWARE_DESCRIPTOR_PARTITIONS || TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS=""
-
     if ! [[ "$TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
         LOGW "Invalid TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL: $TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL (expected 0-9). Using 1."
         TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL="1"
@@ -316,6 +316,21 @@ INIT_DEFAULTS()
         LOGW "Invalid TARGET_AVB_CREATE_IMAGE_PACK_ZIP: $TARGET_AVB_CREATE_IMAGE_PACK_ZIP (expected true|false). Using false."
         TARGET_AVB_CREATE_IMAGE_PACK_ZIP="false"
     fi
+}
+
+GET_FALLBACK_HASH_PARTITIONS()
+{
+    echo "boot vendor_boot init_boot"
+}
+
+GET_FALLBACK_HASHTREE_PARTITIONS()
+{
+    echo "system vendor product odm system_ext vendor_dlkm odm_dlkm system_dlkm prism optics"
+}
+
+GET_FALLBACK_CHAIN_PARTITIONS()
+{
+    echo "recovery=6 dtbo=7 prism=12 optics=13"
 }
 
 GET_ORIGINAL_VBMETA_PATH()
@@ -342,6 +357,7 @@ PARSE_ORIGINAL_VBMETA_LAYOUT()
     [ -f "$ORIGINAL_VBMETA" ] || return 0
     [ -n "$AVB_PYTHON_BIN" ] || return 0
     [ -f "$AVBTOOL_PATH" ] || return 0
+    : > "$ORIGINAL_VBMETA_KERNEL_CMDLINES_FILE"
 
     DUMP_AVB_INFO_IMAGE "$ORIGINAL_VBMETA" "original vbmeta"
 
@@ -371,9 +387,14 @@ PARSE_ORIGINAL_VBMETA_LAYOUT()
             "chain")
                 APPEND_UNIQUE "ORIGINAL_CHAIN_PARTITIONS" "$KEY=$VALUE"
                 ;;
+            "kernel_cmdline")
+                printf '%s\t%s\n' "$KEY" "$VALUE" >> "$ORIGINAL_VBMETA_KERNEL_CMDLINES_FILE"
+                ORIGINAL_VBMETA_KERNEL_CMDLINE_COUNT="$((ORIGINAL_VBMETA_KERNEL_CMDLINE_COUNT + 1))"
+                ;;
         esac
     done < <(
         "$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$ORIGINAL_VBMETA" <<'PY'
+import base64
 import importlib.util
 import sys
 
@@ -402,6 +423,9 @@ for desc in descriptors:
         print(f'hash\t{desc.partition_name}')
     elif isinstance(desc, module.AvbChainPartitionDescriptor):
         print(f'chain\t{desc.partition_name}\t{desc.rollback_index_location}')
+    elif isinstance(desc, module.AvbKernelCmdlineDescriptor):
+        value = base64.b64encode(desc.kernel_cmdline.encode('utf-8')).decode('ascii')
+        print(f'kernel_cmdline\t{desc.flags}\t{value}')
 PY
     )
 
@@ -410,6 +434,7 @@ PY
     LOG_PARTITION_SET "Original vbmeta hash partitions" "$ORIGINAL_HASH_PARTITIONS"
     LOG_PARTITION_SET "Original vbmeta hashtree partitions" "$ORIGINAL_HASHTREE_PARTITIONS"
     LOG_PARTITION_SET "Original vbmeta chain partitions" "$ORIGINAL_CHAIN_PARTITIONS"
+    AVB_DEBUG_LOG "Original vbmeta kernel cmdline descriptors: $ORIGINAL_VBMETA_KERNEL_CMDLINE_COUNT"
 }
 
 ADOPT_ORIGINAL_VBMETA_DEFAULTS()
@@ -438,6 +463,14 @@ MERGE_LAYOUT()
     HASHTREE_PARTITIONS="$TARGET_AVB_HASHTREE_PARTITIONS"
     CHAIN_PARTITIONS="$TARGET_AVB_CHAIN_PARTITIONS"
 
+    if [ -z "$HASH_PARTITIONS$HASHTREE_PARTITIONS$CHAIN_PARTITIONS" ] && \
+            [ -z "$ORIGINAL_HASH_PARTITIONS$ORIGINAL_HASHTREE_PARTITIONS$ORIGINAL_CHAIN_PARTITIONS" ]; then
+        LOGW "Original vbmeta layout is unavailable; falling back to built-in AVB partition defaults"
+        HASH_PARTITIONS="$(GET_FALLBACK_HASH_PARTITIONS)"
+        HASHTREE_PARTITIONS="$(GET_FALLBACK_HASHTREE_PARTITIONS)"
+        CHAIN_PARTITIONS="$(GET_FALLBACK_CHAIN_PARTITIONS)"
+    fi
+
     for PARTITION in $EXCLUDED_VBMETA_PARTITIONS; do
         if LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS"; then
             LOGW "Removing $PARTITION from TARGET_AVB_HASH_PARTITIONS; verification for this partition is disabled"
@@ -454,33 +487,9 @@ MERGE_LAYOUT()
         fi
     done
 
-    for PARTITION in $KNOWN_FIRMWARE_DESCRIPTOR_PARTITIONS; do
-        if IS_ENABLED_FIRMWARE_DESCRIPTOR_PARTITION "$PARTITION"; then
-            continue
-        fi
-
-        if LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS"; then
-            LOG "- Removing $PARTITION from AVB hash descriptors for this target"
-            REMOVE_ITEM "HASH_PARTITIONS" "$PARTITION"
-        fi
-        if LIST_HAS_ITEM "$PARTITION" "$HASHTREE_PARTITIONS"; then
-            LOG "- Removing $PARTITION from AVB hashtree descriptors for this target"
-            REMOVE_ITEM "HASHTREE_PARTITIONS" "$PARTITION"
-        fi
-        LOCATION="$(GET_KV_VALUE "$PARTITION" "$CHAIN_PARTITIONS")"
-        if [ -n "$LOCATION" ]; then
-            LOG "- Removing $PARTITION from AVB chain descriptors for this target"
-            REMOVE_KV_ITEM "CHAIN_PARTITIONS" "$PARTITION"
-        fi
-    done
-
     for ENTRY in $ORIGINAL_HASH_PARTITIONS; do
         if IS_EXCLUDED_AVB_PARTITION "$ENTRY"; then
             LOG "- Ignoring original vbmeta hash descriptor for $ENTRY; verification for this partition is disabled"
-            continue
-        fi
-        if IS_KNOWN_FIRMWARE_DESCRIPTOR_PARTITION "$ENTRY" && ! IS_ENABLED_FIRMWARE_DESCRIPTOR_PARTITION "$ENTRY"; then
-            LOG "- Ignoring original vbmeta hash descriptor for $ENTRY; this firmware partition is not enabled for this target"
             continue
         fi
         SET_PARTITION_SIGN_KIND "$ENTRY" "hash"
@@ -491,10 +500,6 @@ MERGE_LAYOUT()
             LOG "- Ignoring original vbmeta hashtree descriptor for $ENTRY; verification for this partition is disabled"
             continue
         fi
-        if IS_KNOWN_FIRMWARE_DESCRIPTOR_PARTITION "$ENTRY" && ! IS_ENABLED_FIRMWARE_DESCRIPTOR_PARTITION "$ENTRY"; then
-            LOG "- Ignoring original vbmeta hashtree descriptor for $ENTRY; this firmware partition is not enabled for this target"
-            continue
-        fi
         SET_PARTITION_SIGN_KIND "$ENTRY" "hashtree"
     done
 
@@ -502,10 +507,6 @@ MERGE_LAYOUT()
         PARTITION="${ENTRY%%=*}"
         if IS_EXCLUDED_AVB_PARTITION "$PARTITION"; then
             LOG "- Ignoring original vbmeta chain descriptor for $PARTITION; verification for this partition is disabled"
-            continue
-        fi
-        if IS_KNOWN_FIRMWARE_DESCRIPTOR_PARTITION "$PARTITION" && ! IS_ENABLED_FIRMWARE_DESCRIPTOR_PARTITION "$PARTITION"; then
-            LOG "- Ignoring original vbmeta chain descriptor for $PARTITION; this firmware partition is not enabled for this target"
             continue
         fi
         APPEND_UNIQUE "CHAIN_PARTITIONS" "$ENTRY"
@@ -858,6 +859,20 @@ DUMP_AVB_INFO_IMAGE()
     RUN_AVBTOOL info_image --image "$IMAGE" >&2 || exit 1
 }
 
+GET_ABSOLUTE_PATH()
+{
+    local PATH_VALUE="$1"
+
+    if command -v realpath &> /dev/null; then
+        realpath "$PATH_VALUE"
+    else
+        (
+            cd "$(dirname "$PATH_VALUE")" || exit 1
+            printf '%s/%s\n' "$(pwd -P)" "$(basename "$PATH_VALUE")"
+        )
+    fi
+}
+
 GET_METADATA_VALUE()
 {
     local FILE="$1"
@@ -905,6 +920,14 @@ GET_STOCK_IMAGE_PATH()
     local CANDIDATES=()
 
     case "$PARTITION" in
+        "dtb")
+            CANDIDATES+=(
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/kernel/dtb.img"
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/kernel/dt.img"
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/dtb.img"
+                "$FW_DIR/$TARGET_FIRMWARE_PATH/dt.img"
+            )
+            ;;
         "boot" | "dtbo" | "init_boot" | "vendor_boot" | "recovery")
             CANDIDATES+=(
                 "$FW_DIR/$TARGET_FIRMWARE_PATH/kernel/$PARTITION.img"
@@ -1071,7 +1094,9 @@ CALCULATE_MIN_AVB_PARTITION_SIZE()
 
     while [ "$LOWER_BOUND" -lt "$UPPER_BOUND" ]; do
         MID="$((((LOWER_BOUND + UPPER_BOUND) / 2) / 4096 * 4096))"
-        [ "$MID" -le "$LOWER_BOUND" ] && MID="$((LOWER_BOUND + 4096))"
+        # Bounds are 4 KiB-aligned. If the midpoint rounds back to the current
+        # lower bound, there is no aligned candidate left between the bounds.
+        [ "$MID" -le "$LOWER_BOUND" ] && break
 
         MAX_IMAGE_SIZE="$(CALCULATE_AVB_MAX_IMAGE_SIZE "$PARTITION" "$KIND" "$MID")" || return 1
         if [ "$MAX_IMAGE_SIZE" -ge "$IMAGE_SIZE" ]; then
@@ -1148,6 +1173,13 @@ RESOLVE_SIGN_PARTITION_SIZE()
         fi
     fi
 
+    VALUE="$(CALCULATE_MIN_AVB_PARTITION_SIZE "$PARTITION" "$KIND")"
+    if [ -n "$VALUE" ] && [ "$VALUE" -gt "$PARTITION_SIZE" ]; then
+        LOGW "Increasing AVB partition size for $PARTITION: $PARTITION_SIZE -> $VALUE" >&2
+        echo "$VALUE"
+        return 0
+    fi
+
     echo "$PARTITION_SIZE"
 }
 
@@ -1183,6 +1215,20 @@ GET_PARTITION_SIZE_INFO()
             echo "$VALUE|dynamic_calculated"
             return 0
         fi
+    fi
+
+    VALUE="$(ESTIMATE_PARTITION_SIZE_FROM_BUILT_IMAGE "$PARTITION" "$KIND")"
+    if [ -n "$VALUE" ]; then
+        LOGW "Estimated AVB partition size for $PARTITION from the built image: $VALUE" >&2
+        echo "$VALUE|built_image_estimate"
+        return 0
+    fi
+
+    VALUE="$(CALCULATE_MIN_AVB_PARTITION_SIZE "$PARTITION" "$KIND")"
+    if [ -n "$VALUE" ]; then
+        LOGW "Calculated AVB partition size for $PARTITION from the built image: $VALUE" >&2
+        echo "$VALUE|built_image_calculated"
+        return 0
     fi
 
     return 1
@@ -1328,7 +1374,22 @@ GET_FIRMWARE_DESCRIPTOR_FILENAME()
     [ -n "$VALUE" ] && echo "$VALUE"
 }
 
-LOCATE_TARGET_BL_TAR()
+GET_FIRMWARE_DESCRIPTOR_FILENAME_CANDIDATES()
+{
+    local PARTITION="$1"
+    local FILE_NAME=""
+    local CANDIDATES=""
+
+    FILE_NAME="$(GET_FIRMWARE_DESCRIPTOR_FILENAME "$PARTITION")"
+    [ -n "$FILE_NAME" ] && APPEND_UNIQUE "CANDIDATES" "$FILE_NAME"
+    APPEND_UNIQUE "CANDIDATES" "$PARTITION.img"
+    APPEND_UNIQUE "CANDIDATES" "$PARTITION.bin"
+    APPEND_UNIQUE "CANDIDATES" "$PARTITION"
+
+    echo "$CANDIDATES"
+}
+
+TRY_LOCATE_TARGET_BL_TAR()
 {
     local PATTERN
 
@@ -1337,17 +1398,26 @@ LOCATE_TARGET_BL_TAR()
         return 0
     fi
 
+    [ -d "$ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}" ] || return 1
+
     for PATTERN in "BL_${TARGET_FIRMWARE_MODEL}*.md5" "BL_${TARGET_FIRMWARE_MODEL_ALT}*.md5" "BL_*.md5"; do
         BL_TAR_PATH="$(find "$ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}" -name "$PATTERN" | sort -r | head -n 1)"
         [ -n "$BL_TAR_PATH" ] && break
     done
 
-    if [ -z "$BL_TAR_PATH" ]; then
+    [ -n "$BL_TAR_PATH" ] || return 1
+
+    AVB_DEBUG_LOG "Using BL tar for firmware descriptors: $BL_TAR_PATH"
+    echo "$BL_TAR_PATH"
+}
+
+LOCATE_TARGET_BL_TAR()
+{
+    if ! TRY_LOCATE_TARGET_BL_TAR > /dev/null; then
         LOGE "Unable to locate BL tar for $TARGET_FIRMWARE_MODEL/$TARGET_FIRMWARE_CSC in $ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}"
         exit 1
     fi
 
-    AVB_DEBUG_LOG "Using BL tar for firmware descriptors: $BL_TAR_PATH"
     echo "$BL_TAR_PATH"
 }
 
@@ -1384,26 +1454,46 @@ GET_FIRMWARE_DESCRIPTOR_SOURCE_PATH()
     local FILE_NAME=""
     local SOURCE_PATH=""
     local TAR_FILE=""
+    local CANDIDATES=""
 
-    FILE_NAME="$(GET_FIRMWARE_DESCRIPTOR_FILENAME "$PARTITION")"
-    [ -n "$FILE_NAME" ] || {
-        LOGE "Missing TARGET_AVB_FIRMWARE_IMAGE_MAP entry for $PARTITION"
-        exit 1
-    }
+    CANDIDATES="$(GET_FIRMWARE_DESCRIPTOR_FILENAME_CANDIDATES "$PARTITION")"
+    [ -n "$CANDIDATES" ] || return 1
+    TAR_FILE="$(TRY_LOCATE_TARGET_BL_TAR)" || return 1
 
-    SOURCE_PATH="$STAGING_DIR/fw_odin/$FILE_NAME"
-    if [ ! -f "$SOURCE_PATH" ]; then
-        TAR_FILE="$(LOCATE_TARGET_BL_TAR)"
+    for FILE_NAME in $CANDIDATES; do
+        SOURCE_PATH="$STAGING_DIR/fw_odin/$FILE_NAME"
+        if [ -f "$SOURCE_PATH" ]; then
+            echo "$SOURCE_PATH"
+            return 0
+        fi
+
+        if ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME" && ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME.lz4"; then
+            continue
+        fi
+
         # Keep function stdout clean: caller captures only SOURCE_PATH via command substitution.
         LOG "- Extracting $FILE_NAME from $(basename "$TAR_FILE") for $PARTITION" >&2
-        if ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME" && ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME.lz4"; then
-            LOGW "Firmware descriptor source not found in $(basename "$TAR_FILE") for $PARTITION: $FILE_NAME(.lz4)"
-            return 1
-        fi
         EXTRACT_FILE_FROM_TAR_TO_PATH "$TAR_FILE" "$FILE_NAME" "$SOURCE_PATH"
+        echo "$SOURCE_PATH"
+        return 0
+    done
+
+    LOGW "Firmware descriptor source not found in $(basename "$TAR_FILE") for $PARTITION: tried $CANDIDATES"
+    return 1
+}
+
+GET_DESCRIPTOR_SOURCE_PATH()
+{
+    local PARTITION="$1"
+    local SOURCE_PATH=""
+
+    SOURCE_PATH="$(GET_STOCK_IMAGE_PATH "$PARTITION" || true)"
+    if [ -n "$SOURCE_PATH" ] && [ -f "$SOURCE_PATH" ]; then
+        echo "$SOURCE_PATH"
+        return 0
     fi
 
-    echo "$SOURCE_PATH"
+    GET_FIRMWARE_DESCRIPTOR_SOURCE_PATH "$PARTITION"
 }
 
 LOG_PARTITION_SIZE_STATUS()
@@ -1561,7 +1651,7 @@ SIGN_BUILT_PARTITION()
     APPEND_UNIQUE "SIGNED_PARTITIONS" "$PARTITION"
 }
 
-SIGN_FIRMWARE_DESCRIPTOR_PARTITIONS()
+SIGN_EXTERNAL_DESCRIPTOR_PARTITIONS()
 {
     local PARTITION
     local KIND
@@ -1571,36 +1661,32 @@ SIGN_FIRMWARE_DESCRIPTOR_PARTITIONS()
     local IMAGE
     local INCLUDE_IN_TOPLEVEL="false"
 
-    for PARTITION in $TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS; do
-        if ! LIST_HAS_ITEM "$PARTITION" "$HASH_PARTITIONS" && ! LIST_HAS_ITEM "$PARTITION" "$HASHTREE_PARTITIONS"; then
-            continue
-        fi
-
+    for PARTITION in $HASH_PARTITIONS $HASHTREE_PARTITIONS; do
         if LIST_HAS_ITEM "$PARTITION" "$SIGNED_PARTITIONS"; then
             continue
         fi
 
         KIND="$(GET_SIGN_KIND "$PARTITION")"
-        SOURCE_PATH="$(GET_FIRMWARE_DESCRIPTOR_SOURCE_PATH "$PARTITION" || true)"
+        SOURCE_PATH="$(GET_DESCRIPTOR_SOURCE_PATH "$PARTITION" || true)"
         if [ -z "$SOURCE_PATH" ] || [ ! -f "$SOURCE_PATH" ]; then
             if LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASH_PARTITIONS" || LIST_HAS_ITEM "$PARTITION" "$ORIGINAL_HASHTREE_PARTITIONS"; then
-                LOGE "Unable to resolve firmware descriptor source for required partition $PARTITION"
+                LOGE "Unable to resolve descriptor source for required partition $PARTITION"
                 exit 1
             fi
 
-            LOGW "Skipping optional firmware descriptor partition $PARTITION because the source image is unavailable"
+            LOGW "Skipping optional AVB descriptor partition $PARTITION because the source image is unavailable"
             REMOVE_ITEM "HASH_PARTITIONS" "$PARTITION"
             REMOVE_ITEM "HASHTREE_PARTITIONS" "$PARTITION"
             continue
         fi
         SOURCE_SIZE="$(GET_IMAGE_SIZE "$SOURCE_PATH")" || exit 1
         PARTITION_SIZE="$(ESTIMATE_PARTITION_SIZE_FROM_IMAGE_PATH "$SOURCE_PATH" "$KIND")" || exit 1
-        IMAGE="$STAGING_DIR/firmware_descriptors/${PARTITION}.img"
+        IMAGE="$STAGING_DIR/external_descriptors/${PARTITION}.img"
 
         mkdir -p "$(dirname "$IMAGE")"
         cp -fa "$SOURCE_PATH" "$IMAGE"
 
-        LOG "- Preparing firmware AVB descriptor for $PARTITION from $(basename "$SOURCE_PATH"): source_image=$(FORMAT_SIZE "$SOURCE_SIZE") estimated_partition=$(FORMAT_SIZE "$PARTITION_SIZE")"
+        LOG "- Preparing external AVB descriptor for $PARTITION from $(basename "$SOURCE_PATH"): source_image=$(FORMAT_SIZE "$SOURCE_SIZE") estimated_partition=$(FORMAT_SIZE "$PARTITION_SIZE")"
         SIGN_DESCRIPTOR_IMAGE "$IMAGE" "$PARTITION" "$KIND" "$PARTITION_SIZE"
 
         IS_PRESENT_IN_ORIGINAL_VBMETA "$PARTITION" && INCLUDE_IN_TOPLEVEL="true"
@@ -1637,7 +1723,10 @@ spec.loader.exec_module(module)
 
 avb = module.Avb()
 image = module.ImageHandler(image_path, read_only=True)
-footer, _, descriptors, _ = avb._parse_image(image)
+try:
+    footer, _, descriptors, _ = avb._parse_image(image)
+except Exception:
+    raise SystemExit(0)
 if footer:
     for desc in descriptors:
         if isinstance(desc, module.AvbHashtreeDescriptor):
@@ -1727,6 +1816,65 @@ BUILD_OPTIONAL_PROPS()
     [ -n "$VENDOR_PATCH" ] && VBMETA_PROPS+=("--prop" "com.android.build.vendor.security_patch:$VENDOR_PATCH")
 }
 
+BUILD_ORIGINAL_KERNEL_CMDLINE_DESCRIPTOR_IMAGE()
+{
+    local OUTPUT="$STAGING_DIR/original_kernel_cmdline_descriptors.img"
+
+    [ -s "$ORIGINAL_VBMETA_KERNEL_CMDLINES_FILE" ] || return 1
+
+    "$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$ORIGINAL_VBMETA_KERNEL_CMDLINES_FILE" "$OUTPUT" <<'PY'
+import base64
+import importlib.util
+import sys
+
+avbtool_path, input_path, output_path = sys.argv[1:4]
+spec = importlib.util.spec_from_file_location('crecker_avbtool', avbtool_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+descriptors = []
+with open(input_path, 'r', encoding='utf-8') as fh:
+    for raw_line in fh:
+        raw_line = raw_line.rstrip('\n')
+        if not raw_line:
+            continue
+        flags, cmdline_b64 = raw_line.split('\t', 1)
+        desc = module.AvbKernelCmdlineDescriptor()
+        desc.flags = int(flags)
+        desc.kernel_cmdline = base64.b64decode(cmdline_b64).decode('utf-8')
+        descriptors.append(desc)
+
+avb = module.Avb()
+blob = avb._generate_vbmeta_blob(
+    'NONE',
+    None,
+    None,
+    descriptors,
+    None,
+    None,
+    0,
+    0,
+    0,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    0,
+)
+
+with open(output_path, 'wb') as fh:
+    fh.write(blob)
+PY
+
+    echo "$OUTPUT"
+}
+
 MAKE_TOPLEVEL_VBMETA()
 {
     local ENTRY
@@ -1735,6 +1883,7 @@ MAKE_TOPLEVEL_VBMETA()
     local CMD=()
     local PUBLIC_KEY_BLOB=""
     local CHAIN_OPTION="--chain_partition"
+    local ORIGINAL_KERNEL_CMDLINE_IMAGE=""
 
     BUILD_OPTIONAL_PROPS
 
@@ -1750,6 +1899,11 @@ MAKE_TOPLEVEL_VBMETA()
     for ENTRY in $DIRECT_DESCRIPTOR_IMAGES; do
         CMD+=(--include_descriptors_from_image "$ENTRY")
     done
+
+    ORIGINAL_KERNEL_CMDLINE_IMAGE="$(BUILD_ORIGINAL_KERNEL_CMDLINE_DESCRIPTOR_IMAGE || true)"
+    if [ -n "$ORIGINAL_KERNEL_CMDLINE_IMAGE" ] && [ -f "$ORIGINAL_KERNEL_CMDLINE_IMAGE" ]; then
+        CMD+=(--include_descriptors_from_image "$ORIGINAL_KERNEL_CMDLINE_IMAGE")
+    fi
 
     for ENTRY in $ACTIVE_CHAIN_PARTITIONS; do
         PARTITION="${ENTRY%%=*}"
@@ -1790,22 +1944,28 @@ VERIFY_SIGNED_AVB()
     local LOCATION
     local VERIFY_CMD=()
     local PUBLIC_KEY_BLOB=""
+    local SOURCE_PATH=""
 
     rm -rf "$VERIFY_DIR"
     mkdir -p "$VERIFY_DIR"
 
-    ln -sf "$TMP_IMG_DIR/vbmeta.img" "$VERIFY_DIR/vbmeta.img"
+    SOURCE_PATH="$(GET_ABSOLUTE_PATH "$TMP_IMG_DIR/vbmeta.img")"
+    ln -sf "$SOURCE_PATH" "$VERIFY_DIR/vbmeta.img"
 
     for PARTITION in $SIGNED_PARTITIONS; do
         [ -f "$TMP_IMG_DIR/$PARTITION.img" ] || continue
-        ln -sf "$TMP_IMG_DIR/$PARTITION.img" "$VERIFY_DIR/$PARTITION.img"
+        SOURCE_PATH="$(GET_ABSOLUTE_PATH "$TMP_IMG_DIR/$PARTITION.img")"
+        ln -sf "$SOURCE_PATH" "$VERIFY_DIR/$PARTITION.img"
         ASSERT_IMAGE_VBMETA_FLAGS_ZERO "$TMP_IMG_DIR/$PARTITION.img" "$PARTITION.img"
     done
 
     for ENTRY in $DIRECT_DESCRIPTOR_IMAGES; do
         PARTITION="$(basename "$ENTRY")"
         [ -f "$ENTRY" ] || continue
-        [ -e "$VERIFY_DIR/$PARTITION" ] || ln -sf "$ENTRY" "$VERIFY_DIR/$PARTITION"
+        if [ ! -e "$VERIFY_DIR/$PARTITION" ]; then
+            SOURCE_PATH="$(GET_ABSOLUTE_PATH "$ENTRY")"
+            ln -sf "$SOURCE_PATH" "$VERIFY_DIR/$PARTITION"
+        fi
         ASSERT_IMAGE_VBMETA_FLAGS_ZERO "$ENTRY" "$PARTITION"
     done
 
@@ -1966,7 +2126,7 @@ for PARTITION in $HASH_PARTITIONS $HASHTREE_PARTITIONS; do
 done
 
 SIGN_CHAIN_PARTITIONS
-SIGN_FIRMWARE_DESCRIPTOR_PARTITIONS
+SIGN_EXTERNAL_DESCRIPTOR_PARTITIONS
 MAKE_TOPLEVEL_VBMETA
 VERIFY_SIGNED_AVB
 CREATE_IMAGE_PACK
