@@ -1837,6 +1837,7 @@ BUILD_OPTIONAL_PROPS()
     local ENTRY
     local KEY
     local VALUE
+    local SECURITY_PATCH_OVERRIDE="${TARGET_AVB_VBMETA_SECURITY_PATCH_OVERRIDE:-2026-02-01}"
     local BOOT_OS_VERSION
     local BOOT_PATCH
     local SYSTEM_OS_VERSION
@@ -1850,9 +1851,17 @@ BUILD_OPTIONAL_PROPS()
         for ENTRY in $ORIGINAL_VBMETA_PROPS; do
             KEY="${ENTRY%%=*}"
             VALUE="${ENTRY#*=}"
+            case "$KEY" in
+                "com.android.build.boot.security_patch" | \
+                "com.android.build.system.security_patch" | \
+                "com.android.build.vendor.security_patch")
+                    VALUE="$SECURITY_PATCH_OVERRIDE"
+                    ;;
+            esac
             VBMETA_PROPS+=("--prop" "$KEY:$VALUE")
         done
         LOG_PARTITION_SET "Using original vbmeta props" "$ORIGINAL_VBMETA_PROPS"
+        AVB_DEBUG_LOG "Overriding vbmeta boot/system/vendor security_patch props to $SECURITY_PATCH_OVERRIDE"
         return 0
     fi
 
@@ -1864,6 +1873,9 @@ BUILD_OPTIONAL_PROPS()
     [ -z "$VENDOR_OS_VERSION" ] && VENDOR_OS_VERSION="$(GET_PROP "vendor" "ro.build.version.release")"
     VENDOR_PATCH="$(GET_PROP "vendor" "ro.vendor.build.version.security_patch")"
     [ -z "$VENDOR_PATCH" ] && VENDOR_PATCH="$(GET_PROP "vendor" "ro.build.version.security_patch")"
+    BOOT_PATCH="$SECURITY_PATCH_OVERRIDE"
+    SYSTEM_PATCH="$SECURITY_PATCH_OVERRIDE"
+    VENDOR_PATCH="$SECURITY_PATCH_OVERRIDE"
 
     [ -n "$BOOT_OS_VERSION" ] && VBMETA_PROPS+=("--prop" "com.android.build.boot.os_version:$BOOT_OS_VERSION")
     [ -n "$BOOT_PATCH" ] && VBMETA_PROPS+=("--prop" "com.android.build.boot.security_patch:$BOOT_PATCH")
