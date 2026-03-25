@@ -40,6 +40,9 @@ ORIGINAL_VBMETA_ROLLBACK_INDEX_LOCATION=""
 ORIGINAL_VBMETA_RELEASE_STRING=""
 ORIGINAL_VBMETA_KERNEL_CMDLINE_COUNT=0
 ORIGINAL_VBMETA_KERNEL_CMDLINES_FILE="$STAGING_DIR/original_vbmeta_kernel_cmdlines.tsv"
+ORIGINAL_VBMETA_TRAILER_PATH=""
+ORIGINAL_VBMETA_TRAILER_SIZE="0"
+ORIGINAL_VBMETA_TRAILER_MARKER=""
 HASH_PARTITIONS=""
 HASHTREE_PARTITIONS=""
 CHAIN_PARTITIONS=""
@@ -350,6 +353,10 @@ PARSE_ORIGINAL_VBMETA_LAYOUT()
     local KIND
     local KEY
     local VALUE
+    local TRAILER_INFO=""
+    local TRAILER_OFFSET=""
+    local TRAILER_SIZE=""
+    local TRAILER_MARKER=""
 
     $TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT || return 0
 
@@ -428,6 +435,52 @@ for desc in descriptors:
         print(f'kernel_cmdline\t{desc.flags}\t{value}')
 PY
     )
+
+    TRAILER_INFO="$(
+        "$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$ORIGINAL_VBMETA" <<'PY'
+import importlib.util
+import os
+import sys
+
+avbtool_path, image_path = sys.argv[1:3]
+spec = importlib.util.spec_from_file_location('crecker_avbtool', avbtool_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+avb = module.Avb()
+image = module.ImageHandler(image_path, read_only=True)
+_, header, _, _ = avb._parse_image(image)
+expected_size = 256 + header.authentication_data_block_size + header.auxiliary_data_block_size
+actual_size = os.path.getsize(image_path)
+
+if actual_size <= expected_size:
+    raise SystemExit(0)
+
+with open(image_path, 'rb') as fh:
+    fh.seek(expected_size)
+    trailer = fh.read()
+
+marker = ''
+for candidate in (b'SignerVer03', b'SignerVer02'):
+    if candidate in trailer:
+        marker = candidate.decode('ascii')
+        break
+
+if marker:
+    print(f'{expected_size}\t{actual_size - expected_size}\t{marker}')
+PY
+    )"
+
+    if [ -n "$TRAILER_INFO" ]; then
+        TRAILER_OFFSET="$(cut -f 1 <<< "$TRAILER_INFO")"
+        TRAILER_SIZE="$(cut -f 2 <<< "$TRAILER_INFO")"
+        TRAILER_MARKER="$(cut -f 3 <<< "$TRAILER_INFO")"
+        ORIGINAL_VBMETA_TRAILER_PATH="$STAGING_DIR/original_vbmeta_trailer.bin"
+        dd if="$ORIGINAL_VBMETA" of="$ORIGINAL_VBMETA_TRAILER_PATH" bs=1 skip="$TRAILER_OFFSET" count="$TRAILER_SIZE" status=none || exit 1
+        ORIGINAL_VBMETA_TRAILER_SIZE="$TRAILER_SIZE"
+        ORIGINAL_VBMETA_TRAILER_MARKER="$TRAILER_MARKER"
+        LOG "- Preserving original vbmeta trailer: marker=$ORIGINAL_VBMETA_TRAILER_MARKER size=$(FORMAT_SIZE "$ORIGINAL_VBMETA_TRAILER_SIZE")"
+    fi
 
     LOG_PARTITION_SET "Original vbmeta props" "$ORIGINAL_VBMETA_PROPS"
     [ -n "$ORIGINAL_VBMETA_ALGORITHM" ] && AVB_DEBUG_LOG "Original vbmeta algorithm: $ORIGINAL_VBMETA_ALGORITHM"
@@ -801,8 +854,12 @@ RESOLVE_PARTITION_SIGNING_CONFIG()
 
     PARTITION_SIGN_ROLLBACK_INDEX_LOCATION="$(GET_PARTITION_VAR_VALUE "$PARTITION" "ROLLBACK_INDEX_LOCATION")"
     CHAIN_LOCATION="$(GET_CHAIN_LOCATION "$PARTITION")"
-    [ -z "$PARTITION_SIGN_ROLLBACK_INDEX_LOCATION" ] && [ -n "$CHAIN_LOCATION" ] && PARTITION_SIGN_ROLLBACK_INDEX_LOCATION="$CHAIN_LOCATION"
+    # Keep chained partition footers at rollback_index_location=0 by default.
+    # The chain descriptor in top-level vbmeta carries the real rollback slot.
     [ -z "$PARTITION_SIGN_ROLLBACK_INDEX_LOCATION" ] && PARTITION_SIGN_ROLLBACK_INDEX_LOCATION="0"
+    if [ -n "$CHAIN_LOCATION" ] && [ "$PARTITION_SIGN_ROLLBACK_INDEX_LOCATION" != "0" ]; then
+        AVB_DEBUG_LOG "Chained partition $PARTITION uses explicit footer rollback_index_location=$PARTITION_SIGN_ROLLBACK_INDEX_LOCATION; this may raise required libavb version above stock."
+    fi
 
     PARTITION_SIGN_DO_NOT_USE_AB="$(GET_PARTITION_VAR_VALUE "$PARTITION" "DO_NOT_USE_AB")"
     [ -z "$PARTITION_SIGN_DO_NOT_USE_AB" ] && PARTITION_SIGN_DO_NOT_USE_AB="false"
@@ -1933,6 +1990,10 @@ MAKE_TOPLEVEL_VBMETA()
     LOG_PARTITION_SET "Direct descriptor images" "$DIRECT_DESCRIPTOR_IMAGES"
     LOG_PARTITION_SET "Active chain partitions" "$ACTIVE_CHAIN_PARTITIONS"
     RUN_AVBTOOL "${CMD[@]}" || exit 1
+    if [ -n "$ORIGINAL_VBMETA_TRAILER_PATH" ] && [ -f "$ORIGINAL_VBMETA_TRAILER_PATH" ]; then
+        LOG "- Appending original vbmeta trailer for Samsung compatibility: marker=$ORIGINAL_VBMETA_TRAILER_MARKER size=$(FORMAT_SIZE "$ORIGINAL_VBMETA_TRAILER_SIZE")"
+        cat "$ORIGINAL_VBMETA_TRAILER_PATH" >> "$TMP_IMG_DIR/vbmeta.img" || exit 1
+    fi
     DUMP_AVB_INFO_IMAGE "$TMP_IMG_DIR/vbmeta.img" "vbmeta.img"
 }
 
