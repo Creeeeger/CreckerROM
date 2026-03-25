@@ -276,6 +276,47 @@ GET_PLATFORM_CERT_SIGNATURE_HEX()
 
     sed '/CERTIFICATE/d' "$X509_PATH" | tr -d '\n' | base64 -d | xxd -p -c 0
 }
+
+GET_SHARED_PUBLIC_KEY_SHA256()
+{
+    local SOURCE_KEY_PATH
+    SOURCE_KEY_PATH="$(GET_SHARED_PRIVATE_SIGNING_KEY_PATH)"
+
+    openssl pkey -in "$SOURCE_KEY_PATH" -pubout -outform DER 2> /dev/null | openssl dgst -sha256 -r 2> /dev/null | cut -d " " -f 1
+}
+
+PRINT_SHARED_SIGNING_KEY_INFO()
+{
+    local SOURCE_KEY_PATH
+    local X509_PATH
+    local PK8_PATH
+    local PUBLIC_KEY_SHA256
+    local PUBLIC_KEY_PEM
+    local MESSAGE
+
+    ENSURE_SHARED_PLATFORM_SIGNING_CERTS || return 1
+
+    SOURCE_KEY_PATH="$(GET_SHARED_PRIVATE_SIGNING_KEY_PATH)"
+    X509_PATH="$(GET_PLATFORM_CERT_X509_PATH)"
+    PK8_PATH="$(GET_PLATFORM_CERT_PK8_PATH)"
+    PUBLIC_KEY_SHA256="$(GET_SHARED_PUBLIC_KEY_SHA256)"
+    PUBLIC_KEY_PEM="$(_GET_PUBLIC_KEY_FROM_PRIVATE_PEM "$SOURCE_KEY_PATH")"
+
+    MESSAGE="- Shared signing key ready: ${SOURCE_KEY_PATH//$SRC_DIR\//}"
+    if [ "${TARGET_ENABLE_CUSTOM_AVB:-false}" = "true" ]; then
+        MESSAGE+=" (used for AVB and rebuilt APK signing)"
+    else
+        MESSAGE+=" (used for rebuilt APK signing)"
+    fi
+    LOG "$MESSAGE"
+    LOG "- Platform cert: ${X509_PATH//$SRC_DIR\//}"
+    LOG "- Platform pk8: ${PK8_PATH//$SRC_DIR\//}"
+    [ -n "$PUBLIC_KEY_SHA256" ] && LOG "- Shared public key sha256: $PUBLIC_KEY_SHA256"
+    LOG "- Shared public key (PEM):"
+    while IFS= read -r LINE; do
+        LOG "  $LINE"
+    done <<< "$PUBLIC_KEY_PEM"
+}
 # ]
 
 # ADD_TO_WORK_DIR <source> <partition> <file/dir> <user> <group> <mode> <label>

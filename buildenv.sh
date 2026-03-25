@@ -272,6 +272,7 @@ env -i \
     HOME="${HOME:-}" \
     USER="${USER:-}" \
     SHELL="${SHELL:-}" \
+    DEBUG="$DEBUG" \
     SRC_DIR="$SRC_DIR" \
     OUT_DIR="$OUT_DIR" \
     FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES" \

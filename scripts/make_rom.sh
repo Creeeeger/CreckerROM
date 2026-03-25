@@ -118,6 +118,10 @@ fi
 trap 'PRINT_BUILD_OUTCOME' EXIT
 trap 'echo' INT
 
+LOG_STEP_IN true "Preparing signing keys"
+PRINT_SHARED_SIGNING_KEY_INFO || exit 1
+LOG_STEP_OUT
+
 if $BUILD_ROM; then
     [ -d "$APKTOOL_DIR" ] && rm -rf "$APKTOOL_DIR"
     [ -f "$WORK_DIR/.completed" ] && rm -f "$WORK_DIR/.completed"
