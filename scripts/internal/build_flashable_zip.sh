@@ -57,17 +57,9 @@ done
 export TARGET_AVB_IMAGE_PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
 export TARGET_AVB_IMAGE_PACK_ZIP="$OUT_DIR/${FILE_NAME%.zip}-images.zip"
 
-PRIVATE_KEY_PATH="$SRC_DIR/security/"
-PUBLIC_KEY_PATH="$SRC_DIR/security/"
-if $ROM_IS_OFFICIAL; then
-    PRIVATE_KEY_PATH+="extremerom"
-    PUBLIC_KEY_PATH+="extremerom"
-else
-    PRIVATE_KEY_PATH+="aosp"
-    PUBLIC_KEY_PATH+="aosp"
-fi
-PRIVATE_KEY_PATH+="_platform.pk8"
-PUBLIC_KEY_PATH+="_platform.x509.pem"
+ENSURE_SHARED_PLATFORM_SIGNING_CERTS || exit 1
+PRIVATE_KEY_PATH="$(GET_PLATFORM_CERT_PK8_PATH)"
+PUBLIC_KEY_PATH="$(GET_PLATFORM_CERT_X509_PATH)"
 
 trap 'rm -rf "$TMP_DIR"' EXIT INT
 
