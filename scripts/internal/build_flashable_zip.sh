@@ -164,6 +164,7 @@ BUILD_ODIN_AP_PACKAGE()
     local FILE_NAME
     local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
     local IMAGE_DIR="$TMP_DIR"
+    local -a AP_ARCHIVE_ENTRIES=()
 
     if $TARGET_ENABLE_CUSTOM_AVB; then
         IMAGE_DIR="$TARGET_AVB_IMAGE_PACK_DIR"
@@ -209,12 +210,19 @@ BUILD_ODIN_AP_PACKAGE()
 
     rm -f "$AP_TAR" "$AP_TAR_MD5"
     pushd "$AP_DIR" > /dev/null
-    EVAL "tar -cf \"$AP_TAR\" ./*" || exit 1
+    shopt -s dotglob nullglob
+    AP_ARCHIVE_ENTRIES=(*)
+    shopt -u dotglob nullglob
+    [ "${#AP_ARCHIVE_ENTRIES[@]}" -ge 1 ] || {
+        LOGE "No Odin AP package contents were generated"
+        exit 1
+    }
+    tar -cf "$AP_TAR" -- "${AP_ARCHIVE_ENTRIES[@]}" || exit 1
     popd > /dev/null
 
     pushd "$OUT_DIR" > /dev/null
     AP_CHECKSUM="$(md5sum -t "$(basename "$AP_TAR")" | awk '{print $1}')" || exit 1
-    printf "%s" "$AP_CHECKSUM" >> "$(basename "$AP_TAR")"
+    printf "%s  %s\n" "$AP_CHECKSUM" "$(basename "$AP_TAR")" >> "$(basename "$AP_TAR")"
     mv -f "$(basename "$AP_TAR")" "$(basename "$AP_TAR_MD5")"
     popd > /dev/null
 }
