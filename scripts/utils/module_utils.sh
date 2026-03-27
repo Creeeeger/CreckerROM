@@ -98,6 +98,49 @@ DECODE_APK()
     return 0
 }
 
+# QUEUE_FILE_FOR_REBUILD <partition> <apk/jar>
+# Ensures the supplied APK/JAR is decoded so make_rom.sh rebuilds and re-signs it.
+QUEUE_FILE_FOR_REBUILD()
+{
+    _CHECK_NON_EMPTY_PARAM "PARTITION" "$1" || return 1
+    _CHECK_NON_EMPTY_PARAM "FILE" "$2" || return 1
+
+    local PARTITION="$1"
+    local FILE="$2"
+
+    if ! IS_VALID_PARTITION_NAME "$PARTITION"; then
+        LOGE "\"$PARTITION\" is not a valid partition name"
+        return 1
+    fi
+
+    while [[ "${FILE:0:1}" == "/" ]]; do
+        FILE="${FILE:1}"
+    done
+
+    local FILE_PATH="$WORK_DIR"
+    case "$PARTITION" in
+        "system_ext")
+            if $TARGET_HAS_SYSTEM_EXT; then
+                FILE_PATH+="/system_ext"
+            else
+                FILE_PATH+="/system/system/system_ext"
+            fi
+            ;;
+        *)
+            FILE_PATH+="/$PARTITION"
+            ;;
+    esac
+    FILE_PATH+="/$FILE"
+
+    if [ ! -f "$FILE_PATH" ]; then
+        LOGW "File not found: ${FILE_PATH//$WORK_DIR/}"
+        return 0
+    fi
+
+    DECODE_APK "$PARTITION" "$FILE"
+    return $?
+}
+
 # DOWNLOAD_FILE "<url>" "<output path>"
 # Downloads the file from the provided URL and stores it in the desidered output path.
 DOWNLOAD_FILE()
