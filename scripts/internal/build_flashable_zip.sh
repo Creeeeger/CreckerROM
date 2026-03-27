@@ -48,10 +48,11 @@ ROM_STATUS="CreckerROM"
 ZIP_FILE_SUFFIX="-sign.zip"
 $DEBUG && ! $ROM_IS_OFFICIAL && ZIP_FILE_SUFFIX=".zip"
 
-FILE_NAME="creckerRom_${ROM_STATUS}_${ROM_VERSION}_$(date +%Y%m%d)_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
+BUILD_DATE="$(date +%Y%m%d)"
+FILE_NAME="creckerRom_${ROM_STATUS}_${ROM_VERSION}_${BUILD_DATE}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
 while [ -f "$OUT_DIR/$FILE_NAME" ]; do
     INCREMENTAL=$((INCREMENTAL + 1))
-    FILE_NAME="creckerRom_${ROM_VERSION}_$(date +%Y%m%d)-${INCREMENTAL}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
+    FILE_NAME="creckerRom_${ROM_STATUS}_${ROM_VERSION}_${BUILD_DATE}-${INCREMENTAL}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
 done
 
 export TARGET_AVB_IMAGE_PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
@@ -175,19 +176,19 @@ COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP()
 {
     local ENTRY=""
     local PARTITION=""
-    local FILE_NAME=""
+    local COMPONENT_FILE=""
 
     $TARGET_ENABLE_CUSTOM_AVB || return 0
 
     while IFS= read -r ENTRY; do
         [ -n "$ENTRY" ] || continue
         PARTITION="${ENTRY%%=*}"
-        FILE_NAME="${ENTRY#*=}"
+        COMPONENT_FILE="${ENTRY#*=}"
         [ "$PARTITION" = "bootloader" ] && continue
-        [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$FILE_NAME" ] || continue
+        [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$COMPONENT_FILE" ] || continue
 
-        LOG "- Copying AVB firmware component for zip: $PARTITION ($FILE_NAME)"
-        cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$FILE_NAME" "$TMP_DIR/$FILE_NAME"
+        LOG "- Copying AVB firmware component for zip: $PARTITION ($COMPONENT_FILE)"
+        cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$COMPONENT_FILE" "$TMP_DIR/$COMPONENT_FILE"
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 }
 
@@ -198,7 +199,7 @@ BUILD_ODIN_AP_PACKAGE()
     local AP_TAR_MD5="$OUT_DIR/AP_${FILE_NAME%.zip}.tar.md5"
     local AP_CHECKSUM
     local PARTITION
-    local FILE_NAME
+    local COMPONENT_FILE
     local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
     local IMAGE_DIR="$TMP_DIR"
     local -a AP_ARCHIVE_ENTRIES=()
@@ -230,15 +231,15 @@ BUILD_ODIN_AP_PACKAGE()
     while IFS= read -r ENTRY; do
         [ -n "$ENTRY" ] || continue
         PARTITION="${ENTRY%%=*}"
-        FILE_NAME="${ENTRY#*=}"
+        COMPONENT_FILE="${ENTRY#*=}"
         if [ "$PARTITION" = "bootloader" ]; then
             LOGW "Skipping bootloader from AVB firmware components during Odin packaging"
             continue
         fi
-        [ -f "$IMAGE_DIR/$FILE_NAME" ] || continue
+        [ -f "$IMAGE_DIR/$COMPONENT_FILE" ] || continue
 
-        LOG "- Copying Odin firmware component $FILE_NAME"
-        cp -fa "$IMAGE_DIR/$FILE_NAME" "$AP_DIR/$FILE_NAME"
+        LOG "- Copying Odin firmware component $COMPONENT_FILE"
+        cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$AP_DIR/$COMPONENT_FILE"
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 
     for PARTITION in $TARGET_ODIN_EXTRA_PARTITIONS; do
@@ -247,12 +248,12 @@ BUILD_ODIN_AP_PACKAGE()
             continue
         fi
 
-        FILE_NAME="$(GET_KV_VALUE "$PARTITION" "$TARGET_ODIN_EXTRA_IMAGE_MAP")"
-        [ -n "$FILE_NAME" ] || FILE_NAME="$PARTITION.img"
-        [ -f "$IMAGE_DIR/$FILE_NAME" ] || continue
+        COMPONENT_FILE="$(GET_KV_VALUE "$PARTITION" "$TARGET_ODIN_EXTRA_IMAGE_MAP")"
+        [ -n "$COMPONENT_FILE" ] || COMPONENT_FILE="$PARTITION.img"
+        [ -f "$IMAGE_DIR/$COMPONENT_FILE" ] || continue
 
-        LOG "- Copying Odin firmware component $FILE_NAME"
-        cp -fa "$IMAGE_DIR/$FILE_NAME" "$AP_DIR/$FILE_NAME"
+        LOG "- Copying Odin firmware component $COMPONENT_FILE"
+        cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$AP_DIR/$COMPONENT_FILE"
     done
 
     if [ -f "$TMP_DIR/up_param.bin" ]; then
@@ -442,6 +443,9 @@ GENERATE_UPDATER_SCRIPT()
 {
     local SCRIPT_FILE="$TMP_DIR/META-INF/com/google/android/updater-script"
     local BROTLI_EXTENSION=".br"
+    local ENTRY=""
+    local PARTITION=""
+    local COMPONENT_FILE=""
 
     local PARTITION_COUNT=0
     local HAS_UP_PARAM=false
@@ -736,13 +740,13 @@ GENERATE_UPDATER_SCRIPT()
         while IFS= read -r ENTRY; do
             [ -n "$ENTRY" ] || continue
             PARTITION="${ENTRY%%=*}"
-            FILE_NAME="${ENTRY#*=}"
+            COMPONENT_FILE="${ENTRY#*=}"
             [ "$PARTITION" = "bootloader" ] && continue
-            [ -f "$TMP_DIR/$FILE_NAME" ] || continue
+            [ -f "$TMP_DIR/$COMPONENT_FILE" ] || continue
 
             echo    "ui_print(\"Installing $PARTITION firmware component...\");"
             echo -n 'package_extract_file("'
-            echo -n "$FILE_NAME"
+            echo -n "$COMPONENT_FILE"
             echo -n '", "'
             echo -n "$TARGET_BOOT_DEVICE_PATH"
             echo -n '/'
