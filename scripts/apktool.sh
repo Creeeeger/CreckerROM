@@ -116,6 +116,8 @@ BUILD()
     if [ -f "${INPUT_FILE%/*}/$FILE_NAME.bprof" ]; then
         DELETE_FROM_WORK_DIR "$PARTITION" "${FILE%/*}/$FILE_NAME.bprof"
     fi
+
+    ENSURE_WORK_DIR_METADATA "$PARTITION" "$FILE" || exit 1
 }
 
 DECODE()
