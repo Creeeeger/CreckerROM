@@ -1,0 +1,4 @@
+id=iccc-s24-vendor-stack
+name=S24 ICCC vendor stack
+author=Creeeeger
+description=Uses the S24 ICCC HAL stack for all Exynos 990 targets.
