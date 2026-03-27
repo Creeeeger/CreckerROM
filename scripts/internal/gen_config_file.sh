@@ -126,16 +126,12 @@ GET_DEFAULT_PLATFORM_CERT_PK8_PATH()
 
 GET_DEFAULT_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS()
 {
-    if [[ "$TARGET_NAME" == Galaxy\ S20* ]] || [[ "$TARGET_NAME" == Galaxy\ S21* ]]; then
-        echo "ldfw tzsw keystorage harx"
-    else
-        echo ""
-    fi
+    echo ""
 }
 
 GET_DEFAULT_AVB_FIRMWARE_IMAGE_MAP()
 {
-    echo "ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin"
+    echo ""
 }
 
 GET_DEFAULT_ODIN_EXTRA_PARTITIONS()

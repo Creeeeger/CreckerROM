@@ -62,9 +62,8 @@ PARTITION_SIGN_EXTRA_ARGS=""
 KEY_EXPORT_LABELS=""
 KEY_EXPORT_REPORT="$STAGING_DIR/avb_keys.txt"
 FIRMWARE_DESCRIPTOR_PACK_FILES=""
-BL_TAR_PATH=""
+FIRMWARE_DESCRIPTOR_PACK_COMPONENTS=""
 EXCLUDED_VBMETA_PARTITIONS="bootloader"
-KNOWN_FIRMWARE_DESCRIPTOR_PARTITIONS="ldfw tzsw keystorage harx"
 REQUIRED_RE_SIGN_PARTITIONS="boot init_boot vendor_boot dtbo recovery"
 INCLUDED_HASH_PARTITIONS=""
 INCLUDED_HASHTREE_PARTITIONS=""
@@ -260,26 +259,6 @@ LOG_PARTITION_SET()
     AVB_DEBUG_LOG "$LABEL: ${VALUE:-<empty>}"
 }
 
-TARGET_SUPPORTS_FIRMWARE_DESCRIPTOR_PARTITIONS()
-{
-    [[ "$TARGET_NAME" == Galaxy\ S20* ]] || [[ "$TARGET_NAME" == Galaxy\ S21* ]]
-}
-
-IS_KNOWN_FIRMWARE_DESCRIPTOR_PARTITION()
-{
-    local PARTITION="$1"
-
-    LIST_HAS_ITEM "$PARTITION" "$KNOWN_FIRMWARE_DESCRIPTOR_PARTITIONS"
-}
-
-IS_ENABLED_FIRMWARE_DESCRIPTOR_PARTITION()
-{
-    local PARTITION="$1"
-
-    TARGET_SUPPORTS_FIRMWARE_DESCRIPTOR_PARTITIONS || return 1
-    LIST_HAS_ITEM "$PARTITION" "$TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS"
-}
-
 INIT_DEFAULTS()
 {
     TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT="${TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT:-true}"
@@ -308,7 +287,7 @@ INIT_DEFAULTS()
     TARGET_AVB_HASH_ALGORITHM="${TARGET_AVB_HASH_ALGORITHM:-sha256}"
     TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS="${TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS:-}"
     TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS="${TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS:-}"
-    TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-ldfw=ldfw.img tzsw=tzsw.img keystorage=keystorage.bin harx=harx.bin}"
+    TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-}"
     TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS="${TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS:-true}"
 
     if ! [[ "$TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
@@ -568,7 +547,7 @@ MERGE_LAYOUT()
     LOG_PARTITION_SET "Merged AVB hash partitions" "$HASH_PARTITIONS"
     LOG_PARTITION_SET "Merged AVB hashtree partitions" "$HASHTREE_PARTITIONS"
     LOG_PARTITION_SET "Merged AVB chain partitions" "$CHAIN_PARTITIONS"
-    LOG_PARTITION_SET "Enabled firmware descriptor partitions" "$TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS"
+    LOG_PARTITION_SET "Configured firmware descriptor overrides" "$TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS"
 }
 
 IS_PRESENT_IN_ORIGINAL_VBMETA()
@@ -1446,36 +1425,13 @@ GET_FIRMWARE_DESCRIPTOR_FILENAME_CANDIDATES()
     echo "$CANDIDATES"
 }
 
-TRY_LOCATE_TARGET_BL_TAR()
+LIST_TARGET_FIRMWARE_TARS()
 {
-    local PATTERN
+    local FW_ODIN_DIR="$ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}"
 
-    if [ -n "$BL_TAR_PATH" ] && [ -f "$BL_TAR_PATH" ]; then
-        echo "$BL_TAR_PATH"
-        return 0
-    fi
+    [ -d "$FW_ODIN_DIR" ] || return 1
 
-    [ -d "$ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}" ] || return 1
-
-    for PATTERN in "BL_${TARGET_FIRMWARE_MODEL}*.md5" "BL_${TARGET_FIRMWARE_MODEL_ALT}*.md5" "BL_*.md5"; do
-        BL_TAR_PATH="$(find "$ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}" -name "$PATTERN" | sort -r | head -n 1)"
-        [ -n "$BL_TAR_PATH" ] && break
-    done
-
-    [ -n "$BL_TAR_PATH" ] || return 1
-
-    AVB_DEBUG_LOG "Using BL tar for firmware descriptors: $BL_TAR_PATH"
-    echo "$BL_TAR_PATH"
-}
-
-LOCATE_TARGET_BL_TAR()
-{
-    if ! TRY_LOCATE_TARGET_BL_TAR > /dev/null; then
-        LOGE "Unable to locate BL tar for $TARGET_FIRMWARE_MODEL/$TARGET_FIRMWARE_CSC in $ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}"
-        exit 1
-    fi
-
-    echo "$BL_TAR_PATH"
+    find "$FW_ODIN_DIR" -maxdepth 1 -type f \( -name "*.md5" -o -name "*.tar" \) | sort -r
 }
 
 EXTRACT_FILE_FROM_TAR_TO_PATH()
@@ -1510,32 +1466,44 @@ GET_FIRMWARE_DESCRIPTOR_SOURCE_PATH()
     local PARTITION="$1"
     local FILE_NAME=""
     local SOURCE_PATH=""
-    local TAR_FILE=""
     local CANDIDATES=""
+    local FW_ODIN_DIR="$ODIN_DIR/${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}"
+    local EXTRACTED_CANDIDATE=""
+    local TAR_FILE=""
 
     CANDIDATES="$(GET_FIRMWARE_DESCRIPTOR_FILENAME_CANDIDATES "$PARTITION")"
     [ -n "$CANDIDATES" ] || return 1
-    TAR_FILE="$(TRY_LOCATE_TARGET_BL_TAR)" || return 1
 
     for FILE_NAME in $CANDIDATES; do
+        for EXTRACTED_CANDIDATE in \
+            "$FW_DIR/$TARGET_FIRMWARE_PATH/$FILE_NAME" \
+            "$FW_DIR/$TARGET_FIRMWARE_PATH/kernel/$FILE_NAME" \
+            "$FW_DIR/$TARGET_FIRMWARE_PATH/avb/$FILE_NAME"; do
+            if [ -f "$EXTRACTED_CANDIDATE" ]; then
+                echo "$EXTRACTED_CANDIDATE"
+                return 0
+            fi
+        done
+
         SOURCE_PATH="$STAGING_DIR/fw_odin/$FILE_NAME"
         if [ -f "$SOURCE_PATH" ]; then
             echo "$SOURCE_PATH"
             return 0
         fi
 
-        if ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME" && ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME.lz4"; then
-            continue
-        fi
+        while IFS= read -r TAR_FILE; do
+            if ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME" && ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME.lz4"; then
+                continue
+            fi
 
-        # Keep function stdout clean: caller captures only SOURCE_PATH via command substitution.
-        LOG "- Extracting $FILE_NAME from $(basename "$TAR_FILE") for $PARTITION" >&2
-        EXTRACT_FILE_FROM_TAR_TO_PATH "$TAR_FILE" "$FILE_NAME" "$SOURCE_PATH"
-        echo "$SOURCE_PATH"
-        return 0
+            LOG "- Extracting $FILE_NAME from $(basename "$TAR_FILE") for $PARTITION" >&2
+            EXTRACT_FILE_FROM_TAR_TO_PATH "$TAR_FILE" "$FILE_NAME" "$SOURCE_PATH"
+            echo "$SOURCE_PATH"
+            return 0
+        done < <(LIST_TARGET_FIRMWARE_TARS)
     done
 
-    LOGW "Firmware descriptor source not found in $(basename "$TAR_FILE") for $PARTITION: tried $CANDIDATES"
+    LOGW "Firmware descriptor source not found for $PARTITION in extracted firmware or stock Odin tars under $FW_ODIN_DIR: tried $CANDIDATES"
     return 1
 }
 
@@ -1759,6 +1727,7 @@ SIGN_EXTERNAL_DESCRIPTOR_PARTITIONS()
         fi
         APPEND_UNIQUE "SIGNED_PARTITIONS" "$PARTITION"
         APPEND_UNIQUE "FIRMWARE_DESCRIPTOR_PACK_FILES" "$SOURCE_PATH"
+        APPEND_UNIQUE "FIRMWARE_DESCRIPTOR_PACK_COMPONENTS" "$PARTITION=$(basename "$SOURCE_PATH")"
     done
 }
 
@@ -2149,10 +2118,8 @@ CREATE_IMAGE_PACK()
         for PARTITION in $INCLUDED_CHAIN_PARTITIONS; do
             echo "chain_partition=$PARTITION"
         done
-        for ENTRY in $FIRMWARE_DESCRIPTOR_PACK_FILES; do
-            [ -f "$ENTRY" ] || continue
-            PARTITION="$(basename "$ENTRY")"
-            echo "firmware_component=$PARTITION"
+        for ENTRY in $FIRMWARE_DESCRIPTOR_PACK_COMPONENTS; do
+            echo "firmware_component=$ENTRY"
         done
     } > "$PACK_DIR/avb_manifest.txt"
 

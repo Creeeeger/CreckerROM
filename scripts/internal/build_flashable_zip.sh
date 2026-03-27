@@ -154,6 +154,43 @@ GET_KV_VALUE()
     [ -n "$VALUE" ] && echo "$VALUE"
 }
 
+GET_AVB_IMAGE_PACK_MANIFEST()
+{
+    local MANIFEST="$TARGET_AVB_IMAGE_PACK_DIR/avb_manifest.txt"
+
+    [ -f "$MANIFEST" ] && echo "$MANIFEST"
+}
+
+LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS()
+{
+    local MANIFEST=""
+
+    MANIFEST="$(GET_AVB_IMAGE_PACK_MANIFEST || true)"
+    [ -n "$MANIFEST" ] || return 0
+
+    grep '^firmware_component=' "$MANIFEST" | cut -d '=' -f 2-
+}
+
+COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP()
+{
+    local ENTRY=""
+    local PARTITION=""
+    local FILE_NAME=""
+
+    $TARGET_ENABLE_CUSTOM_AVB || return 0
+
+    while IFS= read -r ENTRY; do
+        [ -n "$ENTRY" ] || continue
+        PARTITION="${ENTRY%%=*}"
+        FILE_NAME="${ENTRY#*=}"
+        [ "$PARTITION" = "bootloader" ] && continue
+        [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$FILE_NAME" ] || continue
+
+        LOG "- Copying AVB firmware component for zip: $PARTITION ($FILE_NAME)"
+        cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$FILE_NAME" "$TMP_DIR/$FILE_NAME"
+    done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
+}
+
 BUILD_ODIN_AP_PACKAGE()
 {
     local AP_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_ap"
@@ -190,9 +227,23 @@ BUILD_ODIN_AP_PACKAGE()
         cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
     done
 
+    while IFS= read -r ENTRY; do
+        [ -n "$ENTRY" ] || continue
+        PARTITION="${ENTRY%%=*}"
+        FILE_NAME="${ENTRY#*=}"
+        if [ "$PARTITION" = "bootloader" ]; then
+            LOGW "Skipping bootloader from AVB firmware components during Odin packaging"
+            continue
+        fi
+        [ -f "$IMAGE_DIR/$FILE_NAME" ] || continue
+
+        LOG "- Copying Odin firmware component $FILE_NAME"
+        cp -fa "$IMAGE_DIR/$FILE_NAME" "$AP_DIR/$FILE_NAME"
+    done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
+
     for PARTITION in $TARGET_ODIN_EXTRA_PARTITIONS; do
         if [ "$PARTITION" = "bootloader" ]; then
-            LOGW "Skipping bootloader in TARGET_ODIN_EXTRA_PARTITIONS; Odin extra packaging only supports ldfw/tzsw/keystorage/harx."
+            LOGW "Skipping bootloader in TARGET_ODIN_EXTRA_PARTITIONS"
             continue
         fi
 
@@ -682,6 +733,22 @@ GENERATE_UPDATER_SCRIPT()
             echo -n "$TARGET_BOOT_DEVICE_PATH"
             echo    '/up_param");'
         fi
+        while IFS= read -r ENTRY; do
+            [ -n "$ENTRY" ] || continue
+            PARTITION="${ENTRY%%=*}"
+            FILE_NAME="${ENTRY#*=}"
+            [ "$PARTITION" = "bootloader" ] && continue
+            [ -f "$TMP_DIR/$FILE_NAME" ] || continue
+
+            echo    "ui_print(\"Installing $PARTITION firmware component...\");"
+            echo -n 'package_extract_file("'
+            echo -n "$FILE_NAME"
+            echo -n '", "'
+            echo -n "$TARGET_BOOT_DEVICE_PATH"
+            echo -n '/'
+            echo -n "$PARTITION"
+            echo    '");'
+        done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 
         if $HAS_POST_INSTALL; then
             echo -e "\n"
@@ -794,6 +861,7 @@ if $TARGET_ENABLE_CUSTOM_AVB; then
     LOG_STEP_IN "- Signing AVB images"
     "$SRC_DIR/scripts/internal/sign_avb_images.sh" "$TMP_DIR" || exit 1
     LOG_STEP_OUT
+    COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP
 fi
 
 if $TARGET_BUILD_ODIN_PACKAGE; then
