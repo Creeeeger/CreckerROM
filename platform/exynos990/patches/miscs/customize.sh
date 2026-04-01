@@ -45,12 +45,28 @@ SET_PROP "vendor" "ro.hwui.use_vulkan" "true"
 SET_PROP "vendor" "debug.hwui.use_hint_manager" "true"
 LOG_STEP_OUT
 
-LOG "- Disabling encryption"
-LINE=$(sed -n "/^\/dev\/block\/by-name\/userdata/=" "$WORK_DIR/vendor/etc/fstab.exynos990")
-sed -i "${LINE}s/,fileencryption=ice//g" "$WORK_DIR/vendor/etc/fstab.exynos990"
+LOG_STEP_IN "- Setting first API level"
+SET_PROP "vendor" "ro.product.first_api_level" "$TARGET_PRODUCT_FIRST_API_LEVEL"
+LOG_STEP_OUT
 
-# ODE
-sed -i -e "/ODE/d" -e "/keydata/d" -e "/keyrefuge/d" "$WORK_DIR/vendor/etc/fstab.exynos990"
+LINE=$(sed -n "/^\/dev\/block\/by-name\/userdata/=" "$WORK_DIR/vendor/etc/fstab.exynos990")
+if [[ "${TARGET_ENABLE_ENCRYPTION:-false}" == "true" ]]; then
+    LOG "- Enabling FBE v2 encryption for Exynos 990"
+    FBE_V1="fileencryption=ice"
+    FBE_V2="fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized,metadata_encryption=aes-256-xts,keydirectory=/metadata/vold/metadata_encryption"
+
+    sed -i \
+        -e "${LINE}s|resgid=5678,inlinecrypt|resgid=5678|g" \
+        -e "${LINE}s|resgid=5678|resgid=5678,inlinecrypt|g" \
+        -e "${LINE}s|$FBE_V1|$FBE_V2|g" \
+        "$WORK_DIR/vendor/etc/fstab.exynos990"
+else
+    LOG "- Disabling encryption"
+    sed -i "${LINE}s/,fileencryption=ice//g" "$WORK_DIR/vendor/etc/fstab.exynos990"
+
+    # ODE
+    sed -i -e "/ODE/d" -e "/keydata/d" -e "/keyrefuge/d" "$WORK_DIR/vendor/etc/fstab.exynos990"
+fi
 
 # For some reason we are missing 2 permissions here: android.hardware.security.model.compatible and android.software.controls
 # First one is related to encryption and second one to SmartThings Device Control
