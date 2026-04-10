@@ -1,4 +1,0 @@
-id=rezetprop
-name=Device Characteristics Spoofing
-author=salvogiangri
-description=Spoof bootloader & device information for valid attestations.
