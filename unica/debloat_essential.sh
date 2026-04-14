@@ -39,15 +39,6 @@ etc/init/vendor_flash_recovery.rc
 
 # Samsung SIM Unlock
 SYSTEM_DEBLOAT+="
-system/bin/ssud
-system/etc/init/ssu_r12sxxx.rc
-system/etc/init/ssu.rc
-system/etc/permissions/privapp-permissions-com.samsung.ssu.xml
-system/etc/sysconfig/samsungsimunlock.xml
-system/lib64/android.security.securekeygeneration-ndk.so
-system/lib64/vendor.samsung.hardware.security.ssu-V1-ndk.so
-system/lib64/libssu_keystore2.so
-system/priv-app/SsuService
 "
 
 # eSIM
@@ -75,15 +66,4 @@ overlay/SoftapOverlayOWE
 
 # StorageShare (kSMBd)
 SYSTEM_DEBLOAT+="
-system/bin/ksmbd.addshare
-system/bin/ksmbd.adduser
-system/bin/ksmbd.control
-system/bin/ksmbd.mountd
-system/bin/ksmbd.tools
-system/etc/default-permissions/default-permissions-com.samsung.android.hwresourceshare.storage.xml
-system/etc/init/ksmbd.rc
-system/etc/permissions/privapp-permissions-com.samsung.android.hwresourceshare.storage.xml
-system/etc/sysconfig/preinstalled-packages-com.samsung.android.hwresourceshare.storage.xml
-system/etc/ksmbd.conf
-system/priv-app/StorageShare
 "

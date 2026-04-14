@@ -46,7 +46,6 @@ system/app/MdecService/MdecService.apk
 system/app/MdxKitService/MdxKitService.apk
 system/app/MhsAiService/MhsAiService.apk
 system/app/MoccaMobile/MoccaMobile.apk
-system/app/MotionPhoto/MotionPhoto.apk
 system/app/MyDevice/MyDevice.apk
 system/app/NfwLocationPrivacy/NfwLocationPrivacy.apk
 system/app/OCRDataProvider/OCRDataProvider.apk
