@@ -117,8 +117,8 @@ BUILD()
 DECODE()
 {
     if [ ! -f "$INPUT_FILE" ]; then
-        LOGE "File not found: ${INPUT_FILE//$WORK_DIR/}"
-        exit 1
+        LOGW "File not found, skipping decode: ${INPUT_FILE//$WORK_DIR/}"
+        return 0
     elif [ -d "$OUTPUT_PATH" ]; then
         if $FORCE; then
             rm -rf "$OUTPUT_PATH"

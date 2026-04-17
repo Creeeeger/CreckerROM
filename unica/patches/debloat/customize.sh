@@ -23,24 +23,44 @@ VENDOR_DEBLOAT="$(sed "/^$/d" <<< "$VENDOR_DEBLOAT" | sort)"
 PRISM_DEBLOAT="$(sed "/^$/d" <<< "$PRISM_DEBLOAT" | sort)"
 OPTICS_DEBLOAT="$(sed "/^$/d" <<< "$OPTICS_DEBLOAT" | sort)"
 
-[ "$ODM_DEBLOAT" ] && xargs -I "{}" -P "$(nproc)" \
-    bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "odm" "$1"' "bash" "{}" \
-    <<< "$ODM_DEBLOAT"
-[ "$PRODUCT_DEBLOAT" ] && xargs -I "{}" -P "$(nproc)" \
-    bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "product" "$1"' "bash" "{}" \
-    <<< "$PRODUCT_DEBLOAT"
-[ "$SYSTEM_DEBLOAT" ] && xargs -I "{}" -P "$(nproc)" \
-    bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "system" "$1"' "bash" "{}" \
-    <<< "$SYSTEM_DEBLOAT"
-[ "$SYSTEM_EXT_DEBLOAT" ] && xargs -I "{}" -P "$(nproc)" \
-    bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "system_ext" "$1"' "bash" "{}" \
-    <<< "$SYSTEM_EXT_DEBLOAT"
-[ "$VENDOR_DEBLOAT" ] && xargs -I "{}" -P "$(nproc)" \
-    bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "vendor" "$1"' "bash" "{}" \
-    <<< "$VENDOR_DEBLOAT"
-[ "$PRISM_DEBLOAT" ] && xargs -I "{}" -P "$(nproc)" \
-    bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "prism" "$1"' "bash" "{}" \
-    <<< "$PRISM_DEBLOAT"
-[ "$OPTICS_DEBLOAT" ] && xargs -I "{}" -P "$(nproc)" \
-    bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "optics" "$1"' "bash" "{}" \
-    <<< "$OPTICS_DEBLOAT"
+if [ "$ODM_DEBLOAT" ]; then
+    xargs -I "{}" -P "$(nproc)" \
+        bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "odm" "$1"' "bash" "{}" \
+        <<< "$ODM_DEBLOAT"
+fi
+
+if [ "$PRODUCT_DEBLOAT" ]; then
+    xargs -I "{}" -P "$(nproc)" \
+        bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "product" "$1"' "bash" "{}" \
+        <<< "$PRODUCT_DEBLOAT"
+fi
+
+if [ "$SYSTEM_DEBLOAT" ]; then
+    xargs -I "{}" -P "$(nproc)" \
+        bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "system" "$1"' "bash" "{}" \
+        <<< "$SYSTEM_DEBLOAT"
+fi
+
+if [ "$SYSTEM_EXT_DEBLOAT" ]; then
+    xargs -I "{}" -P "$(nproc)" \
+        bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "system_ext" "$1"' "bash" "{}" \
+        <<< "$SYSTEM_EXT_DEBLOAT"
+fi
+
+if [ "$VENDOR_DEBLOAT" ]; then
+    xargs -I "{}" -P "$(nproc)" \
+        bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "vendor" "$1"' "bash" "{}" \
+        <<< "$VENDOR_DEBLOAT"
+fi
+
+if [ "$PRISM_DEBLOAT" ]; then
+    xargs -I "{}" -P "$(nproc)" \
+        bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "prism" "$1"' "bash" "{}" \
+        <<< "$PRISM_DEBLOAT"
+fi
+
+if [ "$OPTICS_DEBLOAT" ]; then
+    xargs -I "{}" -P "$(nproc)" \
+        bash -c 'source "$SRC_DIR/scripts/utils/module_utils.sh"; DELETE_FROM_WORK_DIR "optics" "$1"' "bash" "{}" \
+        <<< "$OPTICS_DEBLOAT"
+fi
