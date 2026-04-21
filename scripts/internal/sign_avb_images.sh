@@ -17,13 +17,15 @@
 source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
 
 TMP_IMG_DIR="$1"
+TMP_DIR="${TMP_DIR:-$OUT_DIR/tmp}"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_CSC="$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_MODEL_ALT="${TARGET_FIRMWARE_MODEL#SM-}"
 PACK_DIR="${TARGET_AVB_IMAGE_PACK_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_images}"
 PACK_ZIP="${TARGET_AVB_IMAGE_PACK_ZIP:-$OUT_DIR/${TARGET_CODENAME}_signed_images.zip}"
-STAGING_DIR="$(mktemp -d "$TMP_DIR/avb_sign.XXXXXX")"
+mkdir -p "$TMP_DIR" || exit 1
+STAGING_DIR="$(mktemp -d "$TMP_DIR/avb_sign.XXXXXX")" || exit 1
 DEFAULT_CUSTOM_AVB_KEY_DIR="$SRC_DIR/security/avb"
 DEFAULT_CUSTOM_AVB_KEY_NAME="creckerrom_avb"
 DEFAULT_CUSTOM_AVB_KEY_PATH="$DEFAULT_CUSTOM_AVB_KEY_DIR/${DEFAULT_CUSTOM_AVB_KEY_NAME}_private.pem"
@@ -275,6 +277,7 @@ INIT_DEFAULTS()
     fi
     TARGET_AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-$UPSTREAM_AVBTOOL_PATH}"
     TARGET_AVBTOOL_PYTHON="${TARGET_AVBTOOL_PYTHON:-none}"
+    TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS="${TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS:-true}"
     TARGET_AVB_HASH_PARTITIONS="${TARGET_AVB_HASH_PARTITIONS:-}"
     TARGET_AVB_HASHTREE_PARTITIONS="${TARGET_AVB_HASHTREE_PARTITIONS:-}"
     TARGET_AVB_CHAIN_PARTITIONS="${TARGET_AVB_CHAIN_PARTITIONS:-}"
@@ -297,6 +300,10 @@ INIT_DEFAULTS()
     if [ "$TARGET_AVB_CREATE_IMAGE_PACK_ZIP" != "true" ] && [ "$TARGET_AVB_CREATE_IMAGE_PACK_ZIP" != "false" ]; then
         LOGW "Invalid TARGET_AVB_CREATE_IMAGE_PACK_ZIP: $TARGET_AVB_CREATE_IMAGE_PACK_ZIP (expected true|false). Using false."
         TARGET_AVB_CREATE_IMAGE_PACK_ZIP="false"
+    fi
+    if [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ] && [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "false" ]; then
+        LOGW "Invalid TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS: $TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS (expected true|false). Using true."
+        TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
     fi
 }
 
@@ -547,6 +554,7 @@ MERGE_LAYOUT()
     LOG_PARTITION_SET "Merged AVB hash partitions" "$HASH_PARTITIONS"
     LOG_PARTITION_SET "Merged AVB hashtree partitions" "$HASHTREE_PARTITIONS"
     LOG_PARTITION_SET "Merged AVB chain partitions" "$CHAIN_PARTITIONS"
+    LOG_PARTITION_SET "Include vbmeta partition descriptors" "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS"
     LOG_PARTITION_SET "Configured firmware descriptor overrides" "$TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS"
 }
 
@@ -1660,7 +1668,9 @@ SIGN_BUILT_PARTITION()
 
     IS_PRESENT_IN_ORIGINAL_VBMETA "$PARTITION" && INCLUDE_IN_TOPLEVEL="true"
     CHAIN_LOCATION="$(GET_CHAIN_LOCATION "$PARTITION")"
-    if [ "$INCLUDE_IN_TOPLEVEL" = "true" ] && [ -n "$CHAIN_LOCATION" ] && [ -n "$(GET_KV_VALUE "$PARTITION" "$ORIGINAL_CHAIN_PARTITIONS")" ]; then
+    if [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ]; then
+        LOG "- Signed $PARTITION.img but not adding it to top-level vbmeta because partition descriptors are disabled"
+    elif [ "$INCLUDE_IN_TOPLEVEL" = "true" ] && [ -n "$CHAIN_LOCATION" ] && [ -n "$(GET_KV_VALUE "$PARTITION" "$ORIGINAL_CHAIN_PARTITIONS")" ]; then
         APPEND_UNIQUE "ACTIVE_CHAIN_PARTITIONS" "$PARTITION=$CHAIN_LOCATION"
         APPEND_UNIQUE "INCLUDED_CHAIN_PARTITIONS" "$PARTITION=$CHAIN_LOCATION"
     elif [ "$INCLUDE_IN_TOPLEVEL" = "true" ]; then
@@ -1686,7 +1696,14 @@ SIGN_EXTERNAL_DESCRIPTOR_PARTITIONS()
     local IMAGE
     local INCLUDE_IN_TOPLEVEL="false"
 
+    if [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ]; then
+        LOG "- Skipping external AVB descriptor images because top-level vbmeta partition descriptors are disabled"
+        return 0
+    fi
+
     for PARTITION in $HASH_PARTITIONS $HASHTREE_PARTITIONS; do
+        INCLUDE_IN_TOPLEVEL="false"
+
         if LIST_HAS_ITEM "$PARTITION" "$SIGNED_PARTITIONS"; then
             continue
         fi
@@ -1934,28 +1951,34 @@ MAKE_TOPLEVEL_VBMETA()
         --key "$VBMETA_SIGN_KEY_PATH"
     )
 
-    for ENTRY in $DIRECT_DESCRIPTOR_IMAGES; do
-        CMD+=(--include_descriptors_from_image "$ENTRY")
-    done
+    if [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" = "true" ]; then
+        for ENTRY in $DIRECT_DESCRIPTOR_IMAGES; do
+            CMD+=(--include_descriptors_from_image "$ENTRY")
+        done
+    else
+        LOG "- Creating vbmeta without hash, hashtree, or chain partition descriptors"
+    fi
 
     ORIGINAL_KERNEL_CMDLINE_IMAGE="$(BUILD_ORIGINAL_KERNEL_CMDLINE_DESCRIPTOR_IMAGE || true)"
     if [ -n "$ORIGINAL_KERNEL_CMDLINE_IMAGE" ] && [ -f "$ORIGINAL_KERNEL_CMDLINE_IMAGE" ]; then
         CMD+=(--include_descriptors_from_image "$ORIGINAL_KERNEL_CMDLINE_IMAGE")
     fi
 
-    for ENTRY in $ACTIVE_CHAIN_PARTITIONS; do
-        PARTITION="${ENTRY%%=*}"
-        LOCATION="${ENTRY#*=}"
-        RESOLVE_PARTITION_SIGNING_CONFIG "$PARTITION" "$(GET_SIGN_KIND "$PARTITION")"
-        if [ "$PARTITION_SIGN_ALGORITHM" = "NONE" ] || [ -z "$PARTITION_SIGN_KEY_PATH" ]; then
-            LOGE "Chained partition $PARTITION must use a real signing key"
-            exit 1
-        fi
-        PUBLIC_KEY_BLOB="$(GET_CHAIN_PUBLIC_KEY_BLOB "$PARTITION" "$PARTITION_SIGN_KEY_PATH")"
-        CHAIN_OPTION="--chain_partition"
-        [ "$PARTITION_SIGN_DO_NOT_USE_AB" = "true" ] && CHAIN_OPTION="--chain_partition_do_not_use_ab"
-        CMD+=("$CHAIN_OPTION" "${PARTITION}:${LOCATION}:$PUBLIC_KEY_BLOB")
-    done
+    if [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" = "true" ]; then
+        for ENTRY in $ACTIVE_CHAIN_PARTITIONS; do
+            PARTITION="${ENTRY%%=*}"
+            LOCATION="${ENTRY#*=}"
+            RESOLVE_PARTITION_SIGNING_CONFIG "$PARTITION" "$(GET_SIGN_KIND "$PARTITION")"
+            if [ "$PARTITION_SIGN_ALGORITHM" = "NONE" ] || [ -z "$PARTITION_SIGN_KEY_PATH" ]; then
+                LOGE "Chained partition $PARTITION must use a real signing key"
+                exit 1
+            fi
+            PUBLIC_KEY_BLOB="$(GET_CHAIN_PUBLIC_KEY_BLOB "$PARTITION" "$PARTITION_SIGN_KEY_PATH")"
+            CHAIN_OPTION="--chain_partition"
+            [ "$PARTITION_SIGN_DO_NOT_USE_AB" = "true" ] && CHAIN_OPTION="--chain_partition_do_not_use_ab"
+            CMD+=("$CHAIN_OPTION" "${PARTITION}:${LOCATION}:$PUBLIC_KEY_BLOB")
+        done
+    fi
 
     if [ "${#VBMETA_PROPS[@]}" -gt 0 ]; then
         CMD+=("${VBMETA_PROPS[@]}")
@@ -2104,6 +2127,7 @@ CREATE_IMAGE_PACK()
         echo "device=$TARGET_CODENAME"
         echo "firmware=$TARGET_FIRMWARE"
         echo "algorithm=$VBMETA_SIGN_ALGORITHM"
+        echo "include_partition_descriptors=$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS"
         echo "vbmeta_key_path=$VBMETA_SIGN_KEY_PATH"
         echo "vbmeta_public_key_blob=keys/vbmeta.avbpubkey"
         if [ -f "$STAGING_DIR/keys/vbmeta.avbpubkey" ]; then

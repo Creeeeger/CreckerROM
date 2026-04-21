@@ -20,6 +20,7 @@
 source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
 
 FORCE=false
+AVB_ONLY=false
 
 FIRMWARES=()
 MODEL=""
@@ -194,6 +195,8 @@ PREPARE_SCRIPT()
     while [ "$#" != 0 ]; do
         if [[ "$1" == "--force" ]] || [[ "$1" == "-f" ]]; then
             FORCE=true
+        elif [[ "$1" == "--avb-only" ]]; then
+            AVB_ONLY=true
         elif [[ "$1" == "--ignore-source" ]]; then
             IGNORE_SOURCE=true
         elif [[ "$1" == "--ignore-target" ]]; then
@@ -235,6 +238,7 @@ PREPARE_SCRIPT()
 PRINT_USAGE()
 {
     echo "Usage: extract_fw [options] <firmware>" >&2
+    echo " --avb-only : Extract only AVB binaries from BL" >&2
     echo " --ignore-source : Skip parsing source firmware flags" >&2
     echo " --ignore-target : Skip parsing target firmware flags" >&2
     echo " -f, --force : Force firmware extract" >&2
@@ -381,7 +385,13 @@ for i in "${FIRMWARES[@]}"; do
 
     LOG_STEP_IN
 
-    if ! $FORCE; then
+    if ! $FORCE && $AVB_ONLY && [ -f "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta.img" ]; then
+        LOG "\033[0;33m! AVB binaries have already been extracted\033[0m"
+        LOG_STEP_OUT; LOG_STEP_OUT
+        continue
+    fi
+
+    if ! $FORCE && ! $AVB_ONLY; then
         # Skip if firmware has been extracted
         if [ -f "$FW_DIR/${MODEL}_${CSC}/.extracted" ]; then
             if ! COMPARE_SEC_BUILD_VERSION "$(cat "$FW_DIR/${MODEL}_${CSC}/.extracted")" "$LATEST_FIRMWARE"; then
@@ -406,7 +416,9 @@ for i in "${FIRMWARES[@]}"; do
         exit 1
     fi
 
-    [ -f "$FW_DIR/${MODEL}_${CSC}/.extracted" ] && rm -rf "$FW_DIR/${MODEL}_${CSC}"
+    if ! $AVB_ONLY; then
+        [ -f "$FW_DIR/${MODEL}_${CSC}/.extracted" ] && rm -rf "$FW_DIR/${MODEL}_${CSC}"
+    fi
     mkdir -p "$FW_DIR/${MODEL}_${CSC}"
 
     DOWNLOADED_FIRMWARE="$(cat "$ODIN_DIR/${MODEL}_${CSC}/.downloaded")"
@@ -428,9 +440,20 @@ for i in "${FIRMWARES[@]}"; do
     if [ ! "$BL_TAR" ]; then
         LOG "\033[0;31m! No BL tar found\033[0m"
         exit 1
-    elif [ ! "$AP_TAR" ]; then
+    elif [ ! "$AP_TAR" ] && ! $AVB_ONLY; then
         LOG "\033[0;31m! No AP tar found\033[0m"
         exit 1
+    fi
+
+    if $AVB_ONLY; then
+        EXTRACT_AVB_BINARIES
+        if [ ! -f "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta.img" ]; then
+            LOGE "vbmeta.img was not found in BL firmware for $MODEL/$CSC"
+            exit 1
+        fi
+        echo -n "$DOWNLOADED_FIRMWARE" > "$FW_DIR/${MODEL}_${CSC}/avb/.extracted"
+        LOG_STEP_OUT; LOG_STEP_OUT
+        continue
     fi
 
     EXTRACT_KERNEL_BINARIES
