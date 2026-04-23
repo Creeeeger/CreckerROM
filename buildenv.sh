@@ -50,6 +50,8 @@ _PRINT_USAGE()
     echo "Usage: source buildenv.sh [options] <target>" >&2
     echo "Options:" >&2
     echo " --debug : Enable verbose debug logs" >&2
+    echo " --official : Mark the generated config/build as official" >&2
+    echo " --unofficial : Mark the generated config/build as unofficial" >&2
     echo " --ext4-images : Force EROFS target partitions to be built as ext4" >&2
     echo " --encrypt : Enable data encryption in the generated config" >&2
     echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
@@ -142,6 +144,7 @@ export DEBUG=false
 export FORCE_EXT4_IMAGES="${FORCE_EXT4_IMAGES:-false}"
 export ROM_ENABLE_ENCRYPTION="${ROM_ENABLE_ENCRYPTION:-false}"
 export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
+export ROM_IS_OFFICIAL="${ROM_IS_OFFICIAL:-true}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
 export TMP_DIR="$OUT_DIR/tmp"
@@ -159,6 +162,10 @@ done < <(find "$SRC_DIR/target" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" |
 while [[ "$1" == "-"* ]]; do
     if [[ "$1" == "--debug" ]]; then
         export DEBUG=true
+    elif [[ "$1" == "--official" ]]; then
+        export ROM_IS_OFFICIAL="true"
+    elif [[ "$1" == "--unofficial" ]]; then
+        export ROM_IS_OFFICIAL="false"
     elif [[ "$1" == "--ext4-images" ]]; then
         export FORCE_EXT4_IMAGES=true
     elif [[ "$1" == "--encrypt" ]]; then
@@ -203,6 +210,13 @@ if [[ "$ROM_ENABLE_ENCRYPTION" != "true" ]] && \
     return 1
 fi
 
+if [[ "$ROM_IS_OFFICIAL" != "true" ]] && \
+        [[ "$ROM_IS_OFFICIAL" != "false" ]]; then
+    echo "Invalid official flag state: $ROM_IS_OFFICIAL (expected: true|false)" >&2
+    _PRINT_USAGE
+    return 1
+fi
+
 if [ "$#" -ne 1 ]; then
     echo "No target specified. Please choose from the available devices below:"
 
@@ -233,13 +247,16 @@ mkdir -p "$OUT_DIR/target/$SELECTED_TARGET"
 _SAVED_FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES"
 _SAVED_ROM_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION"
 _SAVED_ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL"
+_SAVED_ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL"
 [ -f "$OUT_DIR/config.sh" ] && unset $(sed "/Automatically/d" "$OUT_DIR/config.sh" | cut -d "=" -f 1)
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
 export ROM_ENABLE_ENCRYPTION="$_SAVED_ROM_ENABLE_ENCRYPTION"
 export ROM_DEBLOAT_LEVEL="$_SAVED_ROM_DEBLOAT_LEVEL"
+export ROM_IS_OFFICIAL="$_SAVED_ROM_IS_OFFICIAL"
 unset _SAVED_FORCE_EXT4_IMAGES
 unset _SAVED_ROM_ENABLE_ENCRYPTION
 unset _SAVED_ROM_DEBLOAT_LEVEL
+unset _SAVED_ROM_IS_OFFICIAL
 env -i \
     PATH="$PATH" \
     HOME="${HOME:-}" \
@@ -250,6 +267,7 @@ env -i \
     FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES" \
     ROM_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION" \
     ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL" \
+    ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL" \
     "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport
 
