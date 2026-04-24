@@ -2,9 +2,8 @@ MODEL=$(echo -n "$TARGET_FIRMWARE" | cut -d "/" -f 1)
 REGION=$(echo -n "$TARGET_FIRMWARE" | cut -d "/" -f 2)
 
 # Set build ID
-ROM_STATUS=" Official"
-VALUE="$(GET_PROP "$WORK_DIR/system/system/build.prop" "ro.build.display.id")"
-SET_PROP "system" "ro.build.display.id" "creckerRom$ROM_STATUS $ROM_CODENAME $ROM_VERSION - $TARGET_CODENAME ($VALUE)"
+ROM_DISPLAY_NAME="${ROM_DISPLAY_NAME:-CROM-S24FE-Official-${ROM_VERSION}}"
+SET_PROP "system" "ro.build.display.id" "$ROM_DISPLAY_NAME"
 
 SET_PROP "system" "ro.extremerom.official" "true"
 SET_PROP "system" "ro.extremerom.version" "$ROM_VERSION"

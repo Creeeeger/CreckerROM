@@ -43,16 +43,16 @@ if ! [[ "$TARGET_BROTLI_QUALITY" =~ ^([0-9]|1[01])$ ]]; then
     TARGET_BROTLI_QUALITY="4"
 fi
 
-ROM_STATUS="CreckerROM"
+ROM_DISPLAY_NAME="${ROM_DISPLAY_NAME:-CROM-S24FE-Official-${ROM_VERSION}}"
 
 ZIP_FILE_SUFFIX="-sign.zip"
 $DEBUG && ! $ROM_IS_OFFICIAL && ZIP_FILE_SUFFIX=".zip"
 
 BUILD_DATE="$(date +%Y%m%d)"
-FILE_NAME="creckerRom_${ROM_STATUS}_${ROM_VERSION}_${BUILD_DATE}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
+FILE_NAME="${ROM_DISPLAY_NAME}_${BUILD_DATE}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
 while [ -f "$OUT_DIR/$FILE_NAME" ]; do
     INCREMENTAL=$((INCREMENTAL + 1))
-    FILE_NAME="creckerRom_${ROM_STATUS}_${ROM_VERSION}_${BUILD_DATE}-${INCREMENTAL}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
+    FILE_NAME="${ROM_DISPLAY_NAME}_${BUILD_DATE}-${INCREMENTAL}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
 done
 
 export TARGET_AVB_IMAGE_PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
@@ -793,7 +793,7 @@ PRINT_HEADER()
     echo    'ui_print(" ");'
     echo    'ui_print("****************************************************");'
     echo -n 'ui_print("'
-    echo -n "Welcome to creckerRom $ROM_CODENAME $ROM_VERSION for $TARGET_NAME!"
+    echo -n "Welcome to $ROM_DISPLAY_NAME for $TARGET_NAME!"
     echo    '");'
     echo    'ui_print("****************************************************");'
     echo -n 'ui_print("'

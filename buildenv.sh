@@ -120,7 +120,7 @@ _CLEAR_GENERATED_CONFIG_ENV()
 
     while IFS= read -r VAR; do
         case "$VAR" in
-            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_TYPE|ROM_BUILD_TIMESTAMP|ROM_IS_OFFICIAL)
+            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_DISPLAY_NAME|ROM_TYPE|ROM_BUILD_TIMESTAMP|ROM_IS_OFFICIAL)
                 unset "$VAR"
                 ;;
         esac
@@ -164,7 +164,7 @@ export ROM_BUILD_FLASHABLE_ZIP="false"
 export ROM_ENABLE_AVB="false"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
 export ROM_AVB_VBMETA_ONLY="false"
-export ROM_IS_OFFICIAL="${ROM_IS_OFFICIAL:-false}"
+export ROM_IS_OFFICIAL="${ROM_IS_OFFICIAL:-true}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
 export TMP_DIR="$OUT_DIR/tmp"
