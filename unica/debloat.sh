@@ -50,13 +50,8 @@ etc/init/vendor_flash_recovery.rc
 
 # Apps debloat
 PRODUCT_DEBLOAT+="
-app/Chrome64
 app/Duo
-app/Gmail2
-app/Maps
-app/YouTube
 overlay/GmsConfigOverlaySearchSelector.apk
-priv-app/Messages
 priv-app/SearchSelector
 "
 
@@ -139,7 +134,6 @@ system/priv-app/DigitalKey
 system/priv-app/EnhancedAttestationAgent
 system/priv-app/FBInstaller_NS
 system/priv-app/FBServices
-system/priv-app/FotaAgent
 system/priv-app/ImsLogger
 system/priv-app/IpsGeofence
 system/priv-app/OdaService
