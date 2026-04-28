@@ -1,0 +1,4 @@
+copy this folder to the odin folder in out
+manually download the firmware from samfw (https://samfw.com/firmware/SM-S721B/EUX/S721BXXS7BYH1)
+unpack it so the tar.md5 files are in the folder here
+thats it
