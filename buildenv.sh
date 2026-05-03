@@ -59,7 +59,6 @@ _PRINT_USAGE()
     echo " --ultra-debloat : Alias for --debloat ultra" >&2
     echo " --zip : Build the flashable zip in addition to the default Odin package" >&2
     echo " --avb : Enable AVB signing, image signing and vbmeta creation" >&2
-    echo " --avb-vbmeta-only : Extract stock vbmeta and rebuild vbmeta only" >&2
     echo "Available devices:" >&2
     printf '%s\n' "${TARGETS[@]}" >&2
 }
@@ -163,7 +162,6 @@ export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
 export ROM_BUILD_FLASHABLE_ZIP="false"
 export ROM_ENABLE_AVB="false"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
-export ROM_AVB_VBMETA_ONLY="false"
 export ROM_IS_OFFICIAL="${ROM_IS_OFFICIAL:-true}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
@@ -208,10 +206,6 @@ while [[ "$1" == "-"* ]]; do
         export ROM_BUILD_FLASHABLE_ZIP="true"
     elif [[ "$1" == "--avb" ]]; then
         export ROM_ENABLE_AVB="true"
-    elif [[ "$1" == "--avb-vbmeta-only" ]]; then
-        export ROM_ENABLE_AVB="true"
-        export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
-        export ROM_AVB_VBMETA_ONLY="true"
     elif [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
         _PRINT_USAGE
         return 0
@@ -259,13 +253,6 @@ if [[ "$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ]] && \
     return 1
 fi
 
-if [[ "$ROM_AVB_VBMETA_ONLY" != "true" ]] && \
-        [[ "$ROM_AVB_VBMETA_ONLY" != "false" ]]; then
-    echo "Invalid AVB vbmeta-only state: $ROM_AVB_VBMETA_ONLY (expected: true|false)" >&2
-    _PRINT_USAGE
-    return 1
-fi
-
 if [[ "$ROM_IS_OFFICIAL" != "true" ]] && \
         [[ "$ROM_IS_OFFICIAL" != "false" ]]; then
     echo "Invalid official flag state: $ROM_IS_OFFICIAL (expected: true|false)" >&2
@@ -306,7 +293,6 @@ _SAVED_ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL"
 _SAVED_ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
 _SAVED_ROM_ENABLE_AVB="$ROM_ENABLE_AVB"
 _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
-_SAVED_ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY"
 _SAVED_ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL"
 _CLEAR_GENERATED_CONFIG_ENV
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
@@ -315,7 +301,6 @@ export ROM_DEBLOAT_LEVEL="$_SAVED_ROM_DEBLOAT_LEVEL"
 export ROM_BUILD_FLASHABLE_ZIP="$_SAVED_ROM_BUILD_FLASHABLE_ZIP"
 export ROM_ENABLE_AVB="$_SAVED_ROM_ENABLE_AVB"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
-export ROM_AVB_VBMETA_ONLY="$_SAVED_ROM_AVB_VBMETA_ONLY"
 export ROM_IS_OFFICIAL="$_SAVED_ROM_IS_OFFICIAL"
 unset _SAVED_FORCE_EXT4_IMAGES
 unset _SAVED_ROM_ENABLE_ENCRYPTION
@@ -323,7 +308,6 @@ unset _SAVED_ROM_DEBLOAT_LEVEL
 unset _SAVED_ROM_BUILD_FLASHABLE_ZIP
 unset _SAVED_ROM_ENABLE_AVB
 unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
-unset _SAVED_ROM_AVB_VBMETA_ONLY
 unset _SAVED_ROM_IS_OFFICIAL
 env -i \
     PATH="$PATH" \
@@ -339,7 +323,6 @@ env -i \
     ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP" \
     ROM_ENABLE_AVB="$ROM_ENABLE_AVB" \
     ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" \
-    ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY" \
     ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL" \
     "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport

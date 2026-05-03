@@ -292,6 +292,7 @@ INIT_DEFAULTS()
     TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS="${TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS:-}"
     TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-}"
     TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS="${TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS:-true}"
+    TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES="${TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES:-true}"
 
     if ! [[ "$TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
         LOGW "Invalid TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL: $TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL (expected 0-9). Using 1."
@@ -304,6 +305,10 @@ INIT_DEFAULTS()
     if [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ] && [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "false" ]; then
         LOGW "Invalid TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS: $TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS (expected true|false). Using true."
         TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
+    fi
+    if [ "$TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES" != "true" ] && [ "$TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES" != "false" ]; then
+        LOGW "Invalid TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES: $TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES (expected true|false). Using true."
+        TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES="true"
     fi
 }
 
@@ -549,6 +554,15 @@ MERGE_LAYOUT()
             continue
         fi
         APPEND_UNIQUE "CHAIN_PARTITIONS" "$ENTRY"
+    done
+
+    for ENTRY in $TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS; do
+        PARTITION="${ENTRY%%=*}"
+        if IS_EXCLUDED_AVB_PARTITION "$PARTITION"; then
+            LOG "- Ignoring configured firmware descriptor for $PARTITION; verification for this partition is disabled"
+            continue
+        fi
+        SET_PARTITION_SIGN_KIND "$PARTITION" "hash"
     done
 
     LOG_PARTITION_SET "Merged AVB hash partitions" "$HASH_PARTITIONS"
@@ -1398,7 +1412,11 @@ PREPARE_IMAGE_FOR_CUSTOM_AVB_SIGNING()
     local IMAGE="$1"
 
     ERASE_FOOTER_IF_PRESENT "$IMAGE"
-    REMOVE_SAMSUNG_SIGNATURES_IF_PRESENT "$IMAGE"
+    if [ "$TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES" = "true" ]; then
+        AVB_DEBUG_LOG "Preserving Samsung signature areas in $(basename "$IMAGE") before custom AVB signing"
+    else
+        REMOVE_SAMSUNG_SIGNATURES_IF_PRESENT "$IMAGE"
+    fi
     ERASE_FOOTER_IF_PRESENT "$IMAGE"
 }
 
@@ -2128,6 +2146,7 @@ CREATE_IMAGE_PACK()
         echo "firmware=$TARGET_FIRMWARE"
         echo "algorithm=$VBMETA_SIGN_ALGORITHM"
         echo "include_partition_descriptors=$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS"
+        echo "preserve_samsung_signatures=$TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES"
         echo "vbmeta_key_path=$VBMETA_SIGN_KEY_PATH"
         echo "vbmeta_public_key_blob=keys/vbmeta.avbpubkey"
         if [ -f "$STAGING_DIR/keys/vbmeta.avbpubkey" ]; then

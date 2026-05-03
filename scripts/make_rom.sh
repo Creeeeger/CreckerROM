@@ -97,58 +97,6 @@ PRINT_USAGE()
     echo " --no-rom-zip : Do not build ROM zip" >&2
 }
 
-ENSURE_TARGET_VBMETA_EXTRACTED()
-{
-    local VBMETA_PATH="$FW_DIR/$TARGET_FIRMWARE_PATH/avb/vbmeta.img"
-    local DOWNLOAD_ARGS=(--ignore-source)
-    local EXTRACT_ARGS=(--ignore-source --avb-only)
-
-    ! $FORCE && [ -f "$VBMETA_PATH" ] && return 0
-
-    if $FORCE; then
-        DOWNLOAD_ARGS+=(--force)
-        EXTRACT_ARGS+=(--force)
-    fi
-
-    if $FORCE || [ ! -f "$ODIN_DIR/$TARGET_FIRMWARE_PATH/.downloaded" ]; then
-        LOG_STEP_IN true "Downloading target firmware"
-        "$SRC_DIR/scripts/download_fw.sh" "${DOWNLOAD_ARGS[@]}" || exit 1
-        LOG_STEP_OUT
-    fi
-
-    LOG_STEP_IN true "Extracting target vbmeta"
-    "$SRC_DIR/scripts/extract_fw.sh" "${EXTRACT_ARGS[@]}" || exit 1
-    LOG_STEP_OUT
-
-    if [ ! -f "$VBMETA_PATH" ]; then
-        LOGE "Target vbmeta was not extracted: $VBMETA_PATH"
-        exit 1
-    fi
-}
-
-BUILD_VBMETA_ONLY()
-{
-    local VBMETA_TMP_DIR="$OUT_DIR/target/$TARGET_CODENAME/vbmeta_only"
-    local PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
-
-    if ! $TARGET_ENABLE_CUSTOM_AVB; then
-        LOGE "TARGET_AVB_VBMETA_ONLY requires TARGET_ENABLE_CUSTOM_AVB=true"
-        exit 1
-    fi
-
-    ENSURE_TARGET_VBMETA_EXTRACTED
-
-    rm -rf "$VBMETA_TMP_DIR"
-    mkdir -p "$TMP_DIR" "$VBMETA_TMP_DIR"
-
-    export TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS=false
-
-    LOG_STEP_IN true "Creating vbmeta only"
-    "$SRC_DIR/scripts/internal/sign_avb_images.sh" "$VBMETA_TMP_DIR" || exit 1
-    LOG_STEP_OUT
-
-    LOG "- Rebuilt vbmeta: $PACK_DIR/vbmeta.img"
-}
 # ]
 
 PREPARE_SCRIPT "$@"
@@ -171,11 +119,6 @@ fi
 
 trap 'PRINT_BUILD_OUTCOME' EXIT
 trap 'echo' INT
-
-if ${TARGET_AVB_VBMETA_ONLY:-false}; then
-    BUILD_VBMETA_ONLY
-    exit 0
-fi
 
 LOG_STEP_IN true "Preparing signing keys"
 PRINT_SHARED_SIGNING_KEY_INFO || exit 1

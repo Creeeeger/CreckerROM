@@ -19,3 +19,4 @@ security/avb/
 !.gitmodules
 security/creckerrom_platform.pk8
 security/creckerrom_platform.x509.pem
+*.pyc

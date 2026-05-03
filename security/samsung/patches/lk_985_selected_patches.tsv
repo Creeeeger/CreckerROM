@@ -1,0 +1,37 @@
+# Ghidra LK patch file v1
+# source_program=lk.bin
+# baseline=/tmp/lk_g986b_original.bin
+# target_hint=LK_985
+# format: enabled|offset|old_hex|new_hex|function|instruction
+# Set enabled to 0 or delete a row to skip it before running ApplyLkPatches.java.
+1|0x000025A4|60179036|03000014|platform_init|b 0xe80025b0
+1|0x0000265C|A0F7FF34|1F2003D5|platform_init|nop
+1|0x00002734|20F9|C9FF|platform_init|b 0xe8002658
+1|0x00002737|34|17|platform_init|
+0|0x00014938|2100|C102|cm_otp_write_rom_sec_boot_key|mov x1,#0x16
+0|0x00014AD0|0120|8122|cm_otp_check_rom_sec_boot_key|mov x1,#0x114
+0|0x00014BE4|4100|E102|cm_otp_write_use_rom_sec_boot_key|mov x1,#0x17
+0|0x00014C90|2120|A122|cm_otp_read_use_rom_sec_boot_key|mov x1,#0x115
+1|0x0003BCDC|A002|1500|avb_vbmeta_image_verify|b 0xe803bd30
+1|0x0003BCDF|54|14|avb_vbmeta_image_verify|
+1|0x0003BD38|48FDFF54|1F2003D5|avb_vbmeta_image_verify|nop
+1|0x0007D6A4|F3000035|1F2003D5|FUN_e807d690|nop
+1|0x0007D6E0|C0000035|1F2003D5|FUN_e807d6d8|nop
+1|0x0007D844|00|20|FUN_e807d7b8|mov w0,#0x1
+1|0x0007D8B0|00|20|FUN_e807d7b8|mov w0,#0x1
+1|0x00085F7C|00|20|emc_get_fuse_status|mov w0,#0x1
+1|0x00085F80|820000B5203840F9|1F2003D51F2003D5|emc_get_fuse_status|nop
+1|0x00085F89|001FEBE0079F1A|2003D51F2003D5|emc_get_fuse_status|
+1|0x000874C0|FD7BB0A9E30400D0|000080D2C0035FD6|check_signature|mov x0,#0x0
+1|0x000875C8|FD7BBBA9FD|000080D2C0|check_ext4_signature|mov x0,#0x0
+1|0x000875CE|0091|5FD6|check_ext4_signature|
+1|0x00093BB0|00028036|7F000014|FUN_e8093b68|b 0xe8093dac
+1|0x000B31F0|BCF8FF97|1F2003D5|avb_main|nop
+1|0x000B31F5|001F6B6B000054|2003D51F2003D5|avb_main|
+1|0x000B3538|22|02|exynos_read_is_device_unlocked|mov w2,#0x0
+1|0x000B3575|04|00|exynos_read_is_device_unlocked|
+1|0x000B3594|25CFFD97|1F2003D5|exynos_read_is_device_unlocked|nop
+1|0x000B35A1|04|00|exynos_read_is_device_unlocked|
+1|0x000B42B4|B1FFFF97F403002A40000034DF020039|1F2003D51F2003D51F2003D5F30317AA|exynos_validate_vbmeta_public_key|nop
+1|0x0011A758|4F44494E204D4F4445202845444C29210A|437265636B6572204D6F64650A00000000||
+0|0x00205008|0CDD96D48590F80817FACA2019F13124AD810E9411E42445C496439D5BA2F458|EFD3426BE2EB922AF17A5E7A61FC2BF50624ED4E4D9DD20B9B71546A2BCB9AC9||

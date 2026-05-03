@@ -32,6 +32,14 @@ TARGET_ODIN_EXTRA_PARTITIONS="${TARGET_ODIN_EXTRA_PARTITIONS:-}"
 TARGET_ODIN_EXTRA_IMAGE_MAP="${TARGET_ODIN_EXTRA_IMAGE_MAP:-${TARGET_AVB_FIRMWARE_IMAGE_MAP:-}}"
 TARGET_ROM_ZIP_COMPRESSION_LEVEL="${TARGET_ROM_ZIP_COMPRESSION_LEVEL:-5}"
 TARGET_BROTLI_QUALITY="${TARGET_BROTLI_QUALITY:-4}"
+TARGET_ENABLE_SAMSUNG_SIGNING="${TARGET_ENABLE_SAMSUNG_SIGNING:-false}"
+TARGET_SAMSUNG_SIGN_AP_IMAGES="${TARGET_SAMSUNG_SIGN_AP_IMAGES:-$TARGET_ENABLE_SAMSUNG_SIGNING}"
+TARGET_SAMSUNG_SIGN_BOOTLOADER="${TARGET_SAMSUNG_SIGN_BOOTLOADER:-$TARGET_ENABLE_SAMSUNG_SIGNING}"
+TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE="${TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE:-$TARGET_SAMSUNG_SIGN_BOOTLOADER}"
+TARGET_SAMSUNG_SIGNING_SOC="${TARGET_SAMSUNG_SIGNING_SOC:-exynos990}"
+TARGET_SAMSUNG_SIGNING_KEY_DIR="${TARGET_SAMSUNG_SIGNING_KEY_DIR:-$SRC_DIR/security/samsung/exynos9830_crecker}"
+TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX="${TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX:-23}"
+TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR="${TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_bootloader}"
 
 if ! [[ "$TARGET_ROM_ZIP_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
     LOGW "Invalid TARGET_ROM_ZIP_COMPRESSION_LEVEL: $TARGET_ROM_ZIP_COMPRESSION_LEVEL (expected 0-9). Using 5."
@@ -190,6 +198,70 @@ COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP()
         LOG "- Copying AVB firmware component for zip: $PARTITION ($COMPONENT_FILE)"
         cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$COMPONENT_FILE" "$TMP_DIR/$COMPONENT_FILE"
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
+}
+
+RUN_SAMSUNG_AP_IMAGE_SIGNING()
+{
+    local IMAGE_DIR="$1"
+    local PHASE="$2"
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    $TARGET_SAMSUNG_SIGN_AP_IMAGES || return 0
+
+    if [ "$TARGET_PLATFORM" != "exynos990" ]; then
+        LOGW "Samsung AP image signing is only enabled for TARGET_PLATFORM=exynos990; skipping $TARGET_PLATFORM"
+        return 0
+    fi
+
+    python3 "$SRC_DIR/scripts/samsung_signing/sign_ap_images.py" \
+        --images-dir "$IMAGE_DIR" \
+        --keys-dir "$TARGET_SAMSUNG_SIGNING_KEY_DIR" \
+        --phase "$PHASE" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        --rollback "$TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" || exit 1
+}
+
+RUN_SAMSUNG_BOOTLOADER_SIGNING()
+{
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    $TARGET_SAMSUNG_SIGN_BOOTLOADER || return 0
+
+    "$SRC_DIR/scripts/internal/sign_samsung_bootchain.sh" || exit 1
+}
+
+BUILD_ODIN_BL_PACKAGE()
+{
+    local BL_DIR="$TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR"
+    local BL_TAR_PATH="$OUT_DIR/BL_${FILE_NAME%.zip}.tar"
+    local BL_TAR_MD5="$OUT_DIR/BL_${FILE_NAME%.zip}.tar.md5"
+    local BL_CHECKSUM
+    local -a BL_ARCHIVE_ENTRIES=()
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    $TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE || return 0
+
+    if [ ! -d "$BL_DIR" ]; then
+        LOGW "Signed bootloader directory does not exist; skipping Odin BL package: $BL_DIR"
+        return 0
+    fi
+
+    rm -f "$BL_TAR_PATH" "$BL_TAR_MD5"
+    pushd "$BL_DIR" > /dev/null
+    shopt -s dotglob nullglob
+    BL_ARCHIVE_ENTRIES=(*.bin *.img)
+    shopt -u dotglob nullglob
+    [ "${#BL_ARCHIVE_ENTRIES[@]}" -ge 1 ] || {
+        LOGE "No Odin BL package contents were generated"
+        exit 1
+    }
+    tar -cf "$BL_TAR_PATH" -- "${BL_ARCHIVE_ENTRIES[@]}" || exit 1
+    popd > /dev/null
+
+    pushd "$OUT_DIR" > /dev/null
+    BL_CHECKSUM="$(md5sum -t "$(basename "$BL_TAR_PATH")" | awk '{print $1}')" || exit 1
+    printf "%s  %s\n" "$BL_CHECKSUM" "$(basename "$BL_TAR_PATH")" >> "$(basename "$BL_TAR_PATH")"
+    mv -f "$(basename "$BL_TAR_PATH")" "$(basename "$BL_TAR_MD5")"
+    popd > /dev/null
 }
 
 BUILD_ODIN_AP_PACKAGE()
@@ -861,14 +933,38 @@ if [ -f "$WORK_DIR/up_param.bin" ]; then
     cp -fa "$WORK_DIR/up_param.bin" "$TMP_DIR/up_param.bin"
 fi
 
+if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_AP_IMAGES; then
+    LOG_STEP_IN "- Samsung-signing AP images before AVB"
+    RUN_SAMSUNG_AP_IMAGE_SIGNING "$TMP_DIR" "before-avb"
+    LOG_STEP_OUT
+fi
+
 if $TARGET_ENABLE_CUSTOM_AVB; then
     LOG_STEP_IN "- Signing AVB images"
     "$SRC_DIR/scripts/internal/sign_avb_images.sh" "$TMP_DIR" || exit 1
     LOG_STEP_OUT
+    if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_AP_IMAGES; then
+        LOG_STEP_IN "- Samsung-signing vbmeta after AVB"
+        RUN_SAMSUNG_AP_IMAGE_SIGNING "$TARGET_AVB_IMAGE_PACK_DIR" "after-avb"
+        [ -f "$TARGET_AVB_IMAGE_PACK_DIR/vbmeta.img" ] && cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/vbmeta.img" "$TMP_DIR/vbmeta.img"
+        LOG_STEP_OUT
+    fi
     COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP
 fi
 
+if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_BOOTLOADER; then
+    LOG_STEP_IN "- Samsung-signing bootloader"
+    RUN_SAMSUNG_BOOTLOADER_SIGNING
+    LOG_STEP_OUT
+fi
+
 if $TARGET_BUILD_ODIN_PACKAGE; then
+    if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE; then
+        LOG_STEP_IN "- Building Odin BL package"
+        BUILD_ODIN_BL_PACKAGE
+        LOG_STEP_OUT
+    fi
+
     LOG_STEP_IN "- Building Odin AP package"
     BUILD_ODIN_AP_PACKAGE
     LOG_STEP_OUT

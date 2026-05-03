@@ -47,6 +47,28 @@ EXTRACT_AVB_BINARIES()
     fi
 }
 
+EXTRACT_BOOTLOADER_BINARIES()
+{
+    local FILES="sboot.bin ldfw.img tzsw.img keystorage.bin harx.bin ssp.img tzar.img uh.bin vbmeta_samsung.img up_param.bin"
+    local f
+
+    LOG_STEP_IN "- Extracting bootloader binaries"
+
+    mkdir -p "$FW_DIR/${MODEL}_${CSC}/bootloader"
+
+    for f in $FILES; do
+        if ! FILE_EXISTS_IN_TAR "$BL_TAR" "$f" && ! FILE_EXISTS_IN_TAR "$BL_TAR" "$f.lz4" && ! FILE_EXISTS_IN_TAR "$BL_TAR" "$f.ext4"; then
+            continue
+        fi
+
+        EXTRACT_FILE_FROM_TAR "$BL_TAR" "$f" || exit 1
+        [ -f "$FW_DIR/${MODEL}_${CSC}/$f" ] || continue
+        mv -f "$FW_DIR/${MODEL}_${CSC}/$f" "$FW_DIR/${MODEL}_${CSC}/bootloader/$f"
+    done
+
+    LOG_STEP_OUT
+}
+
 EXTRACT_KERNEL_BINARIES()
 {
     local FILES="boot.img dtbo.img init_boot.img vendor_boot.img"
@@ -456,6 +478,7 @@ for i in "${FIRMWARES[@]}"; do
         continue
     fi
 
+    EXTRACT_BOOTLOADER_BINARIES
     EXTRACT_KERNEL_BINARIES
     EXTRACT_OS_PARTITIONS
     EXTRACT_AVB_BINARIES
