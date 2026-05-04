@@ -183,6 +183,33 @@ LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS()
     grep '^firmware_component=' "$MANIFEST" | cut -d '=' -f 2-
 }
 
+SHOULD_PACKAGE_BOOTLOADER_COMPONENTS_IN_AP()
+{
+    if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_BOOTLOADER && $TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE; then
+        return 1
+    fi
+
+    return 0
+}
+
+IS_BOOTLOADER_COMPONENT()
+{
+    local PARTITION="$1"
+    local COMPONENT_FILE="$2"
+    local COMPONENT
+    local COMPONENT_PARTITION
+    local BOOTLOADER_COMPONENTS="sboot.bin ldfw.img tzsw.img keystorage.bin harx.bin ssp.img tzar.img uh.bin vbmeta_samsung.img up_param.bin"
+
+    for COMPONENT in $BOOTLOADER_COMPONENTS; do
+        COMPONENT_PARTITION="${COMPONENT%.*}"
+        if [ "$COMPONENT_FILE" = "$COMPONENT" ] || [ "$PARTITION" = "$COMPONENT_PARTITION" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP()
 {
     local ENTRY=""
@@ -278,6 +305,8 @@ BUILD_ODIN_AP_PACKAGE()
     local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
     local IMAGE_DIR="$TMP_DIR"
     local -a AP_ARCHIVE_ENTRIES=()
+    local -A AP_INCLUDED_FILES=()
+    local -A AP_INCLUDED_PARTITIONS=()
 
     if $TARGET_ENABLE_CUSTOM_AVB; then
         IMAGE_DIR="$TARGET_AVB_IMAGE_PACK_DIR"
@@ -289,18 +318,23 @@ BUILD_ODIN_AP_PACKAGE()
     if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ] && $TARGET_ODIN_USE_SUPER_IMAGE; then
         LOG "- Building super.img for Odin"
         BUILD_ODIN_SUPER_IMAGE "$AP_DIR/super.img" "$IMAGE_DIR"
+        AP_INCLUDED_FILES["super.img"]=1
     else
         while IFS= read -r f; do
             PARTITION="$(basename "$f")"
             IS_VALID_PARTITION_NAME "$PARTITION" || continue
             [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
             cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+            AP_INCLUDED_FILES["$PARTITION.img"]=1
+            AP_INCLUDED_PARTITIONS["$PARTITION"]=1
         done < <(find "$WORK_DIR" -maxdepth 1 -type d)
     fi
 
     for PARTITION in $STATIC_PARTITIONS; do
         [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
         cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+        AP_INCLUDED_FILES["$PARTITION.img"]=1
+        AP_INCLUDED_PARTITIONS["$PARTITION"]=1
     done
 
     while IFS= read -r ENTRY; do
@@ -311,10 +345,24 @@ BUILD_ODIN_AP_PACKAGE()
             LOGW "Skipping bootloader from AVB firmware components during Odin packaging"
             continue
         fi
+        if IS_BOOTLOADER_COMPONENT "$PARTITION" "$COMPONENT_FILE" && ! SHOULD_PACKAGE_BOOTLOADER_COMPONENTS_IN_AP; then
+            LOGW "Skipping bootloader component already packaged in BL Odin: $COMPONENT_FILE"
+            continue
+        fi
         [ -f "$IMAGE_DIR/$COMPONENT_FILE" ] || continue
+        if [ -n "${AP_INCLUDED_PARTITIONS[$PARTITION]+x}" ]; then
+            LOGW "Skipping duplicate Odin firmware partition $PARTITION ($COMPONENT_FILE)"
+            continue
+        fi
+        if [ -n "${AP_INCLUDED_FILES[$COMPONENT_FILE]+x}" ]; then
+            LOGW "Skipping duplicate Odin firmware file $COMPONENT_FILE"
+            continue
+        fi
 
         LOG "- Copying Odin firmware component $COMPONENT_FILE"
         cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$AP_DIR/$COMPONENT_FILE"
+        AP_INCLUDED_FILES["$COMPONENT_FILE"]=1
+        AP_INCLUDED_PARTITIONS["$PARTITION"]=1
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 
     for PARTITION in $TARGET_ODIN_EXTRA_PARTITIONS; do
@@ -325,14 +373,34 @@ BUILD_ODIN_AP_PACKAGE()
 
         COMPONENT_FILE="$(GET_KV_VALUE "$PARTITION" "$TARGET_ODIN_EXTRA_IMAGE_MAP")"
         [ -n "$COMPONENT_FILE" ] || COMPONENT_FILE="$PARTITION.img"
+        if IS_BOOTLOADER_COMPONENT "$PARTITION" "$COMPONENT_FILE" && ! SHOULD_PACKAGE_BOOTLOADER_COMPONENTS_IN_AP; then
+            LOGW "Skipping bootloader component already packaged in BL Odin: $COMPONENT_FILE"
+            continue
+        fi
         [ -f "$IMAGE_DIR/$COMPONENT_FILE" ] || continue
+        if [ -n "${AP_INCLUDED_PARTITIONS[$PARTITION]+x}" ]; then
+            LOGW "Skipping duplicate Odin firmware partition $PARTITION ($COMPONENT_FILE)"
+            continue
+        fi
+        if [ -n "${AP_INCLUDED_FILES[$COMPONENT_FILE]+x}" ]; then
+            LOGW "Skipping duplicate Odin firmware file $COMPONENT_FILE"
+            continue
+        fi
 
         LOG "- Copying Odin firmware component $COMPONENT_FILE"
         cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$AP_DIR/$COMPONENT_FILE"
+        AP_INCLUDED_FILES["$COMPONENT_FILE"]=1
+        AP_INCLUDED_PARTITIONS["$PARTITION"]=1
     done
 
     if [ -f "$TMP_DIR/up_param.bin" ]; then
-        cp -fa "$TMP_DIR/up_param.bin" "$AP_DIR/up_param.bin"
+        if ! SHOULD_PACKAGE_BOOTLOADER_COMPONENTS_IN_AP; then
+            LOGW "Skipping bootloader component already packaged in BL Odin: up_param.bin"
+        elif [ -z "${AP_INCLUDED_FILES["up_param.bin"]+x}" ]; then
+            cp -fa "$TMP_DIR/up_param.bin" "$AP_DIR/up_param.bin"
+            AP_INCLUDED_FILES["up_param.bin"]=1
+            AP_INCLUDED_PARTITIONS["up_param"]=1
+        fi
     fi
 
     rm -f "$AP_TAR" "$AP_TAR_MD5"
