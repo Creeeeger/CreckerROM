@@ -25,6 +25,9 @@ TARGET_SAMSUNG_FWBL1_SIZE="${TARGET_SAMSUNG_FWBL1_SIZE:-0x3000}"
 SIGNED_BOOTLOADER_DIR="${TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_bootloader}"
 WORK_BOOTLOADER_DIR="${TARGET_SAMSUNG_BOOTLOADER_WORK_DIR:-$OUT_DIR/target/$TARGET_CODENAME/samsung_bootchain_work}"
 BOOTLOADER_FILES="sboot.bin ldfw.img tzsw.img keystorage.bin harx.bin ssp.img tzar.img uh.bin vbmeta_samsung.img up_param.bin"
+TARGET_FIRMWARE_MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
+TARGET_FIRMWARE_CSC="$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
+TARGET_FIRMWARE_PATH="${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}"
 # ]
 
 FIND_TARGET_BL_TAR()
@@ -65,8 +68,8 @@ ENSURE_BOOTLOADER_BINARIES_EXTRACTED()
     local BL_TAR=""
     local FILE
 
-    MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
-    CSC="$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
+    MODEL="$TARGET_FIRMWARE_MODEL"
+    CSC="$TARGET_FIRMWARE_CSC"
 
     [ -n "$MODEL" ] && [ -n "$CSC" ] || {
         LOGE "Unable to parse TARGET_FIRMWARE=$TARGET_FIRMWARE"
@@ -111,6 +114,11 @@ if [ "$TARGET_PLATFORM" != "exynos990" ]; then
     LOGW "Samsung Exynos9830 signing is only enabled for TARGET_PLATFORM=exynos990; skipping $TARGET_PLATFORM"
     exit 0
 fi
+
+[ -n "$TARGET_FIRMWARE_MODEL" ] && [ -n "$TARGET_FIRMWARE_CSC" ] || {
+    LOGE "Unable to parse TARGET_FIRMWARE=$TARGET_FIRMWARE"
+    exit 1
+}
 
 ENSURE_BOOTLOADER_BINARIES_EXTRACTED
 
