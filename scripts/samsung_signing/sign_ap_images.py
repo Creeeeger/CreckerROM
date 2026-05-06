@@ -23,6 +23,7 @@ PHASE_IMAGES = {
     "before-avb": [
         ("boot.img", "boot"),
         ("dtbo.img", "dtbo"),
+        ("recovery.img", "recovery"),
         ("vendor_boot.img", "vendor_boot"),
         ("init_boot.img", "init_boot"),
     ],
