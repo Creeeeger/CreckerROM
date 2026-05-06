@@ -356,6 +356,13 @@ if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && \
     exit 1
 fi
 
+ROM_BUILD_HEIMDALL_ONLY="${ROM_BUILD_HEIMDALL_ONLY:-false}"
+if [[ "$ROM_BUILD_HEIMDALL_ONLY" != "true" ]] && \
+        [[ "$ROM_BUILD_HEIMDALL_ONLY" != "false" ]]; then
+    LOGE "ROM_BUILD_HEIMDALL_ONLY must be \"true\" or \"false\" (got: $ROM_BUILD_HEIMDALL_ONLY)"
+    exit 1
+fi
+
 ROM_ENABLE_AVB="${ROM_ENABLE_AVB:-false}"
 if [[ "$ROM_ENABLE_AVB" != "true" ]] && \
         [[ "$ROM_ENABLE_AVB" != "false" ]]; then
@@ -406,6 +413,10 @@ fi
 
 TARGET_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
 TARGET_BUILD_ODIN_PACKAGE="true"
+if [[ "$ROM_BUILD_HEIMDALL_ONLY" == "true" ]]; then
+    TARGET_BUILD_FLASHABLE_ZIP="false"
+    TARGET_BUILD_ODIN_PACKAGE="false"
+fi
 TARGET_ODIN_USE_SUPER_IMAGE="$(GET_DEFAULT_ODIN_SUPER_IMAGE)"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 
