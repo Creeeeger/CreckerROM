@@ -369,3 +369,26 @@ def signer_info_offset_from_avb_original(data, original_image_size):
     if data[metadata_offset:metadata_offset + 9] == b"SignerVer":
         return metadata_offset
     return None
+
+
+def stage2_footer_candidate_sizes(stage, data):
+    sizes = []
+    stage = normalize_stage(stage)
+
+    if is_avb_wrapper_stage(stage):
+        avb = parse_avb_footer(data)
+        if avb is not None and avb.original_image_size <= len(data):
+            if looks_like_stage2_footer(data, avb.original_image_size):
+                sizes.append(avb.original_image_size)
+            signer_info_offset = signer_info_offset_from_avb_original(data, avb.original_image_size)
+            if signer_info_offset is not None and looks_like_stage2_footer(data, signer_info_offset):
+                sizes.append(signer_info_offset)
+
+    if looks_like_stage2_footer(data, len(data)):
+        sizes.append(len(data))
+
+    deduped = []
+    for size in sizes:
+        if size not in deduped:
+            deduped.append(size)
+    return deduped

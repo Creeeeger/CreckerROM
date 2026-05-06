@@ -47,21 +47,13 @@ EXTRACT_AVB_BINARIES()
         LOG_STEP_OUT
     fi
 
-    if [ -n "$AP_TAR" ] && { FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img" || \
-            FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img.lz4" || \
-            FILE_EXISTS_IN_TAR "$AP_TAR" "AP_vbmeta_samsung.img" || \
-            FILE_EXISTS_IN_TAR "$AP_TAR" "AP_vbmeta_samsung.img.lz4"; }; then
+    if [ -n "$AP_TAR" ] && FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img.lz4"; then
         LOG_STEP_IN "- Extracting AP vbmeta_samsung"
 
         mkdir -p "$FW_DIR/${MODEL}_${CSC}/avb"
 
-        if FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img" || FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img.lz4"; then
-            EXTRACT_FILE_FROM_TAR "$AP_TAR" "vbmeta_samsung.img" || exit 1
-            mv -f "$FW_DIR/${MODEL}_${CSC}/vbmeta_samsung.img" "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_samsung.img"
-        else
-            EXTRACT_FILE_FROM_TAR "$AP_TAR" "AP_vbmeta_samsung.img" || exit 1
-            mv -f "$FW_DIR/${MODEL}_${CSC}/AP_vbmeta_samsung.img" "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_samsung.img"
-        fi
+        EXTRACT_FILE_FROM_TAR "$AP_TAR" "vbmeta_samsung.img" || exit 1
+        mv -f "$FW_DIR/${MODEL}_${CSC}/vbmeta_samsung.img" "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_samsung.img"
 
         LOG_STEP_OUT
     fi

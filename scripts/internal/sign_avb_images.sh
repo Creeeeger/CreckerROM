@@ -348,10 +348,6 @@ GET_ORIGINAL_VBMETA_SAMSUNG_PATH()
         echo "$TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH"
     elif [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/avb/vbmeta_samsung.img" ]; then
         echo "$FW_DIR/$TARGET_FIRMWARE_PATH/avb/vbmeta_samsung.img"
-    elif [ -f "$SRC_DIR/AP_vbmeta_samsung.img" ]; then
-        echo "$SRC_DIR/AP_vbmeta_samsung.img"
-    elif [ -f "$SRC_DIR/../AP_vbmeta_samsung.img" ]; then
-        echo "$SRC_DIR/../AP_vbmeta_samsung.img"
     fi
 }
 

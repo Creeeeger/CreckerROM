@@ -79,65 +79,46 @@ GET_DEFAULT_ODIN_SUPER_IMAGE()
     fi
 }
 
-GET_FILE_SIZE_BYTES()
-{
-    [ -f "$1" ] || return 1
-
-    wc -c < "$1" | tr -d '[:space:]'
-}
-
 GET_DEFAULT_RECOVERY_IMAGE_PATH()
 {
     case "$TARGET_CODENAME" in
         "beyond0lte")
-            echo "$SRC_DIR/recoveries/extracted/G970/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G970.zip"
             ;;
         "beyond1lte")
-            echo "$SRC_DIR/recoveries/extracted/G973/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G973.zip"
             ;;
         "beyond2lte")
-            echo "$SRC_DIR/recoveries/extracted/G975/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G975.zip"
             ;;
         "beyondx")
-            echo "$SRC_DIR/recoveries/extracted/G977/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G977.zip"
             ;;
         "r8s")
-            echo "$SRC_DIR/recoveries/extracted/G780F/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G780F.zip"
             ;;
         "x1s")
-            echo "$SRC_DIR/recoveries/extracted/G980F_G981B/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G980F_G981B.zip"
             ;;
         "y2s")
-            echo "$SRC_DIR/recoveries/extracted/G985F_G986B/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G985F_G986B.zip"
             ;;
         "z3s")
-            echo "$SRC_DIR/recoveries/extracted/G988B/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G988B.zip"
             ;;
         "p3s")
-            echo "$SRC_DIR/recoveries/extracted/G998B/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/G998B.zip"
             ;;
         "c1s")
-            echo "$SRC_DIR/recoveries/extracted/N980F_N981B/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/N980F_N981B.zip"
             ;;
         "c2s")
-            echo "$SRC_DIR/recoveries/extracted/N985F_N986B/recovery.img"
+            echo "$SRC_DIR/prebuilts/recoveries/N985F_N986B.zip"
             ;;
         *)
             echo "none"
             ;;
     esac
-}
-
-GET_DEFAULT_RECOVERY_PARTITION_SIZE()
-{
-    local RECOVERY_IMAGE
-
-    RECOVERY_IMAGE="${TARGET_RECOVERY_IMAGE_PATH:-$(GET_DEFAULT_RECOVERY_IMAGE_PATH)}"
-    if [ -n "$RECOVERY_IMAGE" ] && [ "$RECOVERY_IMAGE" != "none" ] && [ -f "$RECOVERY_IMAGE" ]; then
-        GET_FILE_SIZE_BYTES "$RECOVERY_IMAGE"
-    else
-        echo "none"
-    fi
 }
 
 GET_DEFAULT_KEEP_ORIGINAL_SIGN()
@@ -531,7 +512,6 @@ fi
     GET_BUILD_VAR "TARGET_DTBO_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_INIT_BOOT_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_VENDOR_BOOT_PARTITION_SIZE" "none"
-    GET_BUILD_VAR "TARGET_RECOVERY_PARTITION_SIZE" "$(GET_DEFAULT_RECOVERY_PARTITION_SIZE)"
     GET_BUILD_VAR "TARGET_REQUIRES_SPECIFIC_FIRMWARE" "false"
     GET_BUILD_VAR "TARGET_SUPPORTED_FIRMWARES" "none"
     GET_BUILD_VAR "TARGET_SUPER_PARTITION_SIZE"

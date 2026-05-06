@@ -9,6 +9,7 @@
 *.bin binary
 *.so binary
 *.jar binary
+*.zip binary
 *.pk8 binary
 *.ogg binary
 *.ico binary

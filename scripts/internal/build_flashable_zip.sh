@@ -266,9 +266,14 @@ COPY_TARGET_RECOVERY_IMAGE_TO_TMP()
     RECOVERY_IMAGE="$(RESOLVE_TARGET_RECOVERY_IMAGE_PATH || true)"
     [ -n "$RECOVERY_IMAGE" ] || return 0
 
-    LOG "- Copying target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
     mkdir -p "$WORK_DIR/kernel"
-    cp -fa "$RECOVERY_IMAGE" "$WORK_DIR/kernel/recovery.img"
+    if [[ "$RECOVERY_IMAGE" == *.zip ]]; then
+        LOG "- Extracting target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
+        unzip -p "$RECOVERY_IMAGE" "*.img" > "$WORK_DIR/kernel/recovery.img" || exit 1
+    else
+        LOG "- Copying target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
+        cp -fa "$RECOVERY_IMAGE" "$WORK_DIR/kernel/recovery.img"
+    fi
     cp -fa "$WORK_DIR/kernel/recovery.img" "$TMP_DIR/recovery.img"
 }
 
@@ -325,30 +330,15 @@ src_dir, image_path, stage = sys.argv[1:4]
 sys.path.insert(0, f"{src_dir}/scripts/samsung_signing")
 
 from stage2_common import (  # noqa: E402
-    is_avb_wrapper_stage,
-    looks_like_stage2_footer,
     normalize_stage,
-    parse_avb_footer,
     parse_stage2_footer,
     read_file,
-    signer_info_offset_from_avb_original,
+    stage2_footer_candidate_sizes,
 )
 
 stage = normalize_stage(stage)
 data = read_file(image_path)
-sizes = []
-
-if is_avb_wrapper_stage(stage):
-    avb = parse_avb_footer(data)
-    if avb is not None and avb.original_image_size <= len(data):
-        if looks_like_stage2_footer(data, avb.original_image_size):
-            sizes.append(avb.original_image_size)
-        signer_info_offset = signer_info_offset_from_avb_original(data, avb.original_image_size)
-        if signer_info_offset is not None and looks_like_stage2_footer(data, signer_info_offset):
-            sizes.append(signer_info_offset)
-
-if looks_like_stage2_footer(data, len(data)):
-    sizes.append(len(data))
+sizes = stage2_footer_candidate_sizes(stage, data)
 
 if not sizes:
     raise SystemExit(1)

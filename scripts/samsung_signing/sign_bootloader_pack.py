@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 import argparse
-import hashlib
 import importlib.util
 import os
 import shutil
@@ -13,14 +12,11 @@ from pathlib import Path
 
 from stage2_common import (
     default_key_type,
-    is_avb_wrapper_stage,
-    looks_like_stage2_footer,
     normalize_stage,
     parse_avb_footer,
     parse_stage2_footer,
-    signer_info_offset_from_avb_original,
+    stage2_footer_candidate_sizes,
 )
-from keystorage_layout_tool import iter_key_slots
 
 
 TOOLS_DIR = Path(__file__).resolve().parent
@@ -87,38 +83,15 @@ def private_key_for_type(paths: dict[str, Path], key_type: int) -> Path:
     return paths["stage2_tee_private"]
 
 
-def footer_candidate_sizes(stage: str, data: bytes) -> list[int]:
-    sizes: list[int] = []
-    stage = normalize_stage(stage)
-
-    if is_avb_wrapper_stage(stage):
-        avb = parse_avb_footer(data)
-        if avb is not None and avb.original_image_size <= len(data):
-            if looks_like_stage2_footer(data, avb.original_image_size):
-                sizes.append(avb.original_image_size)
-            signer_info_offset = signer_info_offset_from_avb_original(data, avb.original_image_size)
-            if signer_info_offset is not None and looks_like_stage2_footer(data, signer_info_offset):
-                sizes.append(signer_info_offset)
-
-    if looks_like_stage2_footer(data, len(data)):
-        sizes.append(len(data))
-
-    deduped: list[int] = []
-    for size in sizes:
-        if size not in deduped:
-            deduped.append(size)
-    return deduped
-
-
 def resolve_existing_key_type(stage: str, image: Path) -> int:
     data = image.read_bytes()
-    for size in footer_candidate_sizes(stage, data):
+    for size in stage2_footer_candidate_sizes(stage, data):
         return parse_stage2_footer(data, size).key_type
     return default_key_type(stage)
 
 
 def has_signable_footer(stage: str, image: Path) -> bool:
-    return bool(footer_candidate_sizes(stage, image.read_bytes()))
+    return bool(stage2_footer_candidate_sizes(stage, image.read_bytes()))
 
 
 def load_avbtool_module(avbtool_path: Path):
@@ -228,7 +201,6 @@ def patch_keystorage_vbmeta_key(args: argparse.Namespace, image: Path, manifest:
         append_manifest(manifest, "keystorage_vbmeta_key", "preserved")
         return
 
-    cp_key_before = read_keystorage_slot(image, "cp_key")
     vbmeta_key = resolve_keystorage_vbmeta_key(args)
     vbmeta_key_size = len(vbmeta_key.read_bytes())
     run_step(
@@ -247,12 +219,8 @@ def patch_keystorage_vbmeta_key(args: argparse.Namespace, image: Path, manifest:
         ],
         f"Patching keystorage.bin vbmeta key from {vbmeta_key.name}",
     )
-    cp_key_after = read_keystorage_slot(image, "cp_key")
-    if cp_key_before != cp_key_after:
-        raise RuntimeError("keystorage cp_key changed while patching the vbmeta key")
-
     append_manifest(manifest, "keystorage_vbmeta_key", f"{vbmeta_key}:size{vbmeta_key_size}")
-    append_manifest(manifest, "keystorage_cp_key", f"preserved:sha256={digest_slot(cp_key_after)}")
+    append_manifest(manifest, "keystorage_cp_key", "preserved")
     append_manifest(manifest, "keystorage_fimc_key", "preserved")
 
 
@@ -486,18 +454,6 @@ def merge_sboot(parts_dir: Path, work_dir: Path) -> Path:
 def append_manifest(manifest: Path, key: str, value: str) -> None:
     with manifest.open("a", encoding="utf-8") as fh:
         fh.write(f"{key}={value}\n")
-
-
-def read_keystorage_slot(image: Path, name: str) -> bytes:
-    data = image.read_bytes()
-    for slot in iter_key_slots(data):
-        if slot["name"] == name:
-            return bytes(slot["slot"])
-    raise RuntimeError(f"{image.name} does not contain keystorage slot {name}")
-
-
-def digest_slot(slot: bytes) -> str:
-    return hashlib.sha256(slot).hexdigest()
 
 
 def sign_split_sboot(args: argparse.Namespace, paths: dict[str, Path], parts_dir: Path, manifest: Path) -> None:
