@@ -48,6 +48,15 @@ ORIGINAL_VBMETA_KERNEL_CMDLINES_FILE="$STAGING_DIR/original_vbmeta_kernel_cmdlin
 ORIGINAL_VBMETA_TRAILER_PATH=""
 ORIGINAL_VBMETA_TRAILER_SIZE="0"
 ORIGINAL_VBMETA_TRAILER_MARKER=""
+ORIGINAL_VBMETA_SAMSUNG_PROPS=""
+ORIGINAL_VBMETA_SAMSUNG_ALGORITHM=""
+ORIGINAL_VBMETA_SAMSUNG_ROLLBACK_INDEX=""
+ORIGINAL_VBMETA_SAMSUNG_ROLLBACK_INDEX_LOCATION=""
+ORIGINAL_VBMETA_SAMSUNG_RELEASE_STRING=""
+ORIGINAL_VBMETA_SAMSUNG_TRAILER_PATH=""
+ORIGINAL_VBMETA_SAMSUNG_TRAILER_SIZE="0"
+ORIGINAL_VBMETA_SAMSUNG_TRAILER_MARKER=""
+VBMETA_SAMSUNG_DESCRIPTOR_PARTITIONS=""
 HASH_PARTITIONS=""
 HASHTREE_PARTITIONS=""
 CHAIN_PARTITIONS=""
@@ -68,8 +77,8 @@ KEY_EXPORT_LABELS=""
 KEY_EXPORT_REPORT="$STAGING_DIR/avb_keys.txt"
 FIRMWARE_DESCRIPTOR_PACK_FILES=""
 FIRMWARE_DESCRIPTOR_PACK_COMPONENTS=""
-EXCLUDED_VBMETA_PARTITIONS="bootloader"
-REQUIRED_RE_SIGN_PARTITIONS="boot init_boot vendor_boot dtbo recovery"
+EXCLUDED_VBMETA_PARTITIONS="bootloader recovery"
+REQUIRED_RE_SIGN_PARTITIONS="boot init_boot vendor_boot dtbo"
 INCLUDED_HASH_PARTITIONS=""
 INCLUDED_HASHTREE_PARTITIONS=""
 INCLUDED_CHAIN_PARTITIONS=""
@@ -296,6 +305,9 @@ INIT_DEFAULTS()
     TARGET_AVB_FIRMWARE_IMAGE_MAP="${TARGET_AVB_FIRMWARE_IMAGE_MAP:-}"
     TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS="${TARGET_AVB_USE_ORIGINAL_VBMETA_PROPS:-true}"
     TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES="${TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES:-true}"
+    TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH="${TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH:-none}"
+    TARGET_AVB_VBMETA_SAMSUNG_PARTITIONS="${TARGET_AVB_VBMETA_SAMSUNG_PARTITIONS:-odm product system vendor}"
+    TARGET_AVB_MAKE_VBMETA_SAMSUNG_IMAGE_ARGS="${TARGET_AVB_MAKE_VBMETA_SAMSUNG_IMAGE_ARGS:-}"
 
     if ! [[ "$TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
         LOGW "Invalid TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL: $TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL (expected 0-9). Using 1."
@@ -327,7 +339,20 @@ GET_FALLBACK_HASHTREE_PARTITIONS()
 
 GET_FALLBACK_CHAIN_PARTITIONS()
 {
-    echo "recovery=6 dtbo=7 prism=12 optics=13"
+    echo "dtbo=7 prism=12 optics=13"
+}
+
+GET_ORIGINAL_VBMETA_SAMSUNG_PATH()
+{
+    if [ "$TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH" != "none" ] && [ -f "$TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH" ]; then
+        echo "$TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH"
+    elif [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/avb/vbmeta_samsung.img" ]; then
+        echo "$FW_DIR/$TARGET_FIRMWARE_PATH/avb/vbmeta_samsung.img"
+    elif [ -f "$SRC_DIR/AP_vbmeta_samsung.img" ]; then
+        echo "$SRC_DIR/AP_vbmeta_samsung.img"
+    elif [ -f "$SRC_DIR/../AP_vbmeta_samsung.img" ]; then
+        echo "$SRC_DIR/../AP_vbmeta_samsung.img"
+    fi
 }
 
 GET_ORIGINAL_VBMETA_PATH()
@@ -482,6 +507,132 @@ PY
     LOG_PARTITION_SET "Original vbmeta hashtree partitions" "$ORIGINAL_HASHTREE_PARTITIONS"
     LOG_PARTITION_SET "Original vbmeta chain partitions" "$ORIGINAL_CHAIN_PARTITIONS"
     AVB_DEBUG_LOG "Original vbmeta kernel cmdline descriptors: $ORIGINAL_VBMETA_KERNEL_CMDLINE_COUNT"
+}
+
+PARSE_ORIGINAL_VBMETA_SAMSUNG_LAYOUT()
+{
+    local ORIGINAL_VBMETA_SAMSUNG
+    local KIND
+    local KEY
+    local VALUE
+    local TRAILER_INFO=""
+    local TRAILER_OFFSET=""
+    local TRAILER_SIZE=""
+    local TRAILER_MARKER=""
+    local ORIGINAL_PARTITIONS=""
+
+    $TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT || return 0
+
+    ORIGINAL_VBMETA_SAMSUNG="$(GET_ORIGINAL_VBMETA_SAMSUNG_PATH)"
+    [ -f "$ORIGINAL_VBMETA_SAMSUNG" ] || return 0
+    [ -n "$AVB_PYTHON_BIN" ] || return 0
+    [ -f "$AVBTOOL_PATH" ] || return 0
+
+    DUMP_AVB_INFO_IMAGE "$ORIGINAL_VBMETA_SAMSUNG" "original vbmeta_samsung"
+
+    while IFS=$'\t' read -r KIND KEY VALUE; do
+        case "$KIND" in
+            "meta_algorithm")
+                ORIGINAL_VBMETA_SAMSUNG_ALGORITHM="$KEY"
+                ;;
+            "meta_rollback_index")
+                ORIGINAL_VBMETA_SAMSUNG_ROLLBACK_INDEX="$KEY"
+                ;;
+            "meta_rollback_index_location")
+                ORIGINAL_VBMETA_SAMSUNG_ROLLBACK_INDEX_LOCATION="$KEY"
+                ;;
+            "meta_release_string")
+                ORIGINAL_VBMETA_SAMSUNG_RELEASE_STRING="$KEY"
+                ;;
+            "prop")
+                APPEND_UNIQUE "ORIGINAL_VBMETA_SAMSUNG_PROPS" "$KEY=$VALUE"
+                ;;
+            "hash" | "hashtree" | "chain")
+                APPEND_UNIQUE "ORIGINAL_PARTITIONS" "$KEY"
+                ;;
+        esac
+    done < <(
+        "$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$ORIGINAL_VBMETA_SAMSUNG" <<'PY'
+import importlib.util
+import sys
+
+avbtool_path, image_path = sys.argv[1:3]
+spec = importlib.util.spec_from_file_location('crecker_avbtool', avbtool_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+avb = module.Avb()
+image = module.ImageHandler(image_path, read_only=True)
+_, header, descriptors, _ = avb._parse_image(image)
+alg_name, _ = module.lookup_algorithm_by_type(header.algorithm_type)
+
+print(f'meta_algorithm\t{alg_name}')
+print(f'meta_rollback_index\t{header.rollback_index}')
+print(f'meta_rollback_index_location\t{header.rollback_index_location}')
+print(f'meta_release_string\t{header.release_string}')
+
+for desc in descriptors:
+    if isinstance(desc, module.AvbPropertyDescriptor):
+        value = desc.value.decode('utf-8', errors='replace')
+        print(f'prop\t{desc.key}\t{value}')
+    elif isinstance(desc, module.AvbHashtreeDescriptor):
+        print(f'hashtree\t{desc.partition_name}')
+    elif isinstance(desc, module.AvbHashDescriptor):
+        print(f'hash\t{desc.partition_name}')
+    elif isinstance(desc, module.AvbChainPartitionDescriptor):
+        print(f'chain\t{desc.partition_name}\t{desc.rollback_index_location}')
+PY
+    )
+
+    TRAILER_INFO="$(
+        "$AVB_PYTHON_BIN" - "$AVBTOOL_PATH" "$ORIGINAL_VBMETA_SAMSUNG" <<'PY'
+import importlib.util
+import os
+import sys
+
+avbtool_path, image_path = sys.argv[1:3]
+spec = importlib.util.spec_from_file_location('crecker_avbtool', avbtool_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+avb = module.Avb()
+image = module.ImageHandler(image_path, read_only=True)
+_, header, _, _ = avb._parse_image(image)
+expected_size = 256 + header.authentication_data_block_size + header.auxiliary_data_block_size
+actual_size = os.path.getsize(image_path)
+
+if actual_size <= expected_size:
+    raise SystemExit(0)
+
+with open(image_path, 'rb') as fh:
+    fh.seek(expected_size)
+    trailer = fh.read()
+
+marker = ''
+for candidate in (b'SignerVer03', b'SignerVer02'):
+    if candidate in trailer:
+        marker = candidate.decode('ascii')
+        break
+
+if marker:
+    print(f'{expected_size}\t{actual_size - expected_size}\t{marker}')
+PY
+    )"
+
+    if [ -n "$TRAILER_INFO" ]; then
+        TRAILER_OFFSET="$(cut -f 1 <<< "$TRAILER_INFO")"
+        TRAILER_SIZE="$(cut -f 2 <<< "$TRAILER_INFO")"
+        TRAILER_MARKER="$(cut -f 3 <<< "$TRAILER_INFO")"
+        ORIGINAL_VBMETA_SAMSUNG_TRAILER_PATH="$STAGING_DIR/original_vbmeta_samsung_trailer.bin"
+        dd if="$ORIGINAL_VBMETA_SAMSUNG" of="$ORIGINAL_VBMETA_SAMSUNG_TRAILER_PATH" bs=1 skip="$TRAILER_OFFSET" count="$TRAILER_SIZE" status=none || exit 1
+        ORIGINAL_VBMETA_SAMSUNG_TRAILER_SIZE="$TRAILER_SIZE"
+        ORIGINAL_VBMETA_SAMSUNG_TRAILER_MARKER="$TRAILER_MARKER"
+        LOG "- Preserving original vbmeta_samsung trailer: marker=$ORIGINAL_VBMETA_SAMSUNG_TRAILER_MARKER size=$(FORMAT_SIZE "$ORIGINAL_VBMETA_SAMSUNG_TRAILER_SIZE")"
+    fi
+
+    LOG_PARTITION_SET "Original vbmeta_samsung props" "$ORIGINAL_VBMETA_SAMSUNG_PROPS"
+    LOG_PARTITION_SET "Original vbmeta_samsung partitions" "$ORIGINAL_PARTITIONS"
+    [ -n "$ORIGINAL_VBMETA_SAMSUNG_ALGORITHM" ] && AVB_DEBUG_LOG "Original vbmeta_samsung algorithm: $ORIGINAL_VBMETA_SAMSUNG_ALGORITHM"
 }
 
 ADOPT_ORIGINAL_VBMETA_DEFAULTS()
@@ -2029,6 +2180,81 @@ MAKE_TOPLEVEL_VBMETA()
     DUMP_AVB_INFO_IMAGE "$TMP_IMG_DIR/vbmeta.img" "vbmeta.img"
 }
 
+MAKE_VBMETA_SAMSUNG()
+{
+    local PARTITION
+    local ENTRY
+    local REQUESTED_PARTITIONS="$TARGET_AVB_VBMETA_SAMSUNG_PARTITIONS"
+    local CMD=()
+    local DESCRIPTOR_IMAGES=""
+    local ALGORITHM="${ORIGINAL_VBMETA_SAMSUNG_ALGORITHM:-$VBMETA_SIGN_ALGORITHM}"
+    local ROLLBACK_INDEX="${ORIGINAL_VBMETA_SAMSUNG_ROLLBACK_INDEX:-$TARGET_AVB_ROLLBACK_INDEX}"
+    local ROLLBACK_INDEX_LOCATION="${ORIGINAL_VBMETA_SAMSUNG_ROLLBACK_INDEX_LOCATION:-$TARGET_AVB_ROLLBACK_INDEX_LOCATION}"
+    local RELEASE_STRING="${ORIGINAL_VBMETA_SAMSUNG_RELEASE_STRING:-}"
+
+    VBMETA_SAMSUNG_DESCRIPTOR_PARTITIONS=""
+
+    if [ "$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ]; then
+        LOG "- Skipping vbmeta_samsung.img because partition descriptors are disabled"
+        return 0
+    fi
+
+    for PARTITION in $REQUESTED_PARTITIONS; do
+        for ENTRY in $DIRECT_DESCRIPTOR_IMAGES; do
+            case "$(basename "$ENTRY")" in
+                "$PARTITION.img" | "$PARTITION.bin" | "$PARTITION")
+                    APPEND_UNIQUE "DESCRIPTOR_IMAGES" "$ENTRY"
+                    APPEND_UNIQUE "VBMETA_SAMSUNG_DESCRIPTOR_PARTITIONS" "$PARTITION"
+                    break
+                    ;;
+            esac
+        done
+
+        if ! LIST_HAS_ITEM "$PARTITION" "$VBMETA_SAMSUNG_DESCRIPTOR_PARTITIONS"; then
+            LOGW "Skipping vbmeta_samsung descriptor for $PARTITION because it is not included in the normal vbmeta descriptor set"
+        fi
+    done
+
+    if [ -z "$DESCRIPTOR_IMAGES" ]; then
+        LOGW "No descriptor images available for vbmeta_samsung.img; skipping"
+        return 0
+    fi
+
+    CMD=(
+        make_vbmeta_image
+        --output "$TMP_IMG_DIR/vbmeta_samsung.img"
+        --algorithm "$ALGORITHM"
+        --rollback_index "$ROLLBACK_INDEX"
+        --rollback_index_location "$ROLLBACK_INDEX_LOCATION"
+        --key "$VBMETA_SIGN_KEY_PATH"
+    )
+
+    for ENTRY in $DESCRIPTOR_IMAGES; do
+        CMD+=(--include_descriptors_from_image "$ENTRY")
+    done
+
+    for ENTRY in $ORIGINAL_VBMETA_SAMSUNG_PROPS; do
+        CMD+=(--prop "${ENTRY%%=*}:${ENTRY#*=}")
+    done
+
+    if [ -n "$RELEASE_STRING" ]; then
+        CMD+=(--internal_release_string "$RELEASE_STRING")
+    fi
+
+    APPEND_ARGS_FROM_STRING CMD "$TARGET_AVB_MAKE_VBMETA_SAMSUNG_IMAGE_ARGS"
+
+    LOG "- Creating vbmeta_samsung.img"
+    LOG_PARTITION_SET "vbmeta_samsung requested partitions" "$REQUESTED_PARTITIONS"
+    LOG_PARTITION_SET "vbmeta_samsung descriptor partitions" "$VBMETA_SAMSUNG_DESCRIPTOR_PARTITIONS"
+    LOG_PARTITION_SET "vbmeta_samsung descriptor images" "$DESCRIPTOR_IMAGES"
+    RUN_AVBTOOL "${CMD[@]}" || exit 1
+    if [ -n "$ORIGINAL_VBMETA_SAMSUNG_TRAILER_PATH" ] && [ -f "$ORIGINAL_VBMETA_SAMSUNG_TRAILER_PATH" ]; then
+        LOG "- Appending original vbmeta_samsung trailer for Samsung compatibility: marker=$ORIGINAL_VBMETA_SAMSUNG_TRAILER_MARKER size=$(FORMAT_SIZE "$ORIGINAL_VBMETA_SAMSUNG_TRAILER_SIZE")"
+        cat "$ORIGINAL_VBMETA_SAMSUNG_TRAILER_PATH" >> "$TMP_IMG_DIR/vbmeta_samsung.img" || exit 1
+    fi
+    DUMP_AVB_INFO_IMAGE "$TMP_IMG_DIR/vbmeta_samsung.img" "vbmeta_samsung.img"
+}
+
 VERIFY_SIGNED_AVB()
 {
     local VERIFY_DIR="$STAGING_DIR/verify"
@@ -2044,6 +2270,10 @@ VERIFY_SIGNED_AVB()
 
     SOURCE_PATH="$(GET_ABSOLUTE_PATH "$TMP_IMG_DIR/vbmeta.img")"
     ln -sf "$SOURCE_PATH" "$VERIFY_DIR/vbmeta.img"
+    if [ -f "$TMP_IMG_DIR/vbmeta_samsung.img" ]; then
+        SOURCE_PATH="$(GET_ABSOLUTE_PATH "$TMP_IMG_DIR/vbmeta_samsung.img")"
+        ln -sf "$SOURCE_PATH" "$VERIFY_DIR/vbmeta_samsung.img"
+    fi
 
     for PARTITION in $SIGNED_PARTITIONS; do
         [ -f "$TMP_IMG_DIR/$PARTITION.img" ] || continue
@@ -2080,6 +2310,14 @@ VERIFY_SIGNED_AVB()
 
     LOG "- Verifying top-level vbmeta image"
     RUN_AVBTOOL "${VERIFY_CMD[@]}" || exit 1
+
+    if [ -f "$TMP_IMG_DIR/vbmeta_samsung.img" ]; then
+        ASSERT_IMAGE_VBMETA_FLAGS_ZERO "$TMP_IMG_DIR/vbmeta_samsung.img" "vbmeta_samsung.img"
+        LOG "- Verifying vbmeta_samsung image"
+        RUN_AVBTOOL verify_image \
+            --image "$VERIFY_DIR/vbmeta_samsung.img" \
+            --key "$VBMETA_SIGN_KEY_PATH" || exit 1
+    fi
 
     for ENTRY in $ACTIVE_CHAIN_PARTITIONS; do
         PARTITION="${ENTRY%%=*}"
@@ -2171,6 +2409,9 @@ CREATE_IMAGE_PACK()
         for PARTITION in $INCLUDED_CHAIN_PARTITIONS; do
             echo "chain_partition=$PARTITION"
         done
+        for PARTITION in $VBMETA_SAMSUNG_DESCRIPTOR_PARTITIONS; do
+            echo "vbmeta_samsung_partition=$PARTITION"
+        done
         for ENTRY in $FIRMWARE_DESCRIPTOR_PACK_COMPONENTS; do
             echo "firmware_component=$ENTRY"
         done
@@ -2208,6 +2449,7 @@ fi
 INIT_DEFAULTS
 SETUP_AVBTOOL
 PARSE_ORIGINAL_VBMETA_LAYOUT
+PARSE_ORIGINAL_VBMETA_SAMSUNG_LAYOUT
 ADOPT_ORIGINAL_VBMETA_DEFAULTS
 MERGE_LAYOUT
 ASSERT_REQUIRED_RE_SIGN_COVERAGE
@@ -2221,6 +2463,7 @@ done
 SIGN_CHAIN_PARTITIONS
 SIGN_EXTERNAL_DESCRIPTOR_PARTITIONS
 MAKE_TOPLEVEL_VBMETA
+MAKE_VBMETA_SAMSUNG
 VERIFY_SIGNED_AVB
 CREATE_IMAGE_PACK
 

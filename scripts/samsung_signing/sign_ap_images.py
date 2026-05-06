@@ -32,6 +32,7 @@ PHASE_IMAGES = {
     ],
     "after-avb": [
         ("vbmeta.img", "vbmeta"),
+        ("vbmeta_samsung.img", "vbmeta_samsung"),
     ],
 }
 
@@ -96,14 +97,22 @@ def image_is_signable(stage: str, data: bytes) -> bool:
     return bool(footer_candidate_sizes(stage, data))
 
 
+def image_can_initialize_footer(stage: str, data: bytes) -> bool:
+    return False
+
+
 def sign_image(args: argparse.Namespace, paths: dict[int, Path], pubs: dict[str, Path], image: Path, stage: str) -> bool:
     data = image.read_bytes()
+    append_footer = False
     if not image_is_signable(stage, data):
-        message = f"{image.name} has no recognizable Samsung Stage2 footer/trailer; skipping"
-        if args.strict:
-            raise RuntimeError(message)
-        print(f"[!] {message}")
-        return False
+        if not image_can_initialize_footer(stage, data):
+            message = f"{image.name} has no recognizable Samsung Stage2 footer/trailer; skipping"
+            if args.strict:
+                raise RuntimeError(message)
+            print(f"[!] {message}")
+            return False
+        append_footer = parse_avb_footer(data) is None
+        print(f"[*] {image.name} has no Samsung Stage2 footer; initializing recovery footer")
 
     key_type = resolve_key_type(stage, data)
     private_key = paths[key_type]
@@ -127,6 +136,8 @@ def sign_image(args: argparse.Namespace, paths: dict[int, Path], pubs: dict[str,
         "--key-type",
         str(key_type),
     ]
+    if append_footer:
+        sign_cmd.append("--append-footer")
     run_step(sign_cmd, f"Signing {image.name} as {stage}, key_type={key_type}, rp={args.rollback}")
 
     if args.verify:

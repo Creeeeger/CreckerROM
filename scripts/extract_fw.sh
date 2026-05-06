@@ -29,6 +29,7 @@ LATEST_FIRMWARE=""
 DOWNLOADED_FIRMWARE=""
 BL_TAR=""
 AP_TAR=""
+CP_TAR=""
 CSC_TAR=""
 
 TMP_DIR="$(mktemp -d)"
@@ -42,6 +43,25 @@ EXTRACT_AVB_BINARIES()
 
         EXTRACT_FILE_FROM_TAR "$BL_TAR" "vbmeta.img" || exit 1
         mv -f "$FW_DIR/${MODEL}_${CSC}/vbmeta.img" "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta.img"
+
+        LOG_STEP_OUT
+    fi
+
+    if [ -n "$AP_TAR" ] && { FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img" || \
+            FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img.lz4" || \
+            FILE_EXISTS_IN_TAR "$AP_TAR" "AP_vbmeta_samsung.img" || \
+            FILE_EXISTS_IN_TAR "$AP_TAR" "AP_vbmeta_samsung.img.lz4"; }; then
+        LOG_STEP_IN "- Extracting AP vbmeta_samsung"
+
+        mkdir -p "$FW_DIR/${MODEL}_${CSC}/avb"
+
+        if FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img" || FILE_EXISTS_IN_TAR "$AP_TAR" "vbmeta_samsung.img.lz4"; then
+            EXTRACT_FILE_FROM_TAR "$AP_TAR" "vbmeta_samsung.img" || exit 1
+            mv -f "$FW_DIR/${MODEL}_${CSC}/vbmeta_samsung.img" "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_samsung.img"
+        else
+            EXTRACT_FILE_FROM_TAR "$AP_TAR" "AP_vbmeta_samsung.img" || exit 1
+            mv -f "$FW_DIR/${MODEL}_${CSC}/AP_vbmeta_samsung.img" "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_samsung.img"
+        fi
 
         LOG_STEP_OUT
     fi
@@ -85,6 +105,41 @@ EXTRACT_KERNEL_BINARIES()
 
         STORE_KERNEL_IMAGE_METADATA "$FW_DIR/${MODEL}_${CSC}/kernel/$f"
     done
+
+    LOG_STEP_OUT
+}
+
+EXTRACT_ODIN_COMPONENT_TO_DIR()
+{
+    local TAR_FILE="$1"
+    local FILE_NAME="$2"
+    local OUTPUT_DIR="$3"
+
+    [ -n "$TAR_FILE" ] && [ -f "$TAR_FILE" ] || return 0
+    if ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME" && \
+            ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME.lz4" && \
+            ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$FILE_NAME.ext4"; then
+        return 0
+    fi
+
+    EXTRACT_FILE_FROM_TAR "$TAR_FILE" "$FILE_NAME" || exit 1
+    [ -f "$FW_DIR/${MODEL}_${CSC}/$FILE_NAME" ] || return 0
+    mkdir -p "$OUTPUT_DIR"
+    mv -f "$FW_DIR/${MODEL}_${CSC}/$FILE_NAME" "$OUTPUT_DIR/$FILE_NAME"
+}
+
+EXTRACT_ODIN_PACKAGE_COMPONENTS()
+{
+    LOG_STEP_IN "- Extracting Odin package firmware components"
+
+    EXTRACT_ODIN_COMPONENT_TO_DIR "$AP_TAR" "dqmdbg.img" "$FW_DIR/${MODEL}_${CSC}/odin_extra/ap"
+    EXTRACT_ODIN_COMPONENT_TO_DIR "$AP_TAR" "misc.bin" "$FW_DIR/${MODEL}_${CSC}/odin_extra/ap"
+
+    EXTRACT_ODIN_COMPONENT_TO_DIR "$CP_TAR" "modem.bin" "$FW_DIR/${MODEL}_${CSC}/odin_extra/cp"
+    EXTRACT_ODIN_COMPONENT_TO_DIR "$CP_TAR" "modem_debug.bin" "$FW_DIR/${MODEL}_${CSC}/odin_extra/cp"
+
+    EXTRACT_ODIN_COMPONENT_TO_DIR "$CSC_TAR" "cache.img" "$FW_DIR/${MODEL}_${CSC}/odin_extra/csc"
+    EXTRACT_ODIN_COMPONENT_TO_DIR "$CSC_TAR" "omr.img" "$FW_DIR/${MODEL}_${CSC}/odin_extra/csc"
 
     LOG_STEP_OUT
 }
@@ -449,6 +504,7 @@ for i in "${FIRMWARES[@]}"; do
 
     BL_TAR=""
     AP_TAR=""
+    CP_TAR=""
     for PATTERN in "BL_${DOWNLOADED_MODEL}*.md5" "BL_${DOWNLOADED_MODEL_ALT}*.md5" "BL_*.md5"; do
         BL_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "$PATTERN" | sort -r | head -n 1)"
         [ -n "$BL_TAR" ] && break
@@ -456,6 +512,10 @@ for i in "${FIRMWARES[@]}"; do
     for PATTERN in "AP_${DOWNLOADED_MODEL}*.md5" "AP_${DOWNLOADED_MODEL_ALT}*.md5" "AP_*.md5"; do
         AP_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "$PATTERN" | sort -r | head -n 1)"
         [ -n "$AP_TAR" ] && break
+    done
+    for PATTERN in "CP_${DOWNLOADED_MODEL}*.md5" "CP_${DOWNLOADED_MODEL_ALT}*.md5" "CP_*.md5"; do
+        CP_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "$PATTERN" | sort -r | head -n 1)"
+        [ -n "$CP_TAR" ] && break
     done
     CSC_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "CSC_*.md5" | sort -r | head -n 1)"
 
@@ -482,6 +542,7 @@ for i in "${FIRMWARES[@]}"; do
     EXTRACT_KERNEL_BINARIES
     EXTRACT_OS_PARTITIONS
     EXTRACT_AVB_BINARIES
+    EXTRACT_ODIN_PACKAGE_COMPONENTS
 
     echo -n "$DOWNLOADED_FIRMWARE" > "$FW_DIR/${MODEL}_${CSC}/.extracted"
 

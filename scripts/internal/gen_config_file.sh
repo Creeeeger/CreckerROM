@@ -79,6 +79,67 @@ GET_DEFAULT_ODIN_SUPER_IMAGE()
     fi
 }
 
+GET_FILE_SIZE_BYTES()
+{
+    [ -f "$1" ] || return 1
+
+    wc -c < "$1" | tr -d '[:space:]'
+}
+
+GET_DEFAULT_RECOVERY_IMAGE_PATH()
+{
+    case "$TARGET_CODENAME" in
+        "beyond0lte")
+            echo "$SRC_DIR/recoveries/extracted/G970/recovery.img"
+            ;;
+        "beyond1lte")
+            echo "$SRC_DIR/recoveries/extracted/G973/recovery.img"
+            ;;
+        "beyond2lte")
+            echo "$SRC_DIR/recoveries/extracted/G975/recovery.img"
+            ;;
+        "beyondx")
+            echo "$SRC_DIR/recoveries/extracted/G977/recovery.img"
+            ;;
+        "r8s")
+            echo "$SRC_DIR/recoveries/extracted/G780F/recovery.img"
+            ;;
+        "x1s")
+            echo "$SRC_DIR/recoveries/extracted/G980F_G981B/recovery.img"
+            ;;
+        "y2s")
+            echo "$SRC_DIR/recoveries/extracted/G985F_G986B/recovery.img"
+            ;;
+        "z3s")
+            echo "$SRC_DIR/recoveries/extracted/G988B/recovery.img"
+            ;;
+        "p3s")
+            echo "$SRC_DIR/recoveries/extracted/G998B/recovery.img"
+            ;;
+        "c1s")
+            echo "$SRC_DIR/recoveries/extracted/N980F_N981B/recovery.img"
+            ;;
+        "c2s")
+            echo "$SRC_DIR/recoveries/extracted/N985F_N986B/recovery.img"
+            ;;
+        *)
+            echo "none"
+            ;;
+    esac
+}
+
+GET_DEFAULT_RECOVERY_PARTITION_SIZE()
+{
+    local RECOVERY_IMAGE
+
+    RECOVERY_IMAGE="${TARGET_RECOVERY_IMAGE_PATH:-$(GET_DEFAULT_RECOVERY_IMAGE_PATH)}"
+    if [ -n "$RECOVERY_IMAGE" ] && [ "$RECOVERY_IMAGE" != "none" ] && [ -f "$RECOVERY_IMAGE" ]; then
+        GET_FILE_SIZE_BYTES "$RECOVERY_IMAGE"
+    else
+        echo "none"
+    fi
+}
+
 GET_DEFAULT_KEEP_ORIGINAL_SIGN()
 {
     if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
@@ -183,6 +244,8 @@ IS_DEFAULT_AVB_CONFIG_VAR()
         "TARGET_AVB_HASHTREE_PARTITIONS" | \
         "TARGET_AVB_CHAIN_PARTITIONS" | \
         "TARGET_AVB_ORIGINAL_VBMETA_PATH" | \
+        "TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH" | \
+        "TARGET_AVB_VBMETA_SAMSUNG_PARTITIONS" | \
         "TARGET_AVB_FLASH_VBMETA_IN_ZIP" | \
         "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" | \
         "TARGET_AVB_CREATE_IMAGE_PACK_ZIP" | \
@@ -191,6 +254,7 @@ IS_DEFAULT_AVB_CONFIG_VAR()
         "TARGET_AVB_ROLLBACK_INDEX_LOCATION" | \
         "TARGET_AVB_HASH_ALGORITHM" | \
         "TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS" | \
+        "TARGET_AVB_MAKE_VBMETA_SAMSUNG_IMAGE_ARGS" | \
         "TARGET_ODIN_EXTRA_PARTITIONS" | \
         "TARGET_ODIN_EXTRA_IMAGE_MAP")
             return 0
@@ -398,6 +462,9 @@ fi
     GET_BUILD_VAR "TARGET_ODIN_USE_SUPER_IMAGE" "$TARGET_ODIN_USE_SUPER_IMAGE"
     GET_BUILD_VAR "TARGET_ODIN_EXTRA_PARTITIONS" "$(GET_DEFAULT_ODIN_EXTRA_PARTITIONS)"
     GET_BUILD_VAR "TARGET_ODIN_EXTRA_IMAGE_MAP" "$(GET_DEFAULT_AVB_FIRMWARE_IMAGE_MAP)"
+    GET_BUILD_VAR "TARGET_BUILD_ODIN_CP_PACKAGE" "true"
+    GET_BUILD_VAR "TARGET_BUILD_ODIN_CSC_PACKAGE" "true"
+    GET_BUILD_VAR "TARGET_RECOVERY_IMAGE_PATH" "$(GET_DEFAULT_RECOVERY_IMAGE_PATH)"
     GET_BUILD_VAR "TARGET_ROM_ZIP_COMPRESSION_LEVEL" "5"
     GET_BUILD_VAR "TARGET_BROTLI_QUALITY" "4"
     GET_BUILD_VAR "TARGET_ENABLE_CUSTOM_AVB" "$ROM_ENABLE_AVB"
@@ -418,6 +485,8 @@ fi
     GET_BUILD_VAR "TARGET_AVB_HASHTREE_PARTITIONS" ""
     GET_BUILD_VAR "TARGET_AVB_CHAIN_PARTITIONS" ""
     GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_PATH" "$OUT_DIR/fw/$TARGET_FIRMWARE_PATH/avb/vbmeta.img"
+    GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH" "$OUT_DIR/fw/$TARGET_FIRMWARE_PATH/avb/vbmeta_samsung.img"
+    GET_BUILD_VAR "TARGET_AVB_VBMETA_SAMSUNG_PARTITIONS" "odm product system vendor"
     GET_BUILD_VAR "TARGET_AVB_FLASH_VBMETA_IN_ZIP" "true"
     GET_BUILD_VAR "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" "false"
     GET_BUILD_VAR "TARGET_AVB_CREATE_IMAGE_PACK_ZIP" "false"
@@ -426,6 +495,7 @@ fi
     GET_BUILD_VAR "TARGET_AVB_ROLLBACK_INDEX_LOCATION" "0"
     GET_BUILD_VAR "TARGET_AVB_HASH_ALGORITHM" "sha256"
     GET_BUILD_VAR "TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS" ""
+    GET_BUILD_VAR "TARGET_AVB_MAKE_VBMETA_SAMSUNG_IMAGE_ARGS" ""
     EMIT_EXTRA_AVB_VARS
     GET_BUILD_VAR "TARGET_ENABLE_SAMSUNG_SIGNING" "$(GET_DEFAULT_SAMSUNG_SIGNING)"
     GET_BUILD_VAR "TARGET_SAMSUNG_SIGN_AP_IMAGES" "$(GET_DEFAULT_SAMSUNG_SIGNING_DEPENDENT)"
@@ -449,6 +519,7 @@ fi
     GET_BUILD_VAR "TARGET_DTBO_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_INIT_BOOT_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_VENDOR_BOOT_PARTITION_SIZE" "none"
+    GET_BUILD_VAR "TARGET_RECOVERY_PARTITION_SIZE" "$(GET_DEFAULT_RECOVERY_PARTITION_SIZE)"
     GET_BUILD_VAR "TARGET_REQUIRES_SPECIFIC_FIRMWARE" "false"
     GET_BUILD_VAR "TARGET_SUPPORTED_FIRMWARES" "none"
     GET_BUILD_VAR "TARGET_SUPER_PARTITION_SIZE"

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 import argparse
+import hashlib
 import importlib.util
 import os
 import shutil
@@ -19,6 +20,7 @@ from stage2_common import (
     parse_stage2_footer,
     signer_info_offset_from_avb_original,
 )
+from keystorage_layout_tool import iter_key_slots
 
 
 TOOLS_DIR = Path(__file__).resolve().parent
@@ -226,6 +228,7 @@ def patch_keystorage_vbmeta_key(args: argparse.Namespace, image: Path, manifest:
         append_manifest(manifest, "keystorage_vbmeta_key", "preserved")
         return
 
+    cp_key_before = read_keystorage_slot(image, "cp_key")
     vbmeta_key = resolve_keystorage_vbmeta_key(args)
     vbmeta_key_size = len(vbmeta_key.read_bytes())
     run_step(
@@ -244,8 +247,12 @@ def patch_keystorage_vbmeta_key(args: argparse.Namespace, image: Path, manifest:
         ],
         f"Patching keystorage.bin vbmeta key from {vbmeta_key.name}",
     )
+    cp_key_after = read_keystorage_slot(image, "cp_key")
+    if cp_key_before != cp_key_after:
+        raise RuntimeError("keystorage cp_key changed while patching the vbmeta key")
+
     append_manifest(manifest, "keystorage_vbmeta_key", f"{vbmeta_key}:size{vbmeta_key_size}")
-    append_manifest(manifest, "keystorage_cp_key", "preserved")
+    append_manifest(manifest, "keystorage_cp_key", f"preserved:sha256={digest_slot(cp_key_after)}")
     append_manifest(manifest, "keystorage_fimc_key", "preserved")
 
 
@@ -479,6 +486,18 @@ def merge_sboot(parts_dir: Path, work_dir: Path) -> Path:
 def append_manifest(manifest: Path, key: str, value: str) -> None:
     with manifest.open("a", encoding="utf-8") as fh:
         fh.write(f"{key}={value}\n")
+
+
+def read_keystorage_slot(image: Path, name: str) -> bytes:
+    data = image.read_bytes()
+    for slot in iter_key_slots(data):
+        if slot["name"] == name:
+            return bytes(slot["slot"])
+    raise RuntimeError(f"{image.name} does not contain keystorage slot {name}")
+
+
+def digest_slot(slot: bytes) -> str:
+    return hashlib.sha256(slot).hexdigest()
 
 
 def sign_split_sboot(args: argparse.Namespace, paths: dict[str, Path], parts_dir: Path, manifest: Path) -> None:

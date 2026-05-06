@@ -18,8 +18,11 @@
 
 # [
 source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
+source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
 
 SOURCE_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$SOURCE_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$SOURCE_FIRMWARE")"
+TARGET_FIRMWARE_MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
+TARGET_FIRMWARE_CSC="$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 
 SOURCE_FINGERPRINT="$(GET_PROP "$WORK_DIR/system/system/build.prop" "ro.system.build.fingerprint")"
@@ -33,6 +36,9 @@ TARGET_BUILD_ODIN_PACKAGE="${TARGET_BUILD_ODIN_PACKAGE:-true}"
 TARGET_ODIN_USE_SUPER_IMAGE="${TARGET_ODIN_USE_SUPER_IMAGE:-false}"
 TARGET_ODIN_EXTRA_PARTITIONS="${TARGET_ODIN_EXTRA_PARTITIONS:-}"
 TARGET_ODIN_EXTRA_IMAGE_MAP="${TARGET_ODIN_EXTRA_IMAGE_MAP:-${TARGET_AVB_FIRMWARE_IMAGE_MAP:-}}"
+TARGET_BUILD_ODIN_CP_PACKAGE="${TARGET_BUILD_ODIN_CP_PACKAGE:-true}"
+TARGET_BUILD_ODIN_CSC_PACKAGE="${TARGET_BUILD_ODIN_CSC_PACKAGE:-true}"
+TARGET_RECOVERY_IMAGE_PATH="${TARGET_RECOVERY_IMAGE_PATH:-none}"
 TARGET_ROM_ZIP_COMPRESSION_LEVEL="${TARGET_ROM_ZIP_COMPRESSION_LEVEL:-5}"
 TARGET_BROTLI_QUALITY="${TARGET_BROTLI_QUALITY:-4}"
 TARGET_ENABLE_SAMSUNG_SIGNING="${TARGET_ENABLE_SAMSUNG_SIGNING:-false}"
@@ -68,6 +74,10 @@ done
 
 export TARGET_AVB_IMAGE_PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
 export TARGET_AVB_IMAGE_PACK_ZIP="$OUT_DIR/${FILE_NAME%.zip}-images.zip"
+ODIN_EXTRA_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_extra"
+ODIN_EXTRA_AP_DIR="$ODIN_EXTRA_DIR/ap"
+ODIN_EXTRA_CP_DIR="$ODIN_EXTRA_DIR/cp"
+ODIN_EXTRA_CSC_DIR="$ODIN_EXTRA_DIR/csc"
 
 ENSURE_SHARED_PLATFORM_SIGNING_CERTS || exit 1
 PRIVATE_KEY_PATH="$(GET_PLATFORM_CERT_PK8_PATH)"
@@ -230,6 +240,30 @@ COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP()
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 }
 
+RESOLVE_TARGET_RECOVERY_IMAGE_PATH()
+{
+    if [ -n "$TARGET_RECOVERY_IMAGE_PATH" ] && [ "$TARGET_RECOVERY_IMAGE_PATH" != "none" ]; then
+        [ -f "$TARGET_RECOVERY_IMAGE_PATH" ] && echo "$TARGET_RECOVERY_IMAGE_PATH" && return 0
+        LOGW "Configured recovery image does not exist: $TARGET_RECOVERY_IMAGE_PATH"
+        return 1
+    fi
+
+    return 1
+}
+
+COPY_TARGET_RECOVERY_IMAGE_TO_TMP()
+{
+    local RECOVERY_IMAGE=""
+
+    RECOVERY_IMAGE="$(RESOLVE_TARGET_RECOVERY_IMAGE_PATH || true)"
+    [ -n "$RECOVERY_IMAGE" ] || return 0
+
+    LOG "- Copying target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
+    mkdir -p "$WORK_DIR/kernel"
+    cp -fa "$RECOVERY_IMAGE" "$WORK_DIR/kernel/recovery.img"
+    cp -fa "$WORK_DIR/kernel/recovery.img" "$TMP_DIR/recovery.img"
+}
+
 RUN_SAMSUNG_AP_IMAGE_SIGNING()
 {
     local IMAGE_DIR="$1"
@@ -249,6 +283,457 @@ RUN_SAMSUNG_AP_IMAGE_SIGNING()
         --phase "$PHASE" \
         --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
         --rollback "$TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" || exit 1
+}
+
+SAMSUNG_PRIVATE_KEY_FOR_TYPE()
+{
+    case "$1" in
+        2)
+            echo "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage3_private.pem"
+            ;;
+        1)
+            echo "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_ree_private.pem"
+            ;;
+        *)
+            echo "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_tee_private.pem"
+            ;;
+    esac
+}
+
+SAMSUNG_VERIFY_KEY_ARGS()
+{
+    echo "--tee-pub-key $TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_tee_pubkey.bin --ree-pub-key $TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_ree_pubkey.bin --stage3-pub-key $TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage3_pubkey.bin"
+}
+
+GET_EXISTING_STAGE2_KEY_TYPE()
+{
+    local IMAGE="$1"
+    local STAGE="$2"
+
+    python3 - "$SRC_DIR" "$IMAGE" "$STAGE" <<'PY'
+import sys
+
+src_dir, image_path, stage = sys.argv[1:4]
+sys.path.insert(0, f"{src_dir}/scripts/samsung_signing")
+
+from stage2_common import (  # noqa: E402
+    is_avb_wrapper_stage,
+    looks_like_stage2_footer,
+    normalize_stage,
+    parse_avb_footer,
+    parse_stage2_footer,
+    read_file,
+    signer_info_offset_from_avb_original,
+)
+
+stage = normalize_stage(stage)
+data = read_file(image_path)
+sizes = []
+
+if is_avb_wrapper_stage(stage):
+    avb = parse_avb_footer(data)
+    if avb is not None and avb.original_image_size <= len(data):
+        if looks_like_stage2_footer(data, avb.original_image_size):
+            sizes.append(avb.original_image_size)
+        signer_info_offset = signer_info_offset_from_avb_original(data, avb.original_image_size)
+        if signer_info_offset is not None and looks_like_stage2_footer(data, signer_info_offset):
+            sizes.append(signer_info_offset)
+
+if looks_like_stage2_footer(data, len(data)):
+    sizes.append(len(data))
+
+if not sizes:
+    raise SystemExit(1)
+
+print(parse_stage2_footer(data, sizes[0]).key_type)
+PY
+}
+
+GET_DOWNLOAD_SIGNATURE_KEY_TYPE()
+{
+    local IMAGE="$1"
+
+    python3 - "$SRC_DIR" "$IMAGE" <<'PY'
+import sys
+
+src_dir, image_path = sys.argv[1:3]
+sys.path.insert(0, f"{src_dir}/scripts/samsung_signing")
+
+from download_signature_common import parse_download_signature_layout  # noqa: E402
+
+try:
+    print(parse_download_signature_layout(image_path).key_type)
+except ValueError:
+    raise SystemExit(1)
+PY
+}
+
+SIGN_STAGE2_ODIN_COMPONENT()
+{
+    local IMAGE="$1"
+    local STAGE="$2"
+    local REQUIRED="$3"
+    local KEY_TYPE=""
+    local PRIVATE_KEY=""
+    local VERIFY_ARGS
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    if [ "$TARGET_PLATFORM" != "exynos990" ]; then
+        LOGW "Samsung Stage-2 Odin firmware signing is only enabled for TARGET_PLATFORM=exynos990; skipping $(basename "$IMAGE")"
+        return 0
+    fi
+
+    KEY_TYPE="$(GET_EXISTING_STAGE2_KEY_TYPE "$IMAGE" "$STAGE" || true)"
+    if [ -z "$KEY_TYPE" ]; then
+        if [ "$REQUIRED" = "true" ]; then
+            LOGE "$(basename "$IMAGE") has no recognizable Samsung Stage-2 footer/trailer"
+            exit 1
+        fi
+        LOGW "$(basename "$IMAGE") has no recognizable Samsung Stage-2 footer/trailer; keeping stock"
+        return 0
+    fi
+
+    PRIVATE_KEY="$(SAMSUNG_PRIVATE_KEY_FOR_TYPE "$KEY_TYPE")"
+    [ -f "$PRIVATE_KEY" ] || {
+        LOGE "Missing Samsung private key for key_type=$KEY_TYPE: $PRIVATE_KEY"
+        exit 1
+    }
+
+    LOG "- Samsung-signing $(basename "$IMAGE") as $STAGE, key_type=$KEY_TYPE"
+    python3 "$SRC_DIR/scripts/samsung_signing/stage2_sign_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        --stage "$STAGE" \
+        -i "$IMAGE" \
+        -o "$IMAGE" \
+        -k "$PRIVATE_KEY" \
+        -r "$TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" \
+        --key-type "$KEY_TYPE" || exit 1
+
+    VERIFY_ARGS="$(SAMSUNG_VERIFY_KEY_ARGS)"
+    # shellcheck disable=SC2086
+    python3 "$SRC_DIR/scripts/samsung_signing/stage2_verify_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        --stage "$STAGE" \
+        -i "$IMAGE" \
+        $VERIFY_ARGS || exit 1
+}
+
+SIGN_DOWNLOAD_ODIN_COMPONENT()
+{
+    local IMAGE="$1"
+    local REQUIRED="$2"
+    local KEY_TYPE=""
+    local PRIVATE_KEY=""
+    local SIGNED_TMP
+    local VERIFY_ARGS
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    if [ "$TARGET_PLATFORM" != "exynos990" ]; then
+        LOGW "Samsung download Odin firmware signing is only enabled for TARGET_PLATFORM=exynos990; skipping $(basename "$IMAGE")"
+        return 0
+    fi
+
+    KEY_TYPE="$(GET_DOWNLOAD_SIGNATURE_KEY_TYPE "$IMAGE" || true)"
+    if [ -z "$KEY_TYPE" ]; then
+        if [ "$REQUIRED" = "true" ]; then
+            LOGE "$(basename "$IMAGE") has no recognizable sparse download signature layout"
+            exit 1
+        fi
+        LOGW "$(basename "$IMAGE") has no recognizable sparse download signature layout; keeping stock"
+        return 0
+    fi
+
+    PRIVATE_KEY="$(SAMSUNG_PRIVATE_KEY_FOR_TYPE "$KEY_TYPE")"
+    [ -f "$PRIVATE_KEY" ] || {
+        LOGE "Missing Samsung private key for key_type=$KEY_TYPE: $PRIVATE_KEY"
+        exit 1
+    }
+
+    SIGNED_TMP="$IMAGE.signed.tmp"
+    rm -f "$SIGNED_TMP"
+    LOG "- Samsung-signing $(basename "$IMAGE") download signature, key_type=$KEY_TYPE"
+    python3 "$SRC_DIR/scripts/samsung_signing/download_sign_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        -i "$IMAGE" \
+        -o "$SIGNED_TMP" \
+        -k "$PRIVATE_KEY" \
+        -r "$TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" || exit 1
+    mv -f "$SIGNED_TMP" "$IMAGE"
+
+    VERIFY_ARGS="$(SAMSUNG_VERIFY_KEY_ARGS)"
+    # shellcheck disable=SC2086
+    python3 "$SRC_DIR/scripts/samsung_signing/download_verify_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        -i "$IMAGE" \
+        $VERIFY_ARGS || exit 1
+}
+
+FIND_TARGET_ODIN_TAR()
+{
+    local PREFIX="$1"
+    local FW_ODIN_DIR="$ODIN_DIR/$TARGET_FIRMWARE_PATH"
+    local MODEL_ALT="${TARGET_FIRMWARE_MODEL#SM-}"
+    local PATTERN
+    local TAR_FILE=""
+
+    [ -d "$FW_ODIN_DIR" ] || return 1
+
+    for PATTERN in \
+        "${PREFIX}_${TARGET_FIRMWARE_MODEL}"*.md5 \
+        "${PREFIX}_${MODEL_ALT}"*.md5 \
+        "${PREFIX}_"*.md5 \
+        "${PREFIX}_${TARGET_FIRMWARE_MODEL}"*.tar \
+        "${PREFIX}_${MODEL_ALT}"*.tar \
+        "${PREFIX}_"*.tar; do
+        TAR_FILE="$(find "$FW_ODIN_DIR" -maxdepth 1 -name "$PATTERN" | sort -r | head -n 1)"
+        [ -n "$TAR_FILE" ] && break
+    done
+
+    [ -n "$TAR_FILE" ] && echo "$TAR_FILE"
+}
+
+EXTRACT_ODIN_TAR_ENTRY_TO_PATH()
+{
+    local TAR_FILE="$1"
+    local ENTRY_NAME="$2"
+    local OUTPUT_PATH="$3"
+    local OUTPUT_DIR
+
+    OUTPUT_DIR="$(dirname "$OUTPUT_PATH")"
+    mkdir -p "$OUTPUT_DIR"
+    rm -f "$OUTPUT_PATH" "$OUTPUT_DIR/$ENTRY_NAME" "$OUTPUT_DIR/$ENTRY_NAME.lz4" "$OUTPUT_DIR/$ENTRY_NAME.ext4"
+
+    if FILE_EXISTS_IN_TAR "$TAR_FILE" "$ENTRY_NAME"; then
+        tar xf "$TAR_FILE" -C "$OUTPUT_DIR" "$ENTRY_NAME" || exit 1
+        [ "$OUTPUT_DIR/$ENTRY_NAME" = "$OUTPUT_PATH" ] || mv -f "$OUTPUT_DIR/$ENTRY_NAME" "$OUTPUT_PATH"
+    elif FILE_EXISTS_IN_TAR "$TAR_FILE" "$ENTRY_NAME.lz4"; then
+        tar xf "$TAR_FILE" -C "$OUTPUT_DIR" "$ENTRY_NAME.lz4" || exit 1
+        lz4 -d --rm "$OUTPUT_DIR/$ENTRY_NAME.lz4" "$OUTPUT_PATH" > /dev/null || exit 1
+    elif FILE_EXISTS_IN_TAR "$TAR_FILE" "$ENTRY_NAME.ext4"; then
+        tar xf "$TAR_FILE" -C "$OUTPUT_DIR" "$ENTRY_NAME.ext4" || exit 1
+        mv -f "$OUTPUT_DIR/$ENTRY_NAME.ext4" "$OUTPUT_PATH"
+    else
+        return 1
+    fi
+
+    chmod u+w "$OUTPUT_PATH"
+    [ -f "$OUTPUT_PATH" ]
+}
+
+GET_ODIN_COMPONENT_AVB_INFO()
+{
+    local IMAGE="$1"
+    local AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-$SRC_DIR/platform_external_avb-master/avbtool.py}"
+    local AVB_PYTHON="${TARGET_AVBTOOL_PYTHON:-python3}"
+
+    [ "$AVBTOOL_PATH" != "none" ] || AVBTOOL_PATH="$SRC_DIR/platform_external_avb-master/avbtool.py"
+    [ "$AVB_PYTHON" != "none" ] || AVB_PYTHON="python3"
+    [ -f "$AVBTOOL_PATH" ] || return 0
+
+    "$AVB_PYTHON" - "$AVBTOOL_PATH" "$IMAGE" <<'PY'
+import importlib.util
+import sys
+
+avbtool_path, image_path = sys.argv[1:3]
+spec = importlib.util.spec_from_file_location('crecker_avbtool', avbtool_path)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+avb = module.Avb()
+image = module.ImageHandler(image_path, read_only=True)
+try:
+    footer, header, descriptors, _ = avb._parse_image(image)
+except Exception:
+    raise SystemExit(0)
+
+if footer is None:
+    raise SystemExit(0)
+
+for desc in descriptors:
+    if isinstance(desc, module.AvbHashtreeDescriptor):
+        do_not_use_ab = int(bool(desc.flags & desc.FLAGS_DO_NOT_USE_AB))
+        check_at_most_once = int(bool(desc.flags & desc.FLAGS_CHECK_AT_MOST_ONCE))
+        do_not_generate_fec = int(desc.fec_num_roots == 0)
+        print('\t'.join([
+            'hashtree',
+            desc.partition_name,
+            desc.hash_algorithm,
+            str(header.rollback_index),
+            str(header.rollback_index_location),
+            str(do_not_use_ab),
+            str(check_at_most_once),
+            str(do_not_generate_fec),
+        ]))
+        raise SystemExit(0)
+    if isinstance(desc, module.AvbHashDescriptor):
+        do_not_use_ab = int(bool(desc.flags & (1 << 0)))
+        print('\t'.join([
+            'hash',
+            desc.partition_name,
+            desc.hash_algorithm,
+            str(header.rollback_index),
+            str(header.rollback_index_location),
+            str(do_not_use_ab),
+            '0',
+            '0',
+        ]))
+        raise SystemExit(0)
+PY
+}
+
+SIGN_AVB_ODIN_COMPONENT_IF_REQUIRED()
+{
+    local IMAGE="$1"
+    local ENTRY_NAME="$2"
+    local AVB_INFO="${3:-}"
+    local KIND
+    local PARTITION_NAME
+    local HASH_ALGORITHM
+    local ROLLBACK_INDEX
+    local ROLLBACK_INDEX_LOCATION
+    local DO_NOT_USE_AB
+    local CHECK_AT_MOST_ONCE
+    local DO_NOT_GENERATE_FEC
+    local PARTITION_SIZE
+    local AVBTOOL_PATH="${TARGET_AVBTOOL_PATH:-$SRC_DIR/platform_external_avb-master/avbtool.py}"
+    local AVB_PYTHON="${TARGET_AVBTOOL_PYTHON:-python3}"
+    local AVB_KEY_PATH="${TARGET_AVB_KEY_PATH:-$SRC_DIR/security/avb/creckerrom_avb_private.pem}"
+    local AVB_ALGORITHM="${TARGET_AVB_ALGORITHM:-SHA256_RSA4096}"
+    local CMD=()
+
+    $TARGET_ENABLE_CUSTOM_AVB || return 0
+    [ -f "$IMAGE" ] || return 0
+
+    [ -n "$AVB_INFO" ] || AVB_INFO="$(GET_ODIN_COMPONENT_AVB_INFO "$IMAGE" || true)"
+    [ -n "$AVB_INFO" ] || return 0
+
+    IFS=$'\t' read -r KIND PARTITION_NAME HASH_ALGORITHM ROLLBACK_INDEX ROLLBACK_INDEX_LOCATION \
+        DO_NOT_USE_AB CHECK_AT_MOST_ONCE DO_NOT_GENERATE_FEC <<< "$AVB_INFO"
+
+    [ "$AVBTOOL_PATH" != "none" ] || AVBTOOL_PATH="$SRC_DIR/platform_external_avb-master/avbtool.py"
+    [ "$AVB_PYTHON" != "none" ] || AVB_PYTHON="python3"
+    [ -f "$AVBTOOL_PATH" ] || {
+        LOGE "AVB tool not found for Odin firmware component signing: $AVBTOOL_PATH"
+        exit 1
+    }
+    [ -f "$AVB_KEY_PATH" ] || {
+        LOGE "AVB key not found for Odin firmware component signing: $AVB_KEY_PATH"
+        exit 1
+    }
+
+    PARTITION_SIZE="$(GET_IMAGE_SIZE "$IMAGE")" || exit 1
+    [ -n "$HASH_ALGORITHM" ] || HASH_ALGORITHM="${TARGET_AVB_HASH_ALGORITHM:-sha256}"
+
+    LOG "- AVB-signing Odin firmware component $ENTRY_NAME after Samsung signing ($KIND, partition=$PARTITION_NAME)"
+    "$AVB_PYTHON" "$AVBTOOL_PATH" erase_footer --image "$IMAGE" || exit 1
+
+    if [ "$KIND" = "hashtree" ]; then
+        CMD=(
+            add_hashtree_footer
+            --image "$IMAGE"
+            --partition_name "$PARTITION_NAME"
+            --partition_size "$PARTITION_SIZE"
+            --hash_algorithm "$HASH_ALGORITHM"
+            --rollback_index "$ROLLBACK_INDEX"
+            --rollback_index_location "$ROLLBACK_INDEX_LOCATION"
+            --algorithm "$AVB_ALGORITHM"
+            --key "$AVB_KEY_PATH"
+        )
+        [ "$DO_NOT_GENERATE_FEC" = "1" ] && CMD+=(--do_not_generate_fec)
+        [ "$CHECK_AT_MOST_ONCE" = "1" ] && CMD+=(--check_at_most_once)
+    else
+        CMD=(
+            add_hash_footer
+            --image "$IMAGE"
+            --partition_name "$PARTITION_NAME"
+            --partition_size "$PARTITION_SIZE"
+            --hash_algorithm "$HASH_ALGORITHM"
+            --rollback_index "$ROLLBACK_INDEX"
+            --rollback_index_location "$ROLLBACK_INDEX_LOCATION"
+            --algorithm "$AVB_ALGORITHM"
+            --key "$AVB_KEY_PATH"
+        )
+    fi
+    [ "$DO_NOT_USE_AB" = "1" ] && CMD+=(--do_not_use_ab)
+
+    "$AVB_PYTHON" "$AVBTOOL_PATH" "${CMD[@]}" || exit 1
+    "$AVB_PYTHON" "$AVBTOOL_PATH" verify_image --image "$IMAGE" --key "$AVB_KEY_PATH" || exit 1
+}
+
+PREPARE_ODIN_COMPONENT()
+{
+    local PACKAGE_PREFIX="$1"
+    local ENTRY_NAME="$2"
+    local OUTPUT_PATH="$3"
+    local SIGN_KIND="$4"
+    local SIGN_STAGE="$5"
+    local REQUIRED_SIGN="${6:-true}"
+    local TAR_FILE=""
+    local CACHE_DIR
+    local CACHE_PATH
+    local AVB_INFO=""
+
+    CACHE_DIR="$(tr '[:upper:]' '[:lower:]' <<< "$PACKAGE_PREFIX")"
+    CACHE_PATH="$FW_DIR/$TARGET_FIRMWARE_PATH/odin_extra/$CACHE_DIR/$ENTRY_NAME"
+    if [ -f "$CACHE_PATH" ]; then
+        LOG "- Copying cached Odin firmware component $ENTRY_NAME"
+        mkdir -p "$(dirname "$OUTPUT_PATH")"
+        cp -fa "$CACHE_PATH" "$OUTPUT_PATH"
+        chmod u+w "$OUTPUT_PATH"
+        AVB_INFO="$(GET_ODIN_COMPONENT_AVB_INFO "$OUTPUT_PATH" || true)"
+        case "$SIGN_KIND" in
+            "download")
+                SIGN_DOWNLOAD_ODIN_COMPONENT "$OUTPUT_PATH" "$REQUIRED_SIGN"
+                ;;
+            "stage2")
+                SIGN_STAGE2_ODIN_COMPONENT "$OUTPUT_PATH" "$SIGN_STAGE" "$REQUIRED_SIGN"
+                ;;
+        esac
+        SIGN_AVB_ODIN_COMPONENT_IF_REQUIRED "$OUTPUT_PATH" "$ENTRY_NAME" "$AVB_INFO"
+        return 0
+    fi
+
+    TAR_FILE="$(FIND_TARGET_ODIN_TAR "$PACKAGE_PREFIX" || true)"
+    if [ -z "$TAR_FILE" ]; then
+        LOGW "No $PACKAGE_PREFIX Odin tar found under $ODIN_DIR/$TARGET_FIRMWARE_PATH; skipping $ENTRY_NAME"
+        return 0
+    fi
+
+    if ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$ENTRY_NAME" && \
+            ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$ENTRY_NAME.lz4" && \
+            ! FILE_EXISTS_IN_TAR "$TAR_FILE" "$ENTRY_NAME.ext4"; then
+        LOGW "$ENTRY_NAME was not found in $(basename "$TAR_FILE"); skipping"
+        return 0
+    fi
+
+    LOG "- Extracting $ENTRY_NAME from $(basename "$TAR_FILE")"
+    EXTRACT_ODIN_TAR_ENTRY_TO_PATH "$TAR_FILE" "$ENTRY_NAME" "$OUTPUT_PATH" || exit 1
+    AVB_INFO="$(GET_ODIN_COMPONENT_AVB_INFO "$OUTPUT_PATH" || true)"
+
+    case "$SIGN_KIND" in
+        "download")
+            SIGN_DOWNLOAD_ODIN_COMPONENT "$OUTPUT_PATH" "$REQUIRED_SIGN"
+            ;;
+        "stage2")
+            SIGN_STAGE2_ODIN_COMPONENT "$OUTPUT_PATH" "$SIGN_STAGE" "$REQUIRED_SIGN"
+            ;;
+    esac
+    SIGN_AVB_ODIN_COMPONENT_IF_REQUIRED "$OUTPUT_PATH" "$ENTRY_NAME" "$AVB_INFO"
+}
+
+PREPARE_ODIN_EXTRA_FIRMWARE_IMAGES()
+{
+    [ -d "$ODIN_EXTRA_DIR" ] && rm -rf "$ODIN_EXTRA_DIR"
+    mkdir -p "$ODIN_EXTRA_AP_DIR" "$ODIN_EXTRA_CP_DIR" "$ODIN_EXTRA_CSC_DIR"
+
+    PREPARE_ODIN_COMPONENT "AP" "dqmdbg.img" "$ODIN_EXTRA_AP_DIR/dqmdbg.img" "download" "" "true"
+    PREPARE_ODIN_COMPONENT "AP" "misc.bin" "$ODIN_EXTRA_AP_DIR/misc.bin" "stage2" "misc" "true"
+
+    PREPARE_ODIN_COMPONENT "CP" "modem.bin" "$ODIN_EXTRA_CP_DIR/modem.bin" "stage2" "modem" "true"
+    PREPARE_ODIN_COMPONENT "CP" "modem_debug.bin" "$ODIN_EXTRA_CP_DIR/modem_debug.bin" "stage2" "modem" "false"
+
+    PREPARE_ODIN_COMPONENT "CSC" "cache.img" "$ODIN_EXTRA_CSC_DIR/cache.img" "download" "" "true"
+    PREPARE_ODIN_COMPONENT "CSC" "omr.img" "$ODIN_EXTRA_CSC_DIR/omr.img" "download" "" "true"
 }
 
 RUN_SAMSUNG_BOOTLOADER_SIGNING()
@@ -294,6 +779,41 @@ BUILD_ODIN_BL_PACKAGE()
     popd > /dev/null
 }
 
+BUILD_ODIN_PACKAGE_FROM_DIR()
+{
+    local PACKAGE_PREFIX="$1"
+    local PACKAGE_DIR="$2"
+    local TAR_PATH="$OUT_DIR/${PACKAGE_PREFIX}_${FILE_NAME%.zip}.tar"
+    local TAR_MD5="$OUT_DIR/${PACKAGE_PREFIX}_${FILE_NAME%.zip}.tar.md5"
+    local CHECKSUM
+    local -a ARCHIVE_ENTRIES=()
+
+    [ -d "$PACKAGE_DIR" ] || {
+        LOGW "Odin $PACKAGE_PREFIX package directory does not exist; skipping"
+        return 0
+    }
+
+    pushd "$PACKAGE_DIR" > /dev/null
+    shopt -s dotglob nullglob
+    ARCHIVE_ENTRIES=(*)
+    shopt -u dotglob nullglob
+    if [ "${#ARCHIVE_ENTRIES[@]}" -lt 1 ]; then
+        LOGW "No Odin $PACKAGE_PREFIX package contents were generated; skipping"
+        popd > /dev/null
+        return 0
+    fi
+
+    rm -f "$TAR_PATH" "$TAR_MD5"
+    tar -cf "$TAR_PATH" -- "${ARCHIVE_ENTRIES[@]}" || exit 1
+    popd > /dev/null
+
+    pushd "$OUT_DIR" > /dev/null
+    CHECKSUM="$(md5sum -t "$(basename "$TAR_PATH")" | awk '{print $1}')" || exit 1
+    printf "%s  %s\n" "$CHECKSUM" "$(basename "$TAR_PATH")" >> "$(basename "$TAR_PATH")"
+    mv -f "$(basename "$TAR_PATH")" "$(basename "$TAR_MD5")"
+    popd > /dev/null
+}
+
 BUILD_ODIN_AP_PACKAGE()
 {
     local AP_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_ap"
@@ -302,11 +822,12 @@ BUILD_ODIN_AP_PACKAGE()
     local AP_CHECKSUM
     local PARTITION
     local COMPONENT_FILE
-    local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
+    local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta vbmeta_samsung prism optics recovery"
     local IMAGE_DIR="$TMP_DIR"
     local -a AP_ARCHIVE_ENTRIES=()
     local -A AP_INCLUDED_FILES=()
     local -A AP_INCLUDED_PARTITIONS=()
+    local EXTRA_FILE
 
     if $TARGET_ENABLE_CUSTOM_AVB; then
         IMAGE_DIR="$TARGET_AVB_IMAGE_PACK_DIR"
@@ -403,6 +924,26 @@ BUILD_ODIN_AP_PACKAGE()
         fi
     fi
 
+    if [ -d "$ODIN_EXTRA_AP_DIR" ]; then
+        while IFS= read -r EXTRA_FILE; do
+            COMPONENT_FILE="$(basename "$EXTRA_FILE")"
+            PARTITION="${COMPONENT_FILE%.*}"
+            if [ -n "${AP_INCLUDED_PARTITIONS[$PARTITION]+x}" ]; then
+                LOGW "Skipping duplicate Odin AP firmware partition $PARTITION ($COMPONENT_FILE)"
+                continue
+            fi
+            if [ -n "${AP_INCLUDED_FILES[$COMPONENT_FILE]+x}" ]; then
+                LOGW "Skipping duplicate Odin AP firmware file $COMPONENT_FILE"
+                continue
+            fi
+
+            LOG "- Copying Odin AP firmware component $COMPONENT_FILE"
+            cp -fa "$EXTRA_FILE" "$AP_DIR/$COMPONENT_FILE"
+            AP_INCLUDED_FILES["$COMPONENT_FILE"]=1
+            AP_INCLUDED_PARTITIONS["$PARTITION"]=1
+        done < <(find "$ODIN_EXTRA_AP_DIR" -maxdepth 1 -type f | sort)
+    fi
+
     rm -f "$AP_TAR" "$AP_TAR_MD5"
     pushd "$AP_DIR" > /dev/null
     shopt -s dotglob nullglob
@@ -420,6 +961,20 @@ BUILD_ODIN_AP_PACKAGE()
     printf "%s  %s\n" "$AP_CHECKSUM" "$(basename "$AP_TAR")" >> "$(basename "$AP_TAR")"
     mv -f "$(basename "$AP_TAR")" "$(basename "$AP_TAR_MD5")"
     popd > /dev/null
+}
+
+BUILD_ODIN_CP_PACKAGE()
+{
+    $TARGET_BUILD_ODIN_CP_PACKAGE || return 0
+
+    BUILD_ODIN_PACKAGE_FROM_DIR "CP" "$ODIN_EXTRA_CP_DIR"
+}
+
+BUILD_ODIN_CSC_PACKAGE()
+{
+    $TARGET_BUILD_ODIN_CSC_PACKAGE || return 0
+
+    BUILD_ODIN_PACKAGE_FROM_DIR "CSC" "$ODIN_EXTRA_CSC_DIR"
 }
 
 GENERATE_BUILD_INFO()
@@ -1004,6 +1559,8 @@ if [ -f "$WORK_DIR/up_param.bin" ]; then
     cp -fa "$WORK_DIR/up_param.bin" "$TMP_DIR/up_param.bin"
 fi
 
+COPY_TARGET_RECOVERY_IMAGE_TO_TMP
+
 if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_AP_IMAGES; then
     LOG_STEP_IN "- Samsung-signing AP images before AVB"
     RUN_SAMSUNG_AP_IMAGE_SIGNING "$TMP_DIR" "before-avb"
@@ -1030,6 +1587,10 @@ if $TARGET_ENABLE_CUSTOM_AVB; then
 fi
 
 if $TARGET_BUILD_ODIN_PACKAGE; then
+    LOG_STEP_IN "- Preparing extra Odin firmware images"
+    PREPARE_ODIN_EXTRA_FIRMWARE_IMAGES
+    LOG_STEP_OUT
+
     if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE; then
         LOG_STEP_IN "- Building Odin BL package"
         BUILD_ODIN_BL_PACKAGE
@@ -1038,6 +1599,14 @@ if $TARGET_BUILD_ODIN_PACKAGE; then
 
     LOG_STEP_IN "- Building Odin AP package"
     BUILD_ODIN_AP_PACKAGE
+    LOG_STEP_OUT
+
+    LOG_STEP_IN "- Building Odin CP package"
+    BUILD_ODIN_CP_PACKAGE
+    LOG_STEP_OUT
+
+    LOG_STEP_IN "- Building Odin CSC package"
+    BUILD_ODIN_CSC_PACKAGE
     LOG_STEP_OUT
 fi
 
