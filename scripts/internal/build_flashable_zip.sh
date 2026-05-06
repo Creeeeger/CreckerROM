@@ -33,6 +33,7 @@ TARGET_FINGERPRINT="${TARGET_FINGERPRINT//$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_P
 TMP_DIR="$OUT_DIR/zip"
 TARGET_BUILD_FLASHABLE_ZIP="${TARGET_BUILD_FLASHABLE_ZIP:-false}"
 TARGET_BUILD_ODIN_PACKAGE="${TARGET_BUILD_ODIN_PACKAGE:-true}"
+TARGET_BUILD_HEIMDALL_PACKAGE="${TARGET_BUILD_HEIMDALL_PACKAGE:-true}"
 TARGET_ODIN_USE_SUPER_IMAGE="${TARGET_ODIN_USE_SUPER_IMAGE:-false}"
 TARGET_ODIN_EXTRA_PARTITIONS="${TARGET_ODIN_EXTRA_PARTITIONS:-}"
 TARGET_ODIN_EXTRA_IMAGE_MAP="${TARGET_ODIN_EXTRA_IMAGE_MAP:-${TARGET_AVB_FIRMWARE_IMAGE_MAP:-}}"
@@ -60,6 +61,11 @@ if ! [[ "$TARGET_BROTLI_QUALITY" =~ ^([0-9]|1[01])$ ]]; then
     TARGET_BROTLI_QUALITY="4"
 fi
 
+if [ "$TARGET_BUILD_HEIMDALL_PACKAGE" != "true" ] && [ "$TARGET_BUILD_HEIMDALL_PACKAGE" != "false" ]; then
+    LOGW "Invalid TARGET_BUILD_HEIMDALL_PACKAGE: $TARGET_BUILD_HEIMDALL_PACKAGE (expected true|false). Using true."
+    TARGET_BUILD_HEIMDALL_PACKAGE="true"
+fi
+
 ROM_DISPLAY_NAME="${ROM_DISPLAY_NAME:-CROM-S24FE-Official-${ROM_VERSION}}"
 
 ZIP_FILE_SUFFIX="-sign.zip"
@@ -74,6 +80,8 @@ done
 
 export TARGET_AVB_IMAGE_PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
 export TARGET_AVB_IMAGE_PACK_ZIP="$OUT_DIR/${FILE_NAME%.zip}-images.zip"
+HEIMDALL_DIR="$OUT_DIR/${FILE_NAME%.zip}-heimdall"
+ODIN_AP_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_ap"
 ODIN_EXTRA_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_extra"
 ODIN_EXTRA_AP_DIR="$ODIN_EXTRA_DIR/ap"
 ODIN_EXTRA_CP_DIR="$ODIN_EXTRA_DIR/cp"
@@ -814,17 +822,12 @@ BUILD_ODIN_PACKAGE_FROM_DIR()
     popd > /dev/null
 }
 
-BUILD_ODIN_AP_PACKAGE()
+PREPARE_ODIN_AP_DIR()
 {
-    local AP_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_ap"
-    local AP_TAR="$OUT_DIR/AP_${FILE_NAME%.zip}.tar"
-    local AP_TAR_MD5="$OUT_DIR/AP_${FILE_NAME%.zip}.tar.md5"
-    local AP_CHECKSUM
     local PARTITION
     local COMPONENT_FILE
     local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta vbmeta_samsung prism optics recovery"
     local IMAGE_DIR="$TMP_DIR"
-    local -a AP_ARCHIVE_ENTRIES=()
     local -A AP_INCLUDED_FILES=()
     local -A AP_INCLUDED_PARTITIONS=()
     local EXTRA_FILE
@@ -833,19 +836,19 @@ BUILD_ODIN_AP_PACKAGE()
         IMAGE_DIR="$TARGET_AVB_IMAGE_PACK_DIR"
     fi
 
-    [ -d "$AP_DIR" ] && rm -rf "$AP_DIR"
-    mkdir -p "$AP_DIR"
+    [ -d "$ODIN_AP_DIR" ] && rm -rf "$ODIN_AP_DIR"
+    mkdir -p "$ODIN_AP_DIR"
 
     if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ] && $TARGET_ODIN_USE_SUPER_IMAGE; then
         LOG "- Building super.img for Odin"
-        BUILD_ODIN_SUPER_IMAGE "$AP_DIR/super.img" "$IMAGE_DIR"
+        BUILD_ODIN_SUPER_IMAGE "$ODIN_AP_DIR/super.img" "$IMAGE_DIR"
         AP_INCLUDED_FILES["super.img"]=1
     else
         while IFS= read -r f; do
             PARTITION="$(basename "$f")"
             IS_VALID_PARTITION_NAME "$PARTITION" || continue
             [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
-            cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+            cp -fa "$IMAGE_DIR/$PARTITION.img" "$ODIN_AP_DIR/$PARTITION.img"
             AP_INCLUDED_FILES["$PARTITION.img"]=1
             AP_INCLUDED_PARTITIONS["$PARTITION"]=1
         done < <(find "$WORK_DIR" -maxdepth 1 -type d)
@@ -853,7 +856,7 @@ BUILD_ODIN_AP_PACKAGE()
 
     for PARTITION in $STATIC_PARTITIONS; do
         [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
-        cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
+        cp -fa "$IMAGE_DIR/$PARTITION.img" "$ODIN_AP_DIR/$PARTITION.img"
         AP_INCLUDED_FILES["$PARTITION.img"]=1
         AP_INCLUDED_PARTITIONS["$PARTITION"]=1
     done
@@ -881,7 +884,7 @@ BUILD_ODIN_AP_PACKAGE()
         fi
 
         LOG "- Copying Odin firmware component $COMPONENT_FILE"
-        cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$AP_DIR/$COMPONENT_FILE"
+        cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$ODIN_AP_DIR/$COMPONENT_FILE"
         AP_INCLUDED_FILES["$COMPONENT_FILE"]=1
         AP_INCLUDED_PARTITIONS["$PARTITION"]=1
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
@@ -909,7 +912,7 @@ BUILD_ODIN_AP_PACKAGE()
         fi
 
         LOG "- Copying Odin firmware component $COMPONENT_FILE"
-        cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$AP_DIR/$COMPONENT_FILE"
+        cp -fa "$IMAGE_DIR/$COMPONENT_FILE" "$ODIN_AP_DIR/$COMPONENT_FILE"
         AP_INCLUDED_FILES["$COMPONENT_FILE"]=1
         AP_INCLUDED_PARTITIONS["$PARTITION"]=1
     done
@@ -918,7 +921,7 @@ BUILD_ODIN_AP_PACKAGE()
         if ! SHOULD_PACKAGE_BOOTLOADER_COMPONENTS_IN_AP; then
             LOGW "Skipping bootloader component already packaged in BL Odin: up_param.bin"
         elif [ -z "${AP_INCLUDED_FILES["up_param.bin"]+x}" ]; then
-            cp -fa "$TMP_DIR/up_param.bin" "$AP_DIR/up_param.bin"
+            cp -fa "$TMP_DIR/up_param.bin" "$ODIN_AP_DIR/up_param.bin"
             AP_INCLUDED_FILES["up_param.bin"]=1
             AP_INCLUDED_PARTITIONS["up_param"]=1
         fi
@@ -938,29 +941,22 @@ BUILD_ODIN_AP_PACKAGE()
             fi
 
             LOG "- Copying Odin AP firmware component $COMPONENT_FILE"
-            cp -fa "$EXTRA_FILE" "$AP_DIR/$COMPONENT_FILE"
+            cp -fa "$EXTRA_FILE" "$ODIN_AP_DIR/$COMPONENT_FILE"
             AP_INCLUDED_FILES["$COMPONENT_FILE"]=1
             AP_INCLUDED_PARTITIONS["$PARTITION"]=1
         done < <(find "$ODIN_EXTRA_AP_DIR" -maxdepth 1 -type f | sort)
     fi
 
-    rm -f "$AP_TAR" "$AP_TAR_MD5"
-    pushd "$AP_DIR" > /dev/null
-    shopt -s dotglob nullglob
-    AP_ARCHIVE_ENTRIES=(*)
-    shopt -u dotglob nullglob
-    [ "${#AP_ARCHIVE_ENTRIES[@]}" -ge 1 ] || {
+    find "$ODIN_AP_DIR" -mindepth 1 -maxdepth 1 -print -quit | grep -q . || {
         LOGE "No Odin AP package contents were generated"
         exit 1
     }
-    tar -cf "$AP_TAR" -- "${AP_ARCHIVE_ENTRIES[@]}" || exit 1
-    popd > /dev/null
+}
 
-    pushd "$OUT_DIR" > /dev/null
-    AP_CHECKSUM="$(md5sum -t "$(basename "$AP_TAR")" | awk '{print $1}')" || exit 1
-    printf "%s  %s\n" "$AP_CHECKSUM" "$(basename "$AP_TAR")" >> "$(basename "$AP_TAR")"
-    mv -f "$(basename "$AP_TAR")" "$(basename "$AP_TAR_MD5")"
-    popd > /dev/null
+BUILD_ODIN_AP_PACKAGE()
+{
+    PREPARE_ODIN_AP_DIR
+    BUILD_ODIN_PACKAGE_FROM_DIR "AP" "$ODIN_AP_DIR"
 }
 
 BUILD_ODIN_CP_PACKAGE()
@@ -975,6 +971,78 @@ BUILD_ODIN_CSC_PACKAGE()
     $TARGET_BUILD_ODIN_CSC_PACKAGE || return 0
 
     BUILD_ODIN_PACKAGE_FROM_DIR "CSC" "$ODIN_EXTRA_CSC_DIR"
+}
+
+IS_HEIMDALL_DYNAMIC_PARTITION_IMAGE()
+{
+    case "$1" in
+        system.img | vendor.img | product.img | system_ext.img | odm.img | \
+            vendor_dlkm.img | odm_dlkm.img | system_dlkm.img)
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+COPY_HEIMDALL_IMAGES_FROM_DIR()
+{
+    local SOURCE_DIR="$1"
+    local ENTRY
+    local FILE_NAME
+
+    [ -d "$SOURCE_DIR" ] || return 0
+
+    while IFS= read -r ENTRY; do
+        FILE_NAME="$(basename "$ENTRY")"
+        if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ] && \
+                IS_HEIMDALL_DYNAMIC_PARTITION_IMAGE "$FILE_NAME"; then
+            continue
+        fi
+        if [ -f "$HEIMDALL_DIR/$FILE_NAME" ]; then
+            continue
+        fi
+
+        LOG "- Copying Heimdall image $FILE_NAME"
+        cp -fa "$ENTRY" "$HEIMDALL_DIR/$FILE_NAME"
+    done < <(find "$SOURCE_DIR" -maxdepth 1 -type f \( -name "*.img" -o -name "*.bin" \) | sort)
+}
+
+BUILD_HEIMDALL_PACKAGE()
+{
+    local IMAGE_DIR="$TMP_DIR"
+
+    if $TARGET_ENABLE_CUSTOM_AVB; then
+        IMAGE_DIR="$TARGET_AVB_IMAGE_PACK_DIR"
+    fi
+
+    [ -d "$HEIMDALL_DIR" ] && rm -rf "$HEIMDALL_DIR"
+    mkdir -p "$HEIMDALL_DIR"
+
+    if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
+        if [ -f "$ODIN_AP_DIR/super.img" ]; then
+            LOG "- Copying Heimdall image super.img"
+            cp -fa "$ODIN_AP_DIR/super.img" "$HEIMDALL_DIR/super.img"
+        else
+            LOG "- Building super.img for Heimdall"
+            BUILD_ODIN_SUPER_IMAGE "$HEIMDALL_DIR/super.img" "$IMAGE_DIR"
+        fi
+    fi
+
+    COPY_HEIMDALL_IMAGES_FROM_DIR "$TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR"
+    COPY_HEIMDALL_IMAGES_FROM_DIR "$ODIN_EXTRA_AP_DIR"
+    COPY_HEIMDALL_IMAGES_FROM_DIR "$ODIN_EXTRA_CP_DIR"
+    COPY_HEIMDALL_IMAGES_FROM_DIR "$ODIN_EXTRA_CSC_DIR"
+    COPY_HEIMDALL_IMAGES_FROM_DIR "$IMAGE_DIR"
+    [ "$IMAGE_DIR" != "$TMP_DIR" ] && COPY_HEIMDALL_IMAGES_FROM_DIR "$TMP_DIR"
+
+    cp -fa "$SRC_DIR/prebuilts/extras/flash_heimdall.sh" "$HEIMDALL_DIR/flash_all.sh"
+    chmod 0755 "$HEIMDALL_DIR/flash_all.sh"
+
+    find "$HEIMDALL_DIR" -maxdepth 1 -type f \( -name "*.img" -o -name "*.bin" \) -print -quit | grep -q . || {
+        LOGE "No Heimdall flash folder contents were generated"
+        exit 1
+    }
 }
 
 GENERATE_BUILD_INFO()
@@ -1586,11 +1654,13 @@ if $TARGET_ENABLE_CUSTOM_AVB; then
     COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP
 fi
 
-if $TARGET_BUILD_ODIN_PACKAGE; then
-    LOG_STEP_IN "- Preparing extra Odin firmware images"
+if $TARGET_BUILD_ODIN_PACKAGE || $TARGET_BUILD_HEIMDALL_PACKAGE; then
+    LOG_STEP_IN "- Preparing extra firmware images"
     PREPARE_ODIN_EXTRA_FIRMWARE_IMAGES
     LOG_STEP_OUT
+fi
 
+if $TARGET_BUILD_ODIN_PACKAGE; then
     if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE; then
         LOG_STEP_IN "- Building Odin BL package"
         BUILD_ODIN_BL_PACKAGE
@@ -1607,6 +1677,12 @@ if $TARGET_BUILD_ODIN_PACKAGE; then
 
     LOG_STEP_IN "- Building Odin CSC package"
     BUILD_ODIN_CSC_PACKAGE
+    LOG_STEP_OUT
+fi
+
+if $TARGET_BUILD_HEIMDALL_PACKAGE; then
+    LOG_STEP_IN "- Building Heimdall flash folder"
+    BUILD_HEIMDALL_PACKAGE
     LOG_STEP_OUT
 fi
 
