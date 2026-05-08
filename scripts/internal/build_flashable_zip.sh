@@ -601,6 +601,11 @@ SIGN_AVB_ODIN_COMPONENT_IF_REQUIRED()
 
     $TARGET_ENABLE_CUSTOM_AVB || return 0
     [ -f "$IMAGE" ] || return 0
+    case "$ENTRY_NAME" in
+        "modem.bin" | "modem_debug.bin")
+            return 0
+            ;;
+    esac
 
     [ -n "$AVB_INFO" ] || AVB_INFO="$(GET_ODIN_COMPONENT_AVB_INFO "$IMAGE" || true)"
     [ -n "$AVB_INFO" ] || return 0
@@ -727,8 +732,8 @@ PREPARE_ODIN_EXTRA_FIRMWARE_IMAGES()
     PREPARE_ODIN_COMPONENT "AP" "dqmdbg.img" "$ODIN_EXTRA_AP_DIR/dqmdbg.img" "download" "" "true"
     PREPARE_ODIN_COMPONENT "AP" "misc.bin" "$ODIN_EXTRA_AP_DIR/misc.bin" "stage2" "misc" "true"
 
-    PREPARE_ODIN_COMPONENT "CP" "modem.bin" "$ODIN_EXTRA_CP_DIR/modem.bin" "stage2" "modem" "true"
-    PREPARE_ODIN_COMPONENT "CP" "modem_debug.bin" "$ODIN_EXTRA_CP_DIR/modem_debug.bin" "stage2" "modem" "false"
+    PREPARE_ODIN_COMPONENT "CP" "modem.bin" "$ODIN_EXTRA_CP_DIR/modem.bin" "" "" "false"
+    PREPARE_ODIN_COMPONENT "CP" "modem_debug.bin" "$ODIN_EXTRA_CP_DIR/modem_debug.bin" "" "" "false"
 
     PREPARE_ODIN_COMPONENT "CSC" "cache.img" "$ODIN_EXTRA_CSC_DIR/cache.img" "download" "" "true"
     PREPARE_ODIN_COMPONENT "CSC" "omr.img" "$ODIN_EXTRA_CSC_DIR/omr.img" "download" "" "true"
