@@ -126,10 +126,7 @@ EXTRACT_ODIN_PACKAGE_COMPONENTS()
 
     EXTRACT_ODIN_COMPONENT_TO_DIR "$AP_TAR" "dqmdbg.img" "$FW_DIR/${MODEL}_${CSC}/odin_extra/ap"
     EXTRACT_ODIN_COMPONENT_TO_DIR "$AP_TAR" "misc.bin" "$FW_DIR/${MODEL}_${CSC}/odin_extra/ap"
-
-    EXTRACT_ODIN_COMPONENT_TO_DIR "$CP_TAR" "modem.bin" "$FW_DIR/${MODEL}_${CSC}/odin_extra/cp"
-    EXTRACT_ODIN_COMPONENT_TO_DIR "$CP_TAR" "modem_debug.bin" "$FW_DIR/${MODEL}_${CSC}/odin_extra/cp"
-
+    
     EXTRACT_ODIN_COMPONENT_TO_DIR "$CSC_TAR" "cache.img" "$FW_DIR/${MODEL}_${CSC}/odin_extra/csc"
     EXTRACT_ODIN_COMPONENT_TO_DIR "$CSC_TAR" "omr.img" "$FW_DIR/${MODEL}_${CSC}/odin_extra/csc"
 
