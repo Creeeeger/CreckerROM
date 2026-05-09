@@ -239,7 +239,7 @@ def resign_avb_footer_if_present(args: argparse.Namespace, image: Path, stage: s
     partition_size = str(metadata["partition_size"])
     kind = str(metadata["kind"])
     hash_algorithm = str(metadata["hash_algorithm"])
-    rollback_index = str(metadata["rollback_index"])
+    rollback_index = str(args.rollback)
     rollback_location = str(metadata["rollback_index_location"])
     avb_cmd = "add_hashtree_footer" if kind == "hashtree" else "add_hash_footer"
 
