@@ -47,6 +47,7 @@ LOG_STEP_OUT
 
 LOG_STEP_IN "- Setting first API level"
 SET_PROP "vendor" "ro.product.first_api_level" "$TARGET_PRODUCT_FIRST_API_LEVEL"
+SET_PROP "vendor" "ro.board.first_api_level" "$TARGET_PRODUCT_FIRST_API_LEVEL"
 LOG_STEP_OUT
 
 LINE=$(sed -n "/^\/dev\/block\/by-name\/userdata/=" "$WORK_DIR/vendor/etc/fstab.exynos990")
