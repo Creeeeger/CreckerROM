@@ -1,0 +1,4 @@
+id=iccc-s24-vendor-stack
+name=S24 ICCC vendor stack
+author=Creeeeger
+description=Uses the source ICCC HAL stack to match the Android 15 framework client.
