@@ -15,7 +15,15 @@ from cryptography.hazmat.primitives.asymmetric.utils import (
     encode_dss_signature,
 )
 
-from common import DEFAULT_SOC, get_soc_config, generate_padded_signature
+from common import (
+    DEFAULT_SOC,
+    DEFAULT_STAGE2_REE_PRIVATE_KEY,
+    DEFAULT_STAGE2_REE_PUBKEY,
+    DEFAULT_STAGE2_TEE_PRIVATE_KEY,
+    DEFAULT_STAGE2_TEE_PUBKEY,
+    generate_padded_signature,
+    get_soc_config,
+)
 
 STAGE2_FOOTER_HEADER_SIZE = 0x10
 STAGE2_SIGNATURE_SIZE = 0x200
@@ -182,6 +190,18 @@ def stage_type(stage):
 
 def default_key_type(stage):
     return STAGE_DEFAULT_KEY_TYPES[normalize_stage(stage)]
+
+
+def is_p384_private_key(private_key):
+    return isinstance(getattr(private_key, "curve", None), ec.SECP384R1)
+
+
+def default_private_key_for_key_type(key_type):
+    if key_type == 0:
+        return DEFAULT_STAGE2_TEE_PRIVATE_KEY
+    if key_type == 1:
+        return DEFAULT_STAGE2_REE_PRIVATE_KEY
+    raise ValueError(f"No default private key is configured for key_type {key_type}; pass -k/--key-file")
 
 
 def is_avb_wrapper_stage(stage):
@@ -392,3 +412,41 @@ def stage2_footer_candidate_sizes(stage, data):
         if size not in deduped:
             deduped.append(size)
     return deduped
+
+
+def validate_signing_args(args, parser, key_type_label="--key-type"):
+    if args.rp_cnt < 0 or args.rp_cnt >= 0x81:
+        parser.error("--rp-cnt must be in range 0..0x80")
+    if args.sign_type != SIGN_TYPE_ECDSA_NIST_P384:
+        parser.error("Only sign_type 4 (ECDSA NIST P-384) is implemented")
+    if args.key_type is not None and not 0 <= args.key_type <= 2:
+        parser.error(f"{key_type_label} must be 0, 1, or 2")
+    if args.key_index is not None and args.key_index == 0:
+        parser.error("--key-index must be non-zero")
+
+
+def load_stage2_key_map(args, soc):
+    if getattr(args, "pub_key", None):
+        blob = load_pubkey_blob(args.pub_key, soc)
+        return {0: blob, 1: blob, 2: blob}
+
+    key_map = {}
+    tee_pub_key = getattr(args, "tee_pub_key", None)
+    ree_pub_key = getattr(args, "ree_pub_key", None)
+    stage3_pub_key = getattr(args, "stage3_pub_key", None)
+    if tee_pub_key:
+        key_map[0] = load_pubkey_blob(tee_pub_key, soc)
+    if ree_pub_key:
+        key_map[1] = load_pubkey_blob(ree_pub_key, soc)
+    if stage3_pub_key:
+        key_map[2] = load_pubkey_blob(stage3_pub_key, soc)
+    return key_map
+
+
+def add_stage2_pubkey_args(parser):
+    parser.add_argument("-p", "--pub-key", help="Single public key blob to use for all key types")
+    parser.add_argument("--tee-pub-key", default=DEFAULT_STAGE2_TEE_PUBKEY,
+                        help=f"Stage-2 TEE public key blob. Default: {DEFAULT_STAGE2_TEE_PUBKEY}")
+    parser.add_argument("--ree-pub-key", default=DEFAULT_STAGE2_REE_PUBKEY,
+                        help=f"Stage-2 REE public key blob. Default: {DEFAULT_STAGE2_REE_PUBKEY}")
+    parser.add_argument("--stage3-pub-key", help="Optional key_type 2 public key blob")

@@ -3,40 +3,26 @@
 
 import argparse
 
-from common import (
-    DEFAULT_SOC,
-    DEFAULT_STAGE3_PUBKEY,
-    DEFAULT_STAGE2_REE_PUBKEY,
-    DEFAULT_STAGE2_TEE_PUBKEY,
-    get_soc_config,
-)
+from common import DEFAULT_SOC, get_soc_config
 from download_signature_common import (
     download_final_digest,
     download_signature_header,
     parse_download_signature_layout,
     read_download_signature_blob,
+    read_super_embedded_signer_info,
+    signer_info_binary_name,
+    signer_info_quick_build_id,
+    sparse_image_has_super_metadata,
+    super_signer_info_output_offset,
 )
 from stage2_common import (
     SIGN_TYPE_ECDSA_NIST_P384,
-    load_pubkey_blob,
+    add_stage2_pubkey_args,
+    load_stage2_key_map,
     verify_digest,
 )
 
 STAGE2_SOC_HELP = "Target SoC: exynos990/exynos9830"
-
-
-def load_key_map(args, soc):
-    key_map = {}
-    if args.pub_key:
-        blob = load_pubkey_blob(args.pub_key, soc)
-        return {0: blob, 1: blob, 2: blob}
-    if args.tee_pub_key:
-        key_map[0] = load_pubkey_blob(args.tee_pub_key, soc)
-    if args.ree_pub_key:
-        key_map[1] = load_pubkey_blob(args.ree_pub_key, soc)
-    if args.stage3_pub_key:
-        key_map[2] = load_pubkey_blob(args.stage3_pub_key, soc)
-    return key_map
 
 
 def main():
@@ -48,13 +34,7 @@ def main():
     )
     parser.add_argument("--soc", type=str, default=DEFAULT_SOC, help=STAGE2_SOC_HELP)
     parser.add_argument("-i", "--input", required=True, help="Path to signed sparse image")
-    parser.add_argument("-p", "--pub-key", help="Single public key blob to use for all key types")
-    parser.add_argument("--tee-pub-key", default=DEFAULT_STAGE2_TEE_PUBKEY,
-                        help=f"Stage-2 TEE public key blob. Default: {DEFAULT_STAGE2_TEE_PUBKEY}")
-    parser.add_argument("--ree-pub-key", default=DEFAULT_STAGE2_REE_PUBKEY,
-                        help=f"Stage-2 REE public key blob. Default: {DEFAULT_STAGE2_REE_PUBKEY}")
-    parser.add_argument("--stage3-pub-key", default=DEFAULT_STAGE3_PUBKEY,
-                        help=f"Stage-3 public key blob. Default: {DEFAULT_STAGE3_PUBKEY}")
+    add_stage2_pubkey_args(parser)
     args = parser.parse_args()
 
     try:
@@ -65,7 +45,7 @@ def main():
     if soc_config["name"] != "exynos990":
         parser.error("Sparse download verification is implemented for Exynos 990 / Exynos9830 only")
 
-    key_map = load_key_map(args, args.soc)
+    key_map = load_stage2_key_map(args, args.soc)
     if not key_map:
         parser.error("Provide --pub-key or at least one of --tee-pub-key/--ree-pub-key/--stage3-pub-key")
 
@@ -91,6 +71,16 @@ def main():
     print(f"Sparse header/chunk header: 0x{layout.file_header_size:X}/0x{layout.chunk_header_size:X}")
     print(f"Signature record: 0x{layout.signature_record_offset:X}")
     print(f"Signer info:      0x{layout.signer_info_offset:X} (SignerVer0{layout.signer_version})")
+    if sparse_image_has_super_metadata(args.input):
+        try:
+            super_signer_info = read_super_embedded_signer_info(args.input)
+            print(f"Super SignerInfo: 0x{super_signer_info_output_offset(args.input):X}")
+            print(
+                f"Build-id/binary:  {signer_info_quick_build_id(super_signer_info)} / "
+                f"{signer_info_binary_name(super_signer_info)}"
+            )
+        except ValueError as e:
+            errors.append(str(e))
     print(f"Payload hashed:   0x{layout.payload_offset:X}..0x{layout.file_size:X}")
     print(f"rp/sign/key/key-index: {layout.rp_count}/0x{layout.sign_type:X}/{layout.key_type}/0x{layout.key_index:X}")
     print(f"Payload SHA-512: {payload_digest.hex()}")

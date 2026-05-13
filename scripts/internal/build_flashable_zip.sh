@@ -44,12 +44,14 @@ TARGET_ROM_ZIP_COMPRESSION_LEVEL="${TARGET_ROM_ZIP_COMPRESSION_LEVEL:-5}"
 TARGET_BROTLI_QUALITY="${TARGET_BROTLI_QUALITY:-4}"
 TARGET_ENABLE_SAMSUNG_SIGNING="${TARGET_ENABLE_SAMSUNG_SIGNING:-false}"
 TARGET_SAMSUNG_SIGN_AP_IMAGES="${TARGET_SAMSUNG_SIGN_AP_IMAGES:-$TARGET_ENABLE_SAMSUNG_SIGNING}"
+TARGET_SAMSUNG_SIGN_SUPER_IMAGES="${TARGET_SAMSUNG_SIGN_SUPER_IMAGES:-$TARGET_SAMSUNG_SIGN_AP_IMAGES}"
 TARGET_SAMSUNG_SIGN_BOOTLOADER="${TARGET_SAMSUNG_SIGN_BOOTLOADER:-$TARGET_ENABLE_SAMSUNG_SIGNING}"
 TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE="${TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE:-$TARGET_SAMSUNG_SIGN_BOOTLOADER}"
 TARGET_SAMSUNG_SIGNING_SOC="${TARGET_SAMSUNG_SIGNING_SOC:-exynos990}"
 TARGET_SAMSUNG_SIGNING_KEY_DIR="${TARGET_SAMSUNG_SIGNING_KEY_DIR:-$SRC_DIR/security/samsung/exynos9830_crecker}"
 TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX="${TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX:-23}"
 TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR="${TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_bootloader}"
+TARGET_SAMSUNG_SUPER_REFERENCE_IMAGE="${TARGET_SAMSUNG_SUPER_REFERENCE_IMAGE:-auto}"
 
 if ! [[ "$TARGET_ROM_ZIP_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
     LOGW "Invalid TARGET_ROM_ZIP_COMPRESSION_LEVEL: $TARGET_ROM_ZIP_COMPRESSION_LEVEL (expected 0-9). Using 5."
@@ -168,6 +170,7 @@ BUILD_ODIN_SUPER_IMAGE()
     CMD+=" --output \"$OUTPUT_FILE\""
 
     EVAL "$CMD" || exit 1
+    SIGN_SUPER_IMAGE_IF_REQUIRED "$OUTPUT_FILE"
 }
 
 GET_KV_VALUE()
@@ -318,6 +321,39 @@ SAMSUNG_VERIFY_KEY_ARGS()
     echo "--tee-pub-key $TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_tee_pubkey.bin --ree-pub-key $TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_ree_pubkey.bin --stage3-pub-key $TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage3_pubkey.bin"
 }
 
+GET_TARGET_SUPER_REFERENCE_IMAGE()
+{
+    local CONFIGURED="$TARGET_SAMSUNG_SUPER_REFERENCE_IMAGE"
+    local CACHE_PATH="$OUT_DIR/target/$TARGET_CODENAME/samsung_super_reference/super.img"
+    local TAR_FILE=""
+    local CANDIDATE
+
+    if [ -n "$CONFIGURED" ] && [ "$CONFIGURED" != "auto" ] && [ "$CONFIGURED" != "none" ]; then
+        [ -f "$CONFIGURED" ] || {
+            LOGE "Configured target super reference image does not exist: $CONFIGURED"
+            exit 1
+        }
+        echo "$CONFIGURED"
+        return 0
+    fi
+
+    [ "$CONFIGURED" != "none" ] || return 1
+
+    for CANDIDATE in "$FW_DIR/$TARGET_FIRMWARE_PATH/super.img" "$CACHE_PATH"; do
+        [ -f "$CANDIDATE" ] && echo "$CANDIDATE" && return 0
+    done
+
+    TAR_FILE="$(FIND_TARGET_ODIN_TAR "AP" || true)"
+    [ -n "$TAR_FILE" ] && [ -f "$TAR_FILE" ] || {
+        LOGE "Unable to find target AP Odin tar for super.img reference under $ODIN_DIR/$TARGET_FIRMWARE_PATH"
+        exit 1
+    }
+
+    LOG "- Extracting target firmware super.img reference from $(basename "$TAR_FILE")" >&2
+    EXTRACT_ODIN_TAR_ENTRY_TO_PATH "$TAR_FILE" "super.img" "$CACHE_PATH" || exit 1
+    echo "$CACHE_PATH"
+}
+
 GET_EXISTING_STAGE2_KEY_TYPE()
 {
     local IMAGE="$1"
@@ -364,6 +400,64 @@ try:
 except ValueError:
     raise SystemExit(1)
 PY
+}
+
+SIGN_SUPER_IMAGE_IF_REQUIRED()
+{
+    local IMAGE="$1"
+    local REFERENCE=""
+    local KEY_TYPE=""
+    local PRIVATE_KEY=""
+    local SIGNED_TMP=""
+    local VERIFY_ARGS
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    $TARGET_SAMSUNG_SIGN_SUPER_IMAGES || return 0
+    [ -f "$IMAGE" ] || return 0
+
+    if [ "$TARGET_PLATFORM" != "exynos990" ]; then
+        LOGW "Samsung super.img signing is only enabled for TARGET_PLATFORM=exynos990; skipping $(basename "$IMAGE")"
+        return 0
+    fi
+
+    REFERENCE="$(GET_TARGET_SUPER_REFERENCE_IMAGE || true)"
+    [ -n "$REFERENCE" ] && [ -f "$REFERENCE" ] || {
+        LOGE "Samsung super.img signing needs a signed target firmware super.img reference"
+        exit 1
+    }
+
+    KEY_TYPE="$(GET_DOWNLOAD_SIGNATURE_KEY_TYPE "$REFERENCE" || true)"
+    [ -n "$KEY_TYPE" ] || {
+        LOGE "Target super reference has no recognizable sparse download signature layout: $REFERENCE"
+        exit 1
+    }
+
+    PRIVATE_KEY="$(SAMSUNG_PRIVATE_KEY_FOR_TYPE "$KEY_TYPE")"
+    [ -f "$PRIVATE_KEY" ] || {
+        LOGE "Missing Samsung private key for super key_type=$KEY_TYPE: $PRIVATE_KEY"
+        exit 1
+    }
+
+    SIGNED_TMP="$IMAGE.signed.tmp"
+    rm -f "$SIGNED_TMP"
+    LOG "- Samsung-signing $(basename "$IMAGE") download signature using target firmware super.img reference, key_type=$KEY_TYPE"
+    python3 "$SRC_DIR/scripts/samsung_signing/download_sign_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        -i "$IMAGE" \
+        -o "$SIGNED_TMP" \
+        -k "$PRIVATE_KEY" \
+        -r "$TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" \
+        --key-type "$KEY_TYPE" \
+        --super \
+        --super-reference "$REFERENCE" || exit 1
+    mv -f "$SIGNED_TMP" "$IMAGE"
+
+    VERIFY_ARGS="$(SAMSUNG_VERIFY_KEY_ARGS)"
+    # shellcheck disable=SC2086
+    python3 "$SRC_DIR/scripts/samsung_signing/download_verify_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        -i "$IMAGE" \
+        $VERIFY_ARGS || exit 1
 }
 
 SIGN_STAGE2_ODIN_COMPONENT()
