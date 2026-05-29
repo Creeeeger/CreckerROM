@@ -87,11 +87,15 @@ BUILD()
     FILE_NAME="$(basename "$INPUT_FILE")"
 
     if [[ "$INPUT_FILE" == *".apk" ]]; then
-        local CERT_PREFIX="aosp"
-        $ROM_IS_OFFICIAL && CERT_PREFIX="extremerom"
+        local PLATFORM_CERT_X509_PATH
+        local PLATFORM_CERT_PK8_PATH
+
+        ENSURE_SHARED_PLATFORM_SIGNING_CERTS || exit 1
+        PLATFORM_CERT_X509_PATH="$(GET_PLATFORM_CERT_X509_PATH)"
+        PLATFORM_CERT_PK8_PATH="$(GET_PLATFORM_CERT_PK8_PATH)"
 
         LOG "- Signing ${INPUT_FILE//$WORK_DIR/}"
-        EVAL "signapk \"$SRC_DIR/security/${CERT_PREFIX}_platform.x509.pem\" \"$SRC_DIR/security/${CERT_PREFIX}_platform.pk8\" \"$OUTPUT_PATH/dist/$FILE_NAME\" \"$OUTPUT_PATH/dist/temp.apk\"" || exit 1
+        EVAL "signapk \"$PLATFORM_CERT_X509_PATH\" \"$PLATFORM_CERT_PK8_PATH\" \"$OUTPUT_PATH/dist/$FILE_NAME\" \"$OUTPUT_PATH/dist/temp.apk\"" || exit 1
         mv -f "$OUTPUT_PATH/dist/temp.apk" "$OUTPUT_PATH/dist/$FILE_NAME"
     else
         LOG "- Zipaligning ${INPUT_FILE//$WORK_DIR/}"
@@ -112,6 +116,8 @@ BUILD()
     if [ -f "${INPUT_FILE%/*}/$FILE_NAME.bprof" ]; then
         DELETE_FROM_WORK_DIR "$PARTITION" "${FILE%/*}/$FILE_NAME.bprof"
     fi
+
+    ENSURE_WORK_DIR_METADATA "$PARTITION" "$FILE" || exit 1
 }
 
 DECODE()

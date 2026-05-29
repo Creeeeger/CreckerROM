@@ -17,6 +17,7 @@
 
 # [
 source "$SRC_DIR/scripts/utils/log_utils.sh"
+source "$SRC_DIR/scripts/utils/word_list_utils.sh"
 
 _CHECK_NON_EMPTY_PARAM()
 {
@@ -168,6 +169,8 @@ _HANDLE_SPECIAL_CHARS()
 
     echo "$STRING"
 }
+
+source "$SRC_DIR/scripts/utils/platform_signing_utils.sh"
 # ]
 
 # ADD_TO_WORK_DIR <source> <partition> <file/dir> <user> <group> <mode> <label>
@@ -460,8 +463,10 @@ DELETE_FROM_WORK_DIR()
     return 0
 }
 
-# EVAL <cmd>
-# Executes the provided command and prints its output if it returns a non-zero exit code.
+# ENSURE_WORK_DIR_METADATA <partition> <file/dir>
+# Ensures the supplied entry has both fs_config and file_context metadata in work dir.
+
+source "$SRC_DIR/scripts/utils/work_dir_metadata_utils.sh"
 EVAL()
 {
     _CHECK_NON_EMPTY_PARAM "CMD" "$1" || return 1
