@@ -22,6 +22,14 @@ source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
 SOURCE_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$SOURCE_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$SOURCE_FIRMWARE")"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 
+ASSERT_SIGNING_POLICY()
+{
+    if ! $TARGET_ENABLE_CUSTOM_AVB && ! $TARGET_KEEP_ORIGINAL_SIGN; then
+        LOGE "Modified kernel/image builds must either keep original signatures or use the official custom AVB re-sign flow."
+        exit 1
+    fi
+}
+
 COPY_SOURCE_FIRMWARE()
 {
     local SOURCE_FOLDERS="odm product system prism optics"
@@ -136,24 +144,21 @@ COPY_TARGET_KERNEL()
     if [ -d "$FW_DIR/$TARGET_FIRMWARE_PATH/kernel" ]; then
         LOG_STEP_IN "- Copying target firmware kernel images"
         EVAL "rsync -a --mkpath --delete \"$FW_DIR/$TARGET_FIRMWARE_PATH/kernel\" \"$WORK_DIR\"" || exit 1
-        $TARGET_KEEP_ORIGINAL_SIGN || find "$WORK_DIR/kernel" -mindepth 1 -exec "$SRC_DIR/scripts/unsign_bin.sh" {} \;
+        if $TARGET_ENABLE_CUSTOM_AVB; then
+            LOG "- Custom AVB enabled: keeping copied kernel images intact here and re-signing them later with the official AVB flow"
+        fi
         LOG_STEP_OUT
     else
         [ -d "$WORK_DIR/kernel" ] && rm -rf "$WORK_DIR/kernel"
     fi
-    if $TARGET_INCLUDE_PATCHED_VBMETA; then
-        LOG "- Copying vbmeta.img from target firmware"
-        mkdir -p "$WORK_DIR/kernel"
-        EVAL "cp -a \"$FW_DIR/$TARGET_FIRMWARE_PATH/vbmeta_patched.img\" \"$WORK_DIR/kernel/vbmeta.img\"" || exit 1
-    else
-        [ -f "$WORK_DIR/kernel/vbmeta.img" ] && rm -f "$WORK_DIR/kernel/vbmeta.img"
-        [ -d "$WORK_DIR/kernel" ] && [ -n "$(find "$WORK_DIR/kernel" -maxdepth 0 -empty)" ] && rm -rf "$WORK_DIR/kernel"
-    fi
+    [ -f "$WORK_DIR/kernel/vbmeta.img" ] && rm -f "$WORK_DIR/kernel/vbmeta.img"
+    [ -d "$WORK_DIR/kernel" ] && [ -n "$(find "$WORK_DIR/kernel" -maxdepth 0 -empty)" ] && rm -rf "$WORK_DIR/kernel"
 }
 # ]
 
 mkdir -p "$WORK_DIR"
 mkdir -p "$WORK_DIR/configs"
+ASSERT_SIGNING_POLICY
 COPY_SOURCE_FIRMWARE
 COPY_TARGET_FIRMWARE
 COPY_TARGET_KERNEL

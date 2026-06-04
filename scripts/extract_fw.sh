@@ -20,6 +20,7 @@
 source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
 
 FORCE=false
+AVB_ONLY=false
 
 FIRMWARES=()
 MODEL=""
@@ -41,12 +42,6 @@ EXTRACT_AVB_BINARIES()
 
         EXTRACT_FILE_FROM_TAR "$BL_TAR" "vbmeta.img" || exit 1
         mv -f "$FW_DIR/${MODEL}_${CSC}/vbmeta.img" "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta.img"
-
-        [ -f "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_patched.img" ] && rm -rf "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_patched.img"
-        LOG "- Creating vbmeta_patched.img..."
-        EVAL "cp -a \"$FW_DIR/${MODEL}_${CSC}/avb/vbmeta.img\" \"$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_patched.img\"" || exit 1
-        # https://android.googlesource.com/platform/system/core/+/refs/tags/android-15.0.0_r1/fastboot/fastboot.cpp#1129
-        EVAL "printf \"\x03\" | dd of=\"$FW_DIR/${MODEL}_${CSC}/avb/vbmeta_patched.img\" bs=1 seek=123 count=1 conv=notrunc" || exit 1
 
         LOG_STEP_OUT
     fi
@@ -97,6 +92,10 @@ EXTRACT_OS_PARTITIONS()
                 mv -f "$FW_DIR/${MODEL}_${CSC}/${p}_a.img" "$FW_DIR/${MODEL}_${CSC}/${p}.img"
             else
                 EVAL "lpunpack -p \"${p}\" \"$FW_DIR/${MODEL}_${CSC}/super.img\" \"$FW_DIR/${MODEL}_${CSC}\"" || exit 1
+            fi
+
+            if [ -f "$FW_DIR/${MODEL}_${CSC}/${p}.img" ]; then
+                STORE_OS_PARTITION_METADATA "$FW_DIR/${MODEL}_${CSC}/${p}.img"
             fi
         done
 
@@ -196,6 +195,8 @@ PREPARE_SCRIPT()
     while [ "$#" != 0 ]; do
         if [[ "$1" == "--force" ]] || [[ "$1" == "-f" ]]; then
             FORCE=true
+        elif [[ "$1" == "--avb-only" ]]; then
+            AVB_ONLY=true
         elif [[ "$1" == "--ignore-source" ]]; then
             IGNORE_SOURCE=true
         elif [[ "$1" == "--ignore-target" ]]; then
@@ -237,6 +238,7 @@ PREPARE_SCRIPT()
 PRINT_USAGE()
 {
     echo "Usage: extract_fw [options] <firmware>" >&2
+    echo " --avb-only : Extract only AVB binaries from BL" >&2
     echo " --ignore-source : Skip parsing source firmware flags" >&2
     echo " --ignore-target : Skip parsing target firmware flags" >&2
     echo " -f, --force : Force firmware extract" >&2
@@ -245,6 +247,7 @@ PRINT_USAGE()
 STORE_KERNEL_IMAGE_METADATA()
 {
     local FILE="$1"
+    local PARTITION_SIZE
 
     if [ ! -f "$FILE" ]; then
         LOGE "File not found: ${TAR//$SRC_DIR\//}"
@@ -252,7 +255,8 @@ STORE_KERNEL_IMAGE_METADATA()
     fi
 
     if avbtool info_image --image "$FILE" &> /dev/null; then
-        echo "partition_size=$(wc -c "$FILE" | cut -d " " -f 1)" >> "$FW_DIR/${MODEL}_${CSC}/${f}_metadata.txt"
+        PARTITION_SIZE="$(GET_IMAGE_SIZE "$FILE")"
+        echo "partition_size=$PARTITION_SIZE" >> "$FW_DIR/${MODEL}_${CSC}/${f}_metadata.txt"
     fi
 
     if [[ "$f" == *"boot.img" ]]; then
@@ -331,7 +335,7 @@ STORE_OS_PARTITION_METADATA()
     fi
 
     local PARTITION_SIZE
-    PARTITION_SIZE="$(wc -c "$FILE" | cut -d " " -f 1)"
+    PARTITION_SIZE="$(GET_IMAGE_SIZE "$FILE")"
 
     if [[ "$FILE" == *"super.img" ]]; then
         local LPDUMP
@@ -381,7 +385,13 @@ for i in "${FIRMWARES[@]}"; do
 
     LOG_STEP_IN
 
-    if ! $FORCE; then
+    if ! $FORCE && $AVB_ONLY && [ -f "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta.img" ]; then
+        LOG "\033[0;33m! AVB binaries have already been extracted\033[0m"
+        LOG_STEP_OUT; LOG_STEP_OUT
+        continue
+    fi
+
+    if ! $FORCE && ! $AVB_ONLY; then
         # Skip if firmware has been extracted
         if [ -f "$FW_DIR/${MODEL}_${CSC}/.extracted" ]; then
             if ! COMPARE_SEC_BUILD_VERSION "$(cat "$FW_DIR/${MODEL}_${CSC}/.extracted")" "$LATEST_FIRMWARE"; then
@@ -406,21 +416,44 @@ for i in "${FIRMWARES[@]}"; do
         exit 1
     fi
 
-    [ -f "$FW_DIR/${MODEL}_${CSC}/.extracted" ] && rm -rf "$FW_DIR/${MODEL}_${CSC}"
+    if ! $AVB_ONLY; then
+        [ -f "$FW_DIR/${MODEL}_${CSC}/.extracted" ] && rm -rf "$FW_DIR/${MODEL}_${CSC}"
+    fi
     mkdir -p "$FW_DIR/${MODEL}_${CSC}"
 
     DOWNLOADED_FIRMWARE="$(cat "$ODIN_DIR/${MODEL}_${CSC}/.downloaded")"
+    DOWNLOADED_MODEL="$(cut -d "/" -f 1 -s <<< "$DOWNLOADED_FIRMWARE")"
+    DOWNLOADED_MODEL_ALT="${DOWNLOADED_MODEL#SM-}"
 
-    BL_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "BL_$(cut -d "/" -f 1 -s <<< "$DOWNLOADED_FIRMWARE")*.md5" | sort -r | head -n 1)"
-    AP_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "AP_$(cut -d "/" -f 1 -s <<< "$DOWNLOADED_FIRMWARE")*.md5" | sort -r | head -n 1)"
+    BL_TAR=""
+    AP_TAR=""
+    for PATTERN in "BL_${DOWNLOADED_MODEL}*.md5" "BL_${DOWNLOADED_MODEL_ALT}*.md5" "BL_*.md5"; do
+        BL_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "$PATTERN" | sort -r | head -n 1)"
+        [ -n "$BL_TAR" ] && break
+    done
+    for PATTERN in "AP_${DOWNLOADED_MODEL}*.md5" "AP_${DOWNLOADED_MODEL_ALT}*.md5" "AP_*.md5"; do
+        AP_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "$PATTERN" | sort -r | head -n 1)"
+        [ -n "$AP_TAR" ] && break
+    done
     CSC_TAR="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "CSC_*.md5" | sort -r | head -n 1)"
 
     if [ ! "$BL_TAR" ]; then
         LOG "\033[0;31m! No BL tar found\033[0m"
         exit 1
-    elif [ ! "$AP_TAR" ]; then
+    elif [ ! "$AP_TAR" ] && ! $AVB_ONLY; then
         LOG "\033[0;31m! No AP tar found\033[0m"
         exit 1
+    fi
+
+    if $AVB_ONLY; then
+        EXTRACT_AVB_BINARIES
+        if [ ! -f "$FW_DIR/${MODEL}_${CSC}/avb/vbmeta.img" ]; then
+            LOGE "vbmeta.img was not found in BL firmware for $MODEL/$CSC"
+            exit 1
+        fi
+        echo -n "$DOWNLOADED_FIRMWARE" > "$FW_DIR/${MODEL}_${CSC}/avb/.extracted"
+        LOG_STEP_OUT; LOG_STEP_OUT
+        continue
     fi
 
     EXTRACT_KERNEL_BINARIES

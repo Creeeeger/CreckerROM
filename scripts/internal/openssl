@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import os
+import shutil
+import sys
+from pathlib import Path
+
+
+def find_real_openssl() -> str:
+    configured = os.environ.get("CRECKER_REAL_OPENSSL")
+    if configured:
+        return configured
+
+    launcher_dir = Path(__file__).resolve().parent
+    search_path = os.pathsep.join(
+        entry
+        for entry in os.environ.get("PATH", "").split(os.pathsep)
+        if entry and Path(entry).resolve() != launcher_dir
+    )
+    executable = shutil.which("openssl", path=search_path)
+    if executable is None:
+        raise SystemExit("Unable to locate the real OpenSSL executable")
+    return executable
+
+
+def translate_rsautl(arguments: list[str]) -> list[str]:
+    translated: list[str] = []
+    operation = None
+
+    for argument in arguments[1:]:
+        if argument == "-sign":
+            operation = "-decrypt"
+        elif argument == "-verify":
+            operation = "-encrypt"
+        elif argument == "-raw":
+            continue
+        else:
+            translated.append(argument)
+
+    if operation is None:
+        raise SystemExit("Unsupported AVB rsautl operation")
+
+    # AVB supplies an already PKCS#1-encoded block exactly one modulus wide.
+    # A no-padding private decrypt/public encrypt pair is the pkeyutl
+    # equivalent of rsautl's legacy raw sign/verify operations.
+    return [
+        "pkeyutl",
+        operation,
+        *translated,
+        "-pkeyopt",
+        "rsa_padding_mode:none",
+    ]
+
+
+def main() -> None:
+    arguments = sys.argv[1:]
+    if arguments and arguments[0] == "rsautl":
+        arguments = translate_rsautl(arguments)
+    os.execv(find_real_openssl(), ["openssl", *arguments])
+
+
+if __name__ == "__main__":
+    main()

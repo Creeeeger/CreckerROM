@@ -96,6 +96,7 @@ PRINT_USAGE()
     echo " -f, --force : Force ROM build" >&2
     echo " --no-rom-zip : Do not build ROM zip" >&2
 }
+
 # ]
 
 PREPARE_SCRIPT "$@"
@@ -118,6 +119,10 @@ fi
 
 trap 'PRINT_BUILD_OUTCOME' EXIT
 trap 'echo' INT
+
+LOG_STEP_IN true "Preparing signing keys"
+PRINT_SHARED_SIGNING_KEY_INFO || exit 1
+LOG_STEP_OUT
 
 if $BUILD_ROM; then
     [ -d "$APKTOOL_DIR" ] && rm -rf "$APKTOOL_DIR"
