@@ -1,219 +1,3 @@
-#!/usr/bin/env bash
-#
-# Copyright (C) 2025 Salvo Giangreco
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
-# [
-source "$SRC_DIR/scripts/utils/common_utils.sh" || exit 1
-
-trap '[ $? -ne 0 ] && rm -f "$OUT_DIR/config.sh"' EXIT
-
-GET_BUILD_VAR()
-{
-    local VALUE
-
-    if [ "$#" -ge 2 ]; then
-        if [ ! "${!1}" ]; then
-            VALUE="$2"
-            VALUE="${VALUE//\\/\\\\}"
-            VALUE="${VALUE//\"/\\\"}"
-            echo "${1}=\"${VALUE}\""
-            return 0
-        fi
-    else
-        _CHECK_NON_EMPTY_PARAM "$1" "${!1}" || exit 1
-    fi
-
-    VALUE="${!1}"
-    VALUE="${VALUE//\\/\\\\}"
-    VALUE="${VALUE//\"/\\\"}"
-    echo "${1}=\"${VALUE}\""
-    return 0
-}
-
-IS_EXTREMEROM_CERT_AVAILABLE()
-{
-    local USES_EXTREMEROM_CERT="false"
-    [ -s "$SRC_DIR/security/extremerom_platform.pk8" ] && USES_EXTREMEROM_CERT="true"
-    echo "$USES_EXTREMEROM_CERT"
-}
-
-GET_DEFAULT_ROM_IS_OFFICIAL()
-{
-    if [ "${ROM_IS_OFFICIAL:-}" = "true" ] || [ "${ROM_IS_OFFICIAL:-}" = "false" ]; then
-        echo "$ROM_IS_OFFICIAL"
-    elif [ "${ROM_TYPE:-default}" = "official" ]; then
-        echo "true"
-    else
-        echo "false"
-    fi
-}
-
-SANITIZE_CONFIG_ENV()
-{
-    local VAR
-
-    while IFS= read -r VAR; do
-        case "$VAR" in
-            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_DISPLAY_NAME|ROM_TYPE|ROM_BUILD_TIMESTAMP)
-                unset "$VAR"
-                ;;
-        esac
-    done < <(compgen -v)
-}
-
-GET_DEFAULT_ODIN_SUPER_IMAGE()
-{
-    if [ "${TARGET_SUPER_PARTITION_SIZE:-0}" -eq 0 ]; then
-        echo "false"
-    elif [[ "$TARGET_NAME" == Galaxy\ S20* ]] || [[ "$TARGET_NAME" == Galaxy\ S21* ]]; then
-        echo "true"
-    else
-        echo "false"
-    fi
-}
-
-GET_DEFAULT_KEEP_ORIGINAL_SIGN()
-{
-    if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
-        echo "false"
-    else
-        echo "true"
-    fi
-}
-
-GET_DEFAULT_AVB_KEY_PATH()
-{
-    if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
-        echo "$SRC_DIR/security/avb/creckerrom_avb_private.pem"
-    else
-        echo "none"
-    fi
-}
-
-GET_DEFAULT_AVB_ALGORITHM()
-{
-    if [[ "$ROM_ENABLE_AVB" == "true" ]]; then
-        echo "SHA256_RSA4096"
-    else
-        echo "SHA256_RSA4096"
-    fi
-}
-
-GET_DEFAULT_AVB_INCLUDE_PARTITION_DESCRIPTORS()
-{
-    echo "${ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS:-true}"
-}
-
-GET_DEFAULT_AVB_VBMETA_FLAGS()
-{
-    echo "0"
-}
-
-GET_DEFAULT_PLATFORM_KEY_SOURCE_PEM()
-{
-    local KEY_PATH
-    KEY_PATH="$(GET_DEFAULT_AVB_KEY_PATH)"
-    [ "$KEY_PATH" = "none" ] && KEY_PATH="$SRC_DIR/security/avb/creckerrom_avb_private.pem"
-    echo "$KEY_PATH"
-}
-
-GET_DEFAULT_PLATFORM_CERT_X509_PATH()
-{
-    echo "$SRC_DIR/security/creckerrom_platform.x509.pem"
-}
-
-GET_DEFAULT_PLATFORM_CERT_PK8_PATH()
-{
-    echo "$SRC_DIR/security/creckerrom_platform.pk8"
-}
-
-GET_DEFAULT_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS()
-{
-    echo ""
-}
-
-GET_DEFAULT_AVB_FIRMWARE_IMAGE_MAP()
-{
-    echo ""
-}
-
-GET_DEFAULT_ODIN_EXTRA_PARTITIONS()
-{
-    GET_DEFAULT_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS
-}
-
-IS_DEFAULT_AVB_CONFIG_VAR()
-{
-    case "$1" in
-        "TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT" | \
-        "TARGET_AVB_KEY_PATH" | \
-        "TARGET_AVB_ALGORITHM" | \
-        "TARGET_AVBTOOL_PATH" | \
-        "TARGET_AVBTOOL_PYTHON" | \
-        "TARGET_AVB_LOW_SECURITY" | \
-        "TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" | \
-        "TARGET_AVB_VBMETA_ONLY" | \
-        "TARGET_AVB_HASH_PARTITIONS" | \
-        "TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS" | \
-        "TARGET_AVB_FIRMWARE_IMAGE_MAP" | \
-        "TARGET_AVB_HASHTREE_PARTITIONS" | \
-        "TARGET_AVB_CHAIN_PARTITIONS" | \
-        "TARGET_AVB_ORIGINAL_VBMETA_PATH" | \
-        "TARGET_AVB_FLASH_VBMETA_IN_ZIP" | \
-        "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" | \
-        "TARGET_AVB_CREATE_IMAGE_PACK_ZIP" | \
-        "TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" | \
-        "TARGET_AVB_ROLLBACK_INDEX" | \
-        "TARGET_AVB_ROLLBACK_INDEX_LOCATION" | \
-        "TARGET_AVB_HASH_ALGORITHM" | \
-        "TARGET_AVB_VBMETA_FLAGS" | \
-        "TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS" | \
-        "TARGET_ODIN_EXTRA_PARTITIONS" | \
-        "TARGET_ODIN_EXTRA_IMAGE_MAP")
-            return 0
-            ;;
-    esac
-
-    return 1
-}
-
-EMIT_EXTRA_AVB_VARS()
-{
-    local VAR
-
-    while IFS= read -r VAR; do
-        IS_DEFAULT_AVB_CONFIG_VAR "$VAR" && continue
-        GET_BUILD_VAR "$VAR"
-    done < <(compgen -v | grep '^TARGET_AVB_' || true)
-}
-# ]
-
-if [ $# -ne 1 ]; then
-    echo "Usage: gen_config_file <target>" >&2
-    exit 1
-elif [ ! -f "$SRC_DIR/target/$1/config.sh" ]; then
-    LOGE "File not found: target/$1/config.sh"
-    exit 1
-else
-    SANITIZE_CONFIG_ENV
-    source "$SRC_DIR/unica/configs/version.sh" || exit 1
-    source "$SRC_DIR/target/$1/config.sh" || exit 1
-fi
-
 if [ "$TARGET_PLATFORM" = "exynos990" ]; then
     TARGET_PRODUCT_FIRST_API_LEVEL=30
 fi
@@ -248,6 +32,41 @@ if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && \
         [[ "$ROM_BUILD_FLASHABLE_ZIP" != "false" ]]; then
     LOGE "ROM_BUILD_FLASHABLE_ZIP must be \"true\" or \"false\" (got: $ROM_BUILD_FLASHABLE_ZIP)"
     exit 1
+fi
+
+ROM_BUILD_HEIMDALL_ONLY="${ROM_BUILD_HEIMDALL_ONLY:-false}"
+if [[ "$ROM_BUILD_HEIMDALL_ONLY" != "true" ]] && \
+        [[ "$ROM_BUILD_HEIMDALL_ONLY" != "false" ]]; then
+    LOGE "ROM_BUILD_HEIMDALL_ONLY must be \"true\" or \"false\" (got: $ROM_BUILD_HEIMDALL_ONLY)"
+    exit 1
+fi
+
+ROM_BUILD_KERNEL_ONLY="${ROM_BUILD_KERNEL_ONLY:-false}"
+if [[ "$ROM_BUILD_KERNEL_ONLY" != "true" ]] && \
+        [[ "$ROM_BUILD_KERNEL_ONLY" != "false" ]]; then
+    LOGE "ROM_BUILD_KERNEL_ONLY must be \"true\" or \"false\" (got: $ROM_BUILD_KERNEL_ONLY)"
+    exit 1
+fi
+
+ROM_BUILD_MODE="${ROM_BUILD_MODE:-normal}"
+if [[ "$ROM_BUILD_MODE" != "normal" ]] && [[ "$ROM_BUILD_MODE" != "rollback" ]]; then
+    LOGE "ROM_BUILD_MODE must be \"normal\" or \"rollback\" (got: $ROM_BUILD_MODE)"
+    exit 1
+fi
+
+ROM_ROLLBACK_FIRMWARE="${ROM_ROLLBACK_FIRMWARE:-}"
+if [[ "$ROM_BUILD_MODE" == "rollback" ]]; then
+    if [ -z "$ROM_ROLLBACK_FIRMWARE" ]; then
+        LOGE "Rollback mode requires ROM_ROLLBACK_FIRMWARE"
+        exit 1
+    fi
+    if [ "$TARGET_PLATFORM" != "exynos990" ]; then
+        LOGE "Rollback mode currently supports Exynos990 targets only"
+        exit 1
+    fi
+    ROM_ENABLE_AVB="true"
+    ROM_BUILD_FLASHABLE_ZIP="false"
+    ROM_BUILD_HEIMDALL_ONLY="true"
 fi
 
 ROM_ENABLE_AVB="${ROM_ENABLE_AVB:-false}"
@@ -294,6 +113,11 @@ if [[ "$ROM_BUILD_KERNEL_ONLY" == "true" ]]; then
     TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
 fi
 
+ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
+if [ "$TARGET_PLATFORM" = "exynos990" ] && [ "$ROM_ENABLE_AVB" = "true" ]; then
+    SET_SAMSUNG_BL1_METADATA
+fi
+
 TARGET_KEEP_ORIGINAL_SIGN="${TARGET_KEEP_ORIGINAL_SIGN:-$(GET_DEFAULT_KEEP_ORIGINAL_SIGN)}"
 if [[ "$TARGET_KEEP_ORIGINAL_SIGN" != "true" ]] && \
         [[ "$TARGET_KEEP_ORIGINAL_SIGN" != "false" ]]; then
@@ -330,12 +154,26 @@ fi
 
 TARGET_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
 TARGET_BUILD_ODIN_PACKAGE="true"
+TARGET_BUILD_HEIMDALL_PACKAGE="${TARGET_BUILD_HEIMDALL_PACKAGE:-true}"
+if [[ "$ROM_BUILD_HEIMDALL_ONLY" == "true" ]]; then
+    TARGET_BUILD_FLASHABLE_ZIP="false"
+    TARGET_BUILD_ODIN_PACKAGE="false"
+fi
+if [[ "$ROM_BUILD_KERNEL_ONLY" == "true" ]]; then
+    TARGET_BUILD_HEIMDALL_PACKAGE="true"
+fi
+TARGET_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY"
 TARGET_ODIN_USE_SUPER_IMAGE="$(GET_DEFAULT_ODIN_SUPER_IMAGE)"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 
 if [ -f "$OUT_DIR/config.sh" ]; then
     LOGW "config.sh already exists. Regenerating"
     rm -f "$OUT_DIR/config.sh"
+fi
+
+DEFAULT_SAMSUNG_LK_PATCH_TABLE="${TARGET_SAMSUNG_LK_PATCH_TABLE:-}"
+if [ -z "$DEFAULT_SAMSUNG_LK_PATCH_TABLE" ]; then
+    DEFAULT_SAMSUNG_LK_PATCH_TABLE="$(GET_DEFAULT_SAMSUNG_LK_PATCH_TABLE)" || exit 1
 fi
 
 {
@@ -348,6 +186,8 @@ fi
     GET_BUILD_VAR "ROM_TYPE" "default"
     GET_BUILD_VAR "ROM_DEBLOAT_LEVEL" "default"
     GET_BUILD_VAR "ROM_BUILD_TIMESTAMP" "$(date +%s)"
+    GET_BUILD_VAR "TARGET_BUILD_MODE" "$ROM_BUILD_MODE"
+    GET_BUILD_VAR "TARGET_ROLLBACK_FIRMWARE" "$ROM_ROLLBACK_FIRMWARE"
     GET_BUILD_VAR "SOURCE_FIRMWARE"
     if [ "${#SOURCE_EXTRA_FIRMWARES[@]}" -ge 1 ]; then
         echo "SOURCE_EXTRA_FIRMWARES=\"$(IFS=":"; printf '%s' "${SOURCE_EXTRA_FIRMWARES[*]}")\""
@@ -381,14 +221,24 @@ fi
     GET_BUILD_VAR "TARGET_BOOT_DEVICE_PATH" "/dev/block/by-name"
     GET_BUILD_VAR "TARGET_KEEP_ORIGINAL_SIGN" "$(GET_DEFAULT_KEEP_ORIGINAL_SIGN)"
     GET_BUILD_VAR "TARGET_ENABLE_ENCRYPTION" "false"
+    GET_BUILD_VAR "TARGET_BUILD_KERNEL_ONLY" "$ROM_BUILD_KERNEL_ONLY"
+    GET_BUILD_VAR "TARGET_KERNEL_BUILD_MODULE_PATH" "none"
     GET_BUILD_VAR "TARGET_BUILD_FLASHABLE_ZIP" "$TARGET_BUILD_FLASHABLE_ZIP"
     GET_BUILD_VAR "TARGET_BUILD_ODIN_PACKAGE" "$TARGET_BUILD_ODIN_PACKAGE"
+    GET_BUILD_VAR "TARGET_BUILD_HEIMDALL_PACKAGE" "$TARGET_BUILD_HEIMDALL_PACKAGE"
     GET_BUILD_VAR "TARGET_ODIN_USE_SUPER_IMAGE" "$TARGET_ODIN_USE_SUPER_IMAGE"
     GET_BUILD_VAR "TARGET_ODIN_EXTRA_PARTITIONS" "$(GET_DEFAULT_ODIN_EXTRA_PARTITIONS)"
     GET_BUILD_VAR "TARGET_ODIN_EXTRA_IMAGE_MAP" "$(GET_DEFAULT_AVB_FIRMWARE_IMAGE_MAP)"
+    GET_BUILD_VAR "TARGET_BUILD_ODIN_CP_PACKAGE" "true"
+    GET_BUILD_VAR "TARGET_BUILD_ODIN_CSC_PACKAGE" "true"
+    GET_BUILD_VAR "TARGET_RECOVERY_IMAGE_PATH" "$(GET_DEFAULT_RECOVERY_IMAGE_PATH)"
     GET_BUILD_VAR "TARGET_ROM_ZIP_COMPRESSION_LEVEL" "5"
     GET_BUILD_VAR "TARGET_BROTLI_QUALITY" "4"
     GET_BUILD_VAR "TARGET_ENABLE_CUSTOM_AVB" "$ROM_ENABLE_AVB"
+    GET_BUILD_VAR "TARGET_PLATFORM_KEY_SOURCE_PEM" "$(GET_DEFAULT_PLATFORM_KEY_SOURCE_PEM)"
+    GET_BUILD_VAR "TARGET_PLATFORM_CERT_X509_PATH" "$(GET_DEFAULT_PLATFORM_CERT_X509_PATH)"
+    GET_BUILD_VAR "TARGET_PLATFORM_CERT_PK8_PATH" "$(GET_DEFAULT_PLATFORM_CERT_PK8_PATH)"
+    GET_BUILD_VAR "TARGET_PLATFORM_CERT_SUBJECT" "/CN=CreckerROM Platform/"
     GET_BUILD_VAR "TARGET_AVB_USE_ORIGINAL_VBMETA_LAYOUT" "true"
     GET_BUILD_VAR "TARGET_AVB_KEY_PATH" "$(GET_DEFAULT_AVB_KEY_PATH)"
     GET_BUILD_VAR "TARGET_AVB_ALGORITHM" "$(GET_DEFAULT_AVB_ALGORITHM)"
@@ -396,23 +246,50 @@ fi
     GET_BUILD_VAR "TARGET_AVBTOOL_PYTHON" "none"
     GET_BUILD_VAR "TARGET_AVB_LOW_SECURITY" "$ROM_AVB_LOW_SECURITY"
     GET_BUILD_VAR "TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS" "$(GET_DEFAULT_AVB_INCLUDE_PARTITION_DESCRIPTORS)"
-    GET_BUILD_VAR "TARGET_AVB_VBMETA_ONLY" "$(GET_DEFAULT_AVB_VBMETA_ONLY)"
-    GET_BUILD_VAR "TARGET_AVB_HASH_PARTITIONS" ""
+    GET_BUILD_VAR "TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES" "$(GET_DEFAULT_AVB_PRESERVE_SAMSUNG_SIGNATURES)"
+    GET_BUILD_VAR "TARGET_AVB_HASH_PARTITIONS" "recovery"
     GET_BUILD_VAR "TARGET_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS" "$(GET_DEFAULT_AVB_FIRMWARE_DESCRIPTOR_PARTITIONS)"
     GET_BUILD_VAR "TARGET_AVB_FIRMWARE_IMAGE_MAP" "$(GET_DEFAULT_AVB_FIRMWARE_IMAGE_MAP)"
     GET_BUILD_VAR "TARGET_AVB_HASHTREE_PARTITIONS" ""
     GET_BUILD_VAR "TARGET_AVB_CHAIN_PARTITIONS" ""
     GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_PATH" "$OUT_DIR/fw/$TARGET_FIRMWARE_PATH/avb/vbmeta.img"
+    GET_BUILD_VAR "TARGET_AVB_ORIGINAL_VBMETA_SAMSUNG_PATH" "$OUT_DIR/fw/$TARGET_FIRMWARE_PATH/avb/vbmeta_samsung.img"
+    GET_BUILD_VAR "TARGET_AVB_VBMETA_SAMSUNG_PARTITIONS" "odm product system vendor"
     GET_BUILD_VAR "TARGET_AVB_FLASH_VBMETA_IN_ZIP" "true"
     GET_BUILD_VAR "TARGET_AVB_ALLOW_HASHTREE_FALLBACK" "false"
     GET_BUILD_VAR "TARGET_AVB_CREATE_IMAGE_PACK_ZIP" "false"
     GET_BUILD_VAR "TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL" "1"
-    GET_BUILD_VAR "TARGET_AVB_ROLLBACK_INDEX" "0"
+    GET_BUILD_VAR "TARGET_AVB_ROLLBACK_INDEX" "${TARGET_AVB_ROLLBACK_INDEX:-0}"
     GET_BUILD_VAR "TARGET_AVB_ROLLBACK_INDEX_LOCATION" "0"
     GET_BUILD_VAR "TARGET_AVB_HASH_ALGORITHM" "sha256"
     GET_BUILD_VAR "TARGET_AVB_VBMETA_FLAGS" "$(GET_DEFAULT_AVB_VBMETA_FLAGS)"
     GET_BUILD_VAR "TARGET_AVB_MAKE_VBMETA_IMAGE_ARGS" ""
+    GET_BUILD_VAR "TARGET_AVB_MAKE_VBMETA_SAMSUNG_IMAGE_ARGS" ""
     EMIT_EXTRA_AVB_VARS
+    GET_BUILD_VAR "TARGET_ENABLE_SAMSUNG_SIGNING" "$(GET_DEFAULT_SAMSUNG_SIGNING)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_SIGN_AP_IMAGES" "$(GET_DEFAULT_SAMSUNG_SIGNING_DEPENDENT)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_SIGN_SUPER_IMAGES" "$(GET_DEFAULT_SAMSUNG_SIGNING_DEPENDENT)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_SIGN_BOOTLOADER" "$(GET_DEFAULT_SAMSUNG_SIGNING_DEPENDENT)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE" "$(GET_DEFAULT_SAMSUNG_SIGNING_DEPENDENT)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_SIGNING_SOC" "exynos990"
+    GET_BUILD_VAR "TARGET_SAMSUNG_SIGNING_KEY_DIR" "$SRC_DIR/security/samsung/exynos9830_crecker"
+    GET_BUILD_VAR "TARGET_SAMSUNG_SUPER_REFERENCE_IMAGE" "auto"
+    GET_BUILD_VAR "TARGET_SAMSUNG_LK_PATCH_TABLE" "$DEFAULT_SAMSUNG_LK_PATCH_TABLE"
+    GET_BUILD_VAR "TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" "${TARGET_AVB_ROLLBACK_INDEX:-0}"
+    GET_BUILD_VAR "TARGET_SAMSUNG_AVBTOOL_PATH" "$SRC_DIR/external/android-tools/vendor/avb/avbtool.py"
+    GET_BUILD_VAR "TARGET_SAMSUNG_AVB_KEY_PATH" "$(GET_DEFAULT_AVB_KEY_PATH)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_AVB_ALGORITHM" "$(GET_DEFAULT_AVB_ALGORITHM)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_UPDATE_KEYSTORAGE_VBMETA_KEY" "true"
+    GET_BUILD_VAR "TARGET_SAMSUNG_KEYSTORAGE_VBMETA_KEY_PATH" "none"
+    GET_BUILD_VAR "TARGET_SAMSUNG_TZAR_PATCH_FILE" "/sbin/root_task"
+    GET_BUILD_VAR "TARGET_SAMSUNG_TZAR_PATCH_TABLE" "$SRC_DIR/security/samsung/patches/tzar_root_task_selected_patches.tsv"
+    GET_BUILD_VAR "TARGET_SAMSUNG_DECRYPTED_TZSW_PATH" "none"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BL1_MACHINE_ID" "0x9830"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BL1_MODEL" "none"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BL1_MODEL_ID" "none"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BL1_EVT" "none"
+    GET_BUILD_VAR "TARGET_SAMSUNG_FWBL1_SIZE" "0x3000"
+    EMIT_EXTRA_SAMSUNG_VARS
     GET_BUILD_VAR "TARGET_BOOT_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_DTBO_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_INIT_BOOT_PARTITION_SIZE" "none"
@@ -478,5 +355,3 @@ fi
 } > "$OUT_DIR/config.sh"
 
 unset SINGLE_SYSTEM_IMAGE
-
-exit 0
