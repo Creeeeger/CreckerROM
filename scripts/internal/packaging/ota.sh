@@ -1,198 +1,3 @@
-#!/usr/bin/env bash
-#
-# Copyright (C) 2023 Salvo Giangreco
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
-# [
-source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
-
-SOURCE_FINGERPRINT="$(GET_PROP "$WORK_DIR/system/system/build.prop" "ro.system.build.fingerprint")"
-SOURCE_FINGERPRINT="${SOURCE_FINGERPRINT//$(GET_PROP "$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system/build.prop" "ro.build.product")/$(GET_PROP "$FW_DIR/$SOURCE_FIRMWARE_PATH/vendor/build.prop" "ro.product.vendor.device")}"
-TARGET_FINGERPRINT="$(GET_PROP "$WORK_DIR/vendor/build.prop" "ro.vendor.build.fingerprint")"
-TARGET_FINGERPRINT="${TARGET_FINGERPRINT//$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.build.product")/$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/build.prop" "ro.product.vendor.device")}"
-
-TMP_DIR="$OUT_DIR/zip"
-TARGET_BUILD_FLASHABLE_ZIP="${TARGET_BUILD_FLASHABLE_ZIP:-false}"
-TARGET_BUILD_ODIN_PACKAGE="${TARGET_BUILD_ODIN_PACKAGE:-true}"
-TARGET_ODIN_USE_SUPER_IMAGE="${TARGET_ODIN_USE_SUPER_IMAGE:-false}"
-
-ROM_DISPLAY_NAME="${ROM_DISPLAY_NAME:-CROM-S24FE-Official-${ROM_VERSION}}"
-
-ZIP_FILE_SUFFIX="-sign.zip"
-$DEBUG && ! $ROM_IS_OFFICIAL && ZIP_FILE_SUFFIX=".zip"
-
-BUILD_DATE="$(date +%Y%m%d)"
-FILE_NAME="${ROM_DISPLAY_NAME}_${BUILD_DATE}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
-while [ -f "$OUT_DIR/$FILE_NAME" ]; do
-    INCREMENTAL=$((INCREMENTAL + 1))
-    FILE_NAME="${ROM_DISPLAY_NAME}_${BUILD_DATE}-${INCREMENTAL}_${TARGET_CODENAME}${ZIP_FILE_SUFFIX}"
-done
-
-export TARGET_AVB_IMAGE_PACK_DIR="$OUT_DIR/target/$TARGET_CODENAME/signed_images"
-export TARGET_AVB_IMAGE_PACK_ZIP="$OUT_DIR/${FILE_NAME%.zip}-images.zip"
-
-PRIVATE_KEY_PATH="$SRC_DIR/security/"
-PUBLIC_KEY_PATH="$SRC_DIR/security/"
-if $ROM_IS_OFFICIAL; then
-    PRIVATE_KEY_PATH+="extremerom"
-    PUBLIC_KEY_PATH+="extremerom"
-else
-    PRIVATE_KEY_PATH+="aosp"
-    PUBLIC_KEY_PATH+="aosp"
-fi
-PRIVATE_KEY_PATH+="_platform.pk8"
-PUBLIC_KEY_PATH+="_platform.x509.pem"
-
-trap 'rm -rf "$TMP_DIR"' EXIT INT
-
-# https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/tools/releasetools/build_super_image.py#72
-BUILD_SUPER_EMPTY()
-{
-    local CMD
-
-    CMD="lpmake"
-    # https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/tools/releasetools/build_super_image.py#75
-    CMD+=" --metadata-size \"65536\""
-    # https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/core/config.mk#1033
-    CMD+=" --super-name \"super\""
-    # https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/tools/releasetools/build_super_image.py#85
-    CMD+=" --metadata-slots \"2\""
-    CMD+=" --device \"super:$TARGET_SUPER_PARTITION_SIZE\""
-    CMD+=" --group \"$TARGET_SUPER_GROUP_NAME:$TARGET_SUPER_GROUP_SIZE\""
-    if [ -f "$TMP_DIR/system.img" ]; then
-        CMD+=" --partition \"system:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    if [ -f "$TMP_DIR/vendor.img" ]; then
-        CMD+=" --partition \"vendor:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    if [ -f "$TMP_DIR/product.img" ]; then
-        CMD+=" --partition \"product:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    if [ -f "$TMP_DIR/system_ext.img" ]; then
-        CMD+=" --partition \"system_ext:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    if [ -f "$TMP_DIR/odm.img" ]; then
-        CMD+=" --partition \"odm:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    if [ -f "$TMP_DIR/vendor_dlkm.img" ]; then
-        CMD+=" --partition \"vendor_dlkm:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    if [ -f "$TMP_DIR/odm_dlkm.img" ]; then
-        CMD+=" --partition \"odm_dlkm:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    if [ -f "$TMP_DIR/system_dlkm.img" ]; then
-        CMD+=" --partition \"system_dlkm:readonly:0:$TARGET_SUPER_GROUP_NAME\""
-    fi
-    CMD+=" --output \"$TMP_DIR/unsparse_super_empty.img\""
-
-    EVAL "$CMD" || exit 1
-}
-
-BUILD_ODIN_SUPER_IMAGE()
-{
-    local OUTPUT_FILE="$1"
-    local IMAGE_DIR="$2"
-    local CMD
-    local PARTITION
-    local PARTITION_SIZE
-    local SUPER_PARTITIONS="system vendor product system_ext odm vendor_dlkm odm_dlkm system_dlkm"
-
-    CMD="lpmake"
-    CMD+=" --metadata-size \"65536\""
-    CMD+=" --super-name \"super\""
-    CMD+=" --metadata-slots \"2\""
-    if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/os_partitions_metadata.txt" ] && \
-            grep -q "^virtual_ab=true$" "$FW_DIR/$TARGET_FIRMWARE_PATH/os_partitions_metadata.txt"; then
-        CMD+=" --virtual-ab"
-    fi
-    CMD+=" --device \"super:$TARGET_SUPER_PARTITION_SIZE\""
-    CMD+=" --group \"$TARGET_SUPER_GROUP_NAME:$TARGET_SUPER_GROUP_SIZE\""
-
-    for PARTITION in $SUPER_PARTITIONS; do
-        if [ -f "$IMAGE_DIR/$PARTITION.img" ]; then
-            PARTITION_SIZE="$(GET_IMAGE_SIZE "$IMAGE_DIR/$PARTITION.img")"
-            CMD+=" --partition \"$PARTITION:readonly:$PARTITION_SIZE:$TARGET_SUPER_GROUP_NAME\""
-            CMD+=" --image \"$PARTITION=$IMAGE_DIR/$PARTITION.img\""
-        fi
-    done
-
-    CMD+=" --sparse"
-    CMD+=" --output \"$OUTPUT_FILE\""
-
-    EVAL "$CMD" || exit 1
-}
-
-BUILD_ODIN_AP_PACKAGE()
-{
-    local AP_DIR="$OUT_DIR/target/$TARGET_CODENAME/odin_ap"
-    local AP_TAR="$OUT_DIR/AP_${FILE_NAME%.zip}.tar"
-    local AP_TAR_MD5="$OUT_DIR/AP_${FILE_NAME%.zip}.tar.md5"
-    local AP_CHECKSUM
-    local PARTITION
-    local STATIC_PARTITIONS="boot dtbo init_boot vendor_boot vbmeta prism optics recovery"
-    local IMAGE_DIR="$TMP_DIR"
-    local -a AP_ARCHIVE_ENTRIES=()
-
-    if $TARGET_ENABLE_CUSTOM_AVB; then
-        IMAGE_DIR="$TARGET_AVB_IMAGE_PACK_DIR"
-    fi
-
-    [ -d "$AP_DIR" ] && rm -rf "$AP_DIR"
-    mkdir -p "$AP_DIR"
-
-    if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ] && $TARGET_ODIN_USE_SUPER_IMAGE; then
-        LOG "- Building super.img for Odin"
-        BUILD_ODIN_SUPER_IMAGE "$AP_DIR/super.img" "$IMAGE_DIR"
-    else
-        while IFS= read -r f; do
-            PARTITION="$(basename "$f")"
-            IS_VALID_PARTITION_NAME "$PARTITION" || continue
-            [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
-            cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
-        done < <(find "$WORK_DIR" -maxdepth 1 -type d)
-    fi
-
-    for PARTITION in $STATIC_PARTITIONS; do
-        [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
-        cp -fa "$IMAGE_DIR/$PARTITION.img" "$AP_DIR/$PARTITION.img"
-    done
-
-    if [ -f "$TMP_DIR/up_param.bin" ]; then
-        cp -fa "$TMP_DIR/up_param.bin" "$AP_DIR/up_param.bin"
-    fi
-
-    rm -f "$AP_TAR" "$AP_TAR_MD5"
-    pushd "$AP_DIR" > /dev/null
-    shopt -s dotglob nullglob
-    AP_ARCHIVE_ENTRIES=(*)
-    shopt -u dotglob nullglob
-    [ "${#AP_ARCHIVE_ENTRIES[@]}" -ge 1 ] || {
-        LOGE "No Odin AP package contents were generated"
-        exit 1
-    }
-    tar -cf "$AP_TAR" -- "${AP_ARCHIVE_ENTRIES[@]}" || exit 1
-    popd > /dev/null
-
-    pushd "$OUT_DIR" > /dev/null
-    AP_CHECKSUM="$(md5sum -t "$(basename "$AP_TAR")" | awk '{print $1}')" || exit 1
-    printf "%s  %s\n" "$AP_CHECKSUM" "$(basename "$AP_TAR")" >> "$(basename "$AP_TAR")"
-    mv -f "$(basename "$AP_TAR")" "$(basename "$AP_TAR_MD5")"
-    popd > /dev/null
-}
-
 GENERATE_BUILD_INFO()
 {
     local BUILD_INFO_FILE="$TMP_DIR/build_info.txt"
@@ -231,6 +36,8 @@ GENERATE_OP_LIST()
     local PARTITION_SIZE=0
     local OCCUPIED_SPACE=0
 
+    # Recovery applies this list before block_image_update, so emit a complete
+    # full-OTA layout from the image files present in TMP_DIR.
     {
         echo "# Remove all existing dynamic partitions and groups before applying full OTA"
         echo "remove_all_groups"
@@ -357,6 +164,9 @@ GENERATE_UPDATER_SCRIPT()
 {
     local SCRIPT_FILE="$TMP_DIR/META-INF/com/google/android/updater-script"
     local BROTLI_EXTENSION=".br"
+    local ENTRY=""
+    local PARTITION=""
+    local COMPONENT_FILE=""
 
     local PARTITION_COUNT=0
     local HAS_UP_PARAM=false
@@ -399,6 +209,8 @@ GENERATE_UPDATER_SCRIPT()
     [ -f "$TMP_DIR/optics.new.dat${BROTLI_EXTENSION}" ] && HAS_OPTICS=true
     [ -f "$SRC_DIR/target/$TARGET_CODENAME/postinstall.edify" ] && HAS_POST_INSTALL=true
 
+    # All HAS_* flags are computed up front so the generated edify script only
+    # references files that were actually placed in the package.
     {
         if [ -n "$TARGET_ASSERT_MODEL" ]; then
             IFS=':' read -r -a TARGET_ASSERT_MODEL <<< "$TARGET_ASSERT_MODEL"
@@ -429,7 +241,7 @@ GENERATE_UPDATER_SCRIPT()
             BL=""${BL% || }""
 
             echo -e "ifelse($BL,\"\","
-            echo -e 'abort("E3004: Your firmware is not supported. Please flash included Odin pack or wait for a new release.' 
+            echo -e 'abort("E3004: Your firmware is not supported. Please flash included Odin pack or wait for a new release.'
             echo -e 'Do not open issues on GitHub!"););'
         fi
 
@@ -648,6 +460,24 @@ GENERATE_UPDATER_SCRIPT()
             echo -n "$TARGET_BOOT_DEVICE_PATH"
             echo    '/up_param");'
         fi
+        while IFS= read -r ENTRY; do
+            [ -n "$ENTRY" ] || continue
+            PARTITION="${ENTRY%%=*}"
+            COMPONENT_FILE="${ENTRY#*=}"
+            [ "$PARTITION" = "bootloader" ] && continue
+            [ -f "$TMP_DIR/$COMPONENT_FILE" ] || continue
+
+            # Firmware components listed in avb_manifest.txt are flashed as raw
+            # block-device payloads, not through block_image_update.
+            echo    "ui_print(\"Installing $PARTITION firmware component...\");"
+            echo -n 'package_extract_file("'
+            echo -n "$COMPONENT_FILE"
+            echo -n '", "'
+            echo -n "$TARGET_BOOT_DEVICE_PATH"
+            echo -n '/'
+            echo -n "$PARTITION"
+            echo    '");'
+        done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 
         if $HAS_POST_INSTALL; then
             echo -e "\n"
@@ -712,129 +542,3 @@ PRINT_HEADER()
     echo    'assert(run_program("/sbin/sh", "-c", "while true; do getevent -lc 1 | grep -q -m1 '\''KEY_VOLUMEUP'\'' && exit 0; sleep 1; done"));'
     echo    'ui_print("Volume UP detected. Proceeding!");'
 }
-# ]
-
-[ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
-mkdir -p "$TMP_DIR/META-INF/com/google/android"
-cp -a "$SRC_DIR/prebuilts/bootable/deprecated-ota/updater" "$TMP_DIR/META-INF/com/google/android/update-binary"
-mkdir -p "$TMP_DIR/scripts"
-cp -a "$SRC_DIR/prebuilts/extras/cleanup.sh" "$TMP_DIR/scripts/cleanup.sh"
-
-LOG_STEP_IN "- Building OS partitions"
-while IFS= read -r f; do
-    PARTITION=$(basename "$f")
-    IS_VALID_PARTITION_NAME "$PARTITION" || continue
-
-    (
-        LOG_STEP_IN "- Building $PARTITION.img"
-        if [[ "$PARTITION" == "prism" || "$PARTITION" == "optics" ]]; then
-            FILESYSTEM_TYPE="ext4"
-        else
-            FILESYSTEM_TYPE="$TARGET_OS_FILE_SYSTEM"
-        fi
-        "$SRC_DIR/scripts/build_fs_image.sh" "$FILESYSTEM_TYPE" \
-            -o "$TMP_DIR/$PARTITION.img" -S \
-            "$WORK_DIR/$PARTITION" "$WORK_DIR/configs/file_context-$PARTITION" "$WORK_DIR/configs/fs_config-$PARTITION" || exit 1
-        LOG_STEP_OUT
-    ) &
-done < <(find "$WORK_DIR" -maxdepth 1 -type d)
-LOG_STEP_OUT
-
-# shellcheck disable=SC2046
-wait $(jobs -p) || exit 1
-
-if [ -d "$WORK_DIR/kernel" ]; then
-    while IFS= read -r f; do
-        IMG="$(basename "$f")"
-        LOG "- Copying $IMG"
-        cp -fa "$WORK_DIR/kernel/$IMG" "$TMP_DIR/$IMG"
-    done < <(find "$WORK_DIR/kernel" -maxdepth 1 -type f -name "*.img")
-fi
-
-if [ -f "$WORK_DIR/up_param.bin" ]; then
-    LOG "- Copying up_param.bin"
-    cp -fa "$WORK_DIR/up_param.bin" "$TMP_DIR/up_param.bin"
-fi
-
-if $TARGET_ENABLE_CUSTOM_AVB; then
-    LOG_STEP_IN "- Signing AVB images"
-    "$SRC_DIR/scripts/internal/sign_avb_images.sh" "$TMP_DIR" || exit 1
-    LOG_STEP_OUT
-fi
-
-if $TARGET_BUILD_ODIN_PACKAGE; then
-    LOG_STEP_IN "- Building Odin AP package"
-    BUILD_ODIN_AP_PACKAGE
-    LOG_STEP_OUT
-fi
-
-if ! $TARGET_BUILD_FLASHABLE_ZIP; then
-    exit 0
-fi
-
-if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ]; then
-    LOG "- Building unsparse_super_empty.img"
-    BUILD_SUPER_EMPTY
-
-    LOG "- Generating dynamic_partitions_op_list"
-    GENERATE_OP_LIST
-fi
-
-BROTLI_QUALITY=6
-$DEBUG && BROTLI_QUALITY=0
-
-while IFS= read -r f; do
-    PARTITION="$(basename "$f")"
-    IS_VALID_PARTITION_NAME "$PARTITION" || continue
-    [ -f "$TMP_DIR/$PARTITION.img" ] || continue
-
-    (
-        LOG "- Converting $PARTITION.img to $PARTITION.new.dat"
-        EVAL "img2sdat -o \"$TMP_DIR\" \"$TMP_DIR/$PARTITION.img\"" || exit 1
-        rm -f "$TMP_DIR/$PARTITION.img"
-
-        LOG "- Compressing $PARTITION.new.dat"
-        # https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/tools/releasetools/common.py#3585
-        EVAL "brotli --quality=\"$BROTLI_QUALITY\" --output=\"$TMP_DIR/$PARTITION.new.dat.br\" \"$TMP_DIR/$PARTITION.new.dat\"" || exit 1
-        rm -f "$TMP_DIR/$PARTITION.new.dat"
-    ) &
-done < <(find "$WORK_DIR" -maxdepth 1 -type d)
-
-# shellcheck disable=SC2046
-wait $(jobs -p) || exit 1
-
-LOG "- Generating updater-script"
-GENERATE_UPDATER_SCRIPT
-
-LOG "- Generating build_info.txt"
-GENERATE_BUILD_INFO
-
-LOG "- Generating OTA metadata"
-GENERATE_OTA_METADATA
-
-LOG "- Creating zip"
-EVAL "rm -f \"$OUT_DIR/rom.zip\"" || exit 1
-pushd "$TMP_DIR" > /dev/null
-
-# 1. Compressed files (everything except zips, special dat files, META-INF)
-find . -type f ! -name "*.new.dat.br" ! -name "*.patch.dat" > compressed.txt
-
-# 2. Stored files (special dat files + META-INF folder)
-find . -type f \( -name "*.new.dat.br" -o -name "*.patch.dat" -o -name "META-INF" \) > stored.txt
-META_INF="./META-INF"
-
-# Add batches
-EVAL "7z a -tzip -mx=9 -mmt=$(nproc --all) \"$TMP_DIR/rom.zip\" @\"compressed.txt\""
-EVAL "7z a -tzip -mx=0 -mmt=$(nproc --all) \"$TMP_DIR/rom.zip\" @\"stored.txt\" \"$META_INF\""
-
-if ! $DEBUG; then
-    LOG "- Signing zip"
-    EVAL "signapk -w \"$PUBLIC_KEY_PATH\" \"$PRIVATE_KEY_PATH\" \"$TMP_DIR/rom.zip\" \"$OUT_DIR/$FILE_NAME\"" || exit 1
-    rm -f "$TMP_DIR/rom.zip"
-else
-    mv -f "$TMP_DIR/rom.zip" "$OUT_DIR/$FILE_NAME"
-fi
-
-popd > /dev/null
-
-exit 0
