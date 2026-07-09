@@ -18,6 +18,7 @@
 
 # [
 source "$SRC_DIR/scripts/utils/common_utils.sh" || exit 1
+source "$SRC_DIR/scripts/samsung_signing/bl1_model_metadata.sh" || exit 1
 
 trap '[ $? -ne 0 ] && rm -f "$OUT_DIR/config.sh"' EXIT
 
@@ -216,6 +217,30 @@ fi
 
 if [ "$TARGET_PLATFORM" = "exynos990" ]; then
     TARGET_PRODUCT_FIRST_API_LEVEL=30
+fi
+
+ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
+if [ "$TARGET_PLATFORM" = "exynos990" ] && [ "$ROM_ENABLE_AVB" = "true" ]; then
+    if ! SAMSUNG_BL1_METADATA="$(GET_SAMSUNG_BL1_MODEL_METADATA "$ROM_AVB_MODEL")"; then
+        LOGE "Unsupported Samsung BL1 model: ${ROM_AVB_MODEL:-<empty>}"
+        LOGE "Valid models: $(PRINT_SAMSUNG_BL1_SUPPORTED_MODELS)"
+        exit 1
+    fi
+    MODEL_IS_SUPPORTED=false
+    for ASSERT_MODEL in "${TARGET_ASSERT_MODEL[@]}"; do
+        [ "$ASSERT_MODEL" = "SM-$ROM_AVB_MODEL" ] && MODEL_IS_SUPPORTED=true
+    done
+    if ! $MODEL_IS_SUPPORTED; then
+        LOGE "Samsung BL1 model $ROM_AVB_MODEL is not valid for target $TARGET_CODENAME"
+        exit 1
+    fi
+    TARGET_SAMSUNG_BL1_MODEL="$ROM_AVB_MODEL"
+    read -r TARGET_SAMSUNG_BL1_MODEL_ID TARGET_SAMSUNG_BL1_EVT <<< "$SAMSUNG_BL1_METADATA"
+    TARGET_ENABLE_SAMSUNG_SIGNING=true
+    TARGET_SAMSUNG_SIGN_AP_IMAGES=true
+    TARGET_SAMSUNG_SIGN_SUPER_IMAGES=true
+    TARGET_SAMSUNG_SIGN_BOOTLOADER=true
+    TARGET_SAMSUNG_BUILD_ODIN_BL_PACKAGE=true
 fi
 
 SINGLE_SYSTEM_IMAGE="$TARGET_SINGLE_SYSTEM_IMAGE"
@@ -424,6 +449,9 @@ fi
     GET_BUILD_VAR "TARGET_SAMSUNG_AVBTOOL_PATH" "$SRC_DIR/external/android-tools/vendor/avb/avbtool.py"
     GET_BUILD_VAR "TARGET_SAMSUNG_AVB_KEY_PATH" "$(GET_DEFAULT_AVB_KEY_PATH)"
     GET_BUILD_VAR "TARGET_SAMSUNG_AVB_ALGORITHM" "$(GET_DEFAULT_AVB_ALGORITHM)"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BL1_MODEL" "none"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BL1_MODEL_ID" "none"
+    GET_BUILD_VAR "TARGET_SAMSUNG_BL1_EVT" "none"
     GET_BUILD_VAR "TARGET_BOOT_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_DTBO_PARTITION_SIZE" "none"
     GET_BUILD_VAR "TARGET_INIT_BOOT_PARTITION_SIZE" "none"

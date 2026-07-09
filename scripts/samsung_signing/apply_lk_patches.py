@@ -103,7 +103,7 @@ def apply_patches(data: bytearray, rows: list[PatchRow], *, force: bool, dry_run
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Apply byte-exact LK patches from lk_985_selected_patches.tsv")
+    parser = argparse.ArgumentParser(description="Apply byte-exact LK patches from a default-model TSV table")
     parser.add_argument("--input", "-i", type=Path, required=True, help="Input lk.bin")
     parser.add_argument("--output", "-o", type=Path, help="Output path. Defaults to in-place patching.")
     parser.add_argument("--patch-table", "-p", type=Path, required=True, help="TSV patch table")

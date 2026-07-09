@@ -56,6 +56,7 @@ _PRINT_USAGE()
     echo " --encrypt : Enable data encryption in the generated config" >&2
     echo " --avb : Enable AVB signing, image signing and vbmeta creation" >&2
     echo " --avb-low-security : Create valid vbmeta images without signing partition images" >&2
+    echo " --avb-model MODEL : Select the Exynos990 signing model" >&2
     echo " --zip : Build a flashable ZIP in addition to the default Odin package" >&2
     echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
     echo " --no-debloat : Alias for --debloat none" >&2
@@ -152,6 +153,7 @@ export ROM_ENABLE_AVB="${ROM_ENABLE_AVB:-false}"
 export ROM_AVB_LOW_SECURITY="${ROM_AVB_LOW_SECURITY:-false}"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="${ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS:-true}"
 export ROM_AVB_VBMETA_ONLY="${ROM_AVB_VBMETA_ONLY:-false}"
+export ROM_AVB_MODEL="${ROM_AVB_MODEL:-}"
 export ROM_BUILD_FLASHABLE_ZIP="${ROM_BUILD_FLASHABLE_ZIP:-false}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
@@ -184,6 +186,12 @@ while [[ "$1" == "-"* ]]; do
         export ROM_ENABLE_AVB="true"
         export ROM_AVB_LOW_SECURITY="true"
         export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
+    elif [[ "$1" == "--avb-model" ]]; then
+        shift
+        export ROM_AVB_MODEL="${1^^}"
+    elif [[ "$1" == "--avb-model="* ]]; then
+        export ROM_AVB_MODEL="${1#--avb-model=}"
+        export ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
     elif [[ "$1" == "--zip" ]]; then
         export ROM_BUILD_FLASHABLE_ZIP="true"
     elif [[ "$1" == "--no-debloat" ]]; then
@@ -289,6 +297,7 @@ _SAVED_ROM_ENABLE_AVB="$ROM_ENABLE_AVB"
 _SAVED_ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY"
 _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
 _SAVED_ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY"
+_SAVED_ROM_AVB_MODEL="$ROM_AVB_MODEL"
 _SAVED_ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
 [ -f "$OUT_DIR/config.sh" ] && unset $(sed "/Automatically/d" "$OUT_DIR/config.sh" | cut -d "=" -f 1)
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
@@ -299,6 +308,7 @@ export ROM_ENABLE_AVB="$_SAVED_ROM_ENABLE_AVB"
 export ROM_AVB_LOW_SECURITY="$_SAVED_ROM_AVB_LOW_SECURITY"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
 export ROM_AVB_VBMETA_ONLY="$_SAVED_ROM_AVB_VBMETA_ONLY"
+export ROM_AVB_MODEL="$_SAVED_ROM_AVB_MODEL"
 export ROM_BUILD_FLASHABLE_ZIP="$_SAVED_ROM_BUILD_FLASHABLE_ZIP"
 unset _SAVED_FORCE_EXT4_IMAGES
 unset _SAVED_ROM_ENABLE_ENCRYPTION
@@ -308,6 +318,7 @@ unset _SAVED_ROM_ENABLE_AVB
 unset _SAVED_ROM_AVB_LOW_SECURITY
 unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
 unset _SAVED_ROM_AVB_VBMETA_ONLY
+unset _SAVED_ROM_AVB_MODEL
 unset _SAVED_ROM_BUILD_FLASHABLE_ZIP
 env -i \
     PATH="$PATH" \
@@ -324,6 +335,7 @@ env -i \
     ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY" \
     ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" \
     ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY" \
+    ROM_AVB_MODEL="$ROM_AVB_MODEL" \
     ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP" \
     "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport
