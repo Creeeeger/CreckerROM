@@ -52,6 +52,22 @@ Any form of contribution, suggestions, bug report or feature request for the pro
 - Countless other small optimizations
 - More that I can't remember right now and will have to be added in the future
 
+# Exynos990 TZAR / TZSW patching
+
+When Samsung bootchain signing is enabled on Exynos990 targets:
+
+- `TARGET_SAMSUNG_TZAR_PATCH_FILE` defaults to `/sbin/root_task`;
+- `TARGET_SAMSUNG_TZAR_PATCH_TABLE` defaults to
+  `security/samsung/patches/tzar_root_task_selected_patches.tsv`;
+- `tzar.img` is unpacked, the selected member is patched from the TSV, and
+  `tzar.img` is repacked and Stage-2 signed again;
+- when `tzar.img` changes, encrypted `tzsw.img` is decrypted, userboot's
+  embedded `startup.tzar` object hash table is patched, `tzsw.img` is
+  re-encrypted with a refreshed `BiEn` digest, and `tzsw.img` is Stage-2 signed
+  again. Set
+  `TARGET_SAMSUNG_DECRYPTED_TZSW_PATH` only when you want to override the stock
+  `tzsw.img` source used for that step.
+
 # Bugs
 See the <a href="https://github.com/ExtremeXT/ExtremeROM/issues">⚠ Issues</a> tab
 
