@@ -25,12 +25,8 @@ TARGET_FIRMWARE_MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_CSC="$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 
-SOURCE_FINGERPRINT="$(GET_PROP "$WORK_DIR/system/system/build.prop" "ro.system.build.fingerprint")"
-SOURCE_FINGERPRINT="${SOURCE_FINGERPRINT//$(GET_PROP "$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system/build.prop" "ro.build.product")/$(GET_PROP "$FW_DIR/$SOURCE_FIRMWARE_PATH/vendor/build.prop" "ro.product.vendor.device")}"
-TARGET_FINGERPRINT="$(GET_PROP "$WORK_DIR/vendor/build.prop" "ro.vendor.build.fingerprint")"
-TARGET_FINGERPRINT="${TARGET_FINGERPRINT//$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.build.product")/$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/build.prop" "ro.product.vendor.device")}"
-
 TMP_DIR="$OUT_DIR/zip"
+TARGET_BUILD_KERNEL_ONLY="${TARGET_BUILD_KERNEL_ONLY:-false}"
 TARGET_BUILD_FLASHABLE_ZIP="${TARGET_BUILD_FLASHABLE_ZIP:-false}"
 TARGET_BUILD_ODIN_PACKAGE="${TARGET_BUILD_ODIN_PACKAGE:-true}"
 TARGET_BUILD_HEIMDALL_PACKAGE="${TARGET_BUILD_HEIMDALL_PACKAGE:-true}"
@@ -55,6 +51,20 @@ TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX="${TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX:-
 TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR="${TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR:-$OUT_DIR/target/$TARGET_CODENAME/signed_bootloader}"
 TARGET_SAMSUNG_SUPER_REFERENCE_IMAGE="${TARGET_SAMSUNG_SUPER_REFERENCE_IMAGE:-auto}"
 TARGET_SAMSUNG_DECRYPTED_TZSW_PATH="${TARGET_SAMSUNG_DECRYPTED_TZSW_PATH:-none}"
+
+SOURCE_FINGERPRINT=""
+TARGET_FINGERPRINT=""
+if [ "$TARGET_BUILD_KERNEL_ONLY" != "true" ] && [ "$TARGET_BUILD_KERNEL_ONLY" != "false" ]; then
+    LOGE "TARGET_BUILD_KERNEL_ONLY must be true or false (got: $TARGET_BUILD_KERNEL_ONLY)"
+    exit 1
+fi
+
+if ! $TARGET_BUILD_KERNEL_ONLY; then
+    SOURCE_FINGERPRINT="$(GET_PROP "$WORK_DIR/system/system/build.prop" "ro.system.build.fingerprint")"
+    SOURCE_FINGERPRINT="${SOURCE_FINGERPRINT//$(GET_PROP "$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system/build.prop" "ro.build.product")/$(GET_PROP "$FW_DIR/$SOURCE_FIRMWARE_PATH/vendor/build.prop" "ro.product.vendor.device")}"
+    TARGET_FINGERPRINT="$(GET_PROP "$WORK_DIR/vendor/build.prop" "ro.vendor.build.fingerprint")"
+    TARGET_FINGERPRINT="${TARGET_FINGERPRINT//$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.build.product")/$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/build.prop" "ro.product.vendor.device")}"
+fi
 
 if ! [[ "$TARGET_ROM_ZIP_COMPRESSION_LEVEL" =~ ^[0-9]$ ]]; then
     LOGW "Invalid TARGET_ROM_ZIP_COMPRESSION_LEVEL: $TARGET_ROM_ZIP_COMPRESSION_LEVEL (expected 0-9). Using 5."
@@ -305,6 +315,20 @@ COPY_TARGET_RECOVERY_IMAGE_TO_TMP()
         cp -fa "$RECOVERY_IMAGE" "$WORK_DIR/kernel/recovery.img"
     fi
     cp -fa "$WORK_DIR/kernel/recovery.img" "$TMP_DIR/recovery.img"
+}
+
+COPY_KERNEL_TEST_IMAGES_TO_TMP()
+{
+    local IMAGE
+
+    for IMAGE in boot dtbo; do
+        [ -f "$WORK_DIR/kernel/$IMAGE.img" ] || {
+            LOGE "Missing kernel test image: $WORK_DIR/kernel/$IMAGE.img"
+            exit 1
+        }
+        LOG "- Copying $IMAGE.img"
+        cp -fa "$WORK_DIR/kernel/$IMAGE.img" "$TMP_DIR/$IMAGE.img"
+    done
 }
 
 RUN_SAMSUNG_AP_IMAGE_SIGNING()
@@ -1119,6 +1143,26 @@ BUILD_HEIMDALL_PACKAGE()
     }
 }
 
+BUILD_KERNEL_ONLY_HEIMDALL_PACKAGE()
+{
+    local IMAGE
+
+    [ -d "$HEIMDALL_DIR" ] && rm -rf "$HEIMDALL_DIR"
+    mkdir -p "$HEIMDALL_DIR"
+
+    for IMAGE in boot.img dtbo.img vbmeta.img; do
+        [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$IMAGE" ] || {
+            LOGE "Missing signed kernel test image: $TARGET_AVB_IMAGE_PACK_DIR/$IMAGE"
+            exit 1
+        }
+        LOG "- Copying Heimdall image $IMAGE"
+        cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$IMAGE" "$HEIMDALL_DIR/$IMAGE"
+    done
+
+    cp -fa "$SRC_DIR/prebuilts/extras/flash_kernel.sh" "$HEIMDALL_DIR/flash_kernel.sh"
+    chmod 0755 "$HEIMDALL_DIR/flash_kernel.sh"
+}
+
 GENERATE_BUILD_INFO()
 {
     local BUILD_INFO_FILE="$TMP_DIR/build_info.txt"
@@ -1660,48 +1704,54 @@ PRINT_HEADER()
 # ]
 
 [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
-mkdir -p "$TMP_DIR/META-INF/com/google/android"
-cp -a "$SRC_DIR/prebuilts/bootable/deprecated-ota/updater" "$TMP_DIR/META-INF/com/google/android/update-binary"
-mkdir -p "$TMP_DIR/scripts"
-cp -a "$SRC_DIR/prebuilts/extras/cleanup.sh" "$TMP_DIR/scripts/cleanup.sh"
+mkdir -p "$TMP_DIR"
 
-LOG_STEP_IN "- Building OS partitions"
-while IFS= read -r f; do
-    PARTITION=$(basename "$f")
-    IS_VALID_PARTITION_NAME "$PARTITION" || continue
+if $TARGET_BUILD_KERNEL_ONLY; then
+    COPY_KERNEL_TEST_IMAGES_TO_TMP
+else
+    mkdir -p "$TMP_DIR/META-INF/com/google/android"
+    cp -a "$SRC_DIR/prebuilts/bootable/deprecated-ota/updater" "$TMP_DIR/META-INF/com/google/android/update-binary"
+    mkdir -p "$TMP_DIR/scripts"
+    cp -a "$SRC_DIR/prebuilts/extras/cleanup.sh" "$TMP_DIR/scripts/cleanup.sh"
 
-    (
-        LOG_STEP_IN "- Building $PARTITION.img"
-        if [[ "$PARTITION" == "prism" || "$PARTITION" == "optics" ]]; then
-            FILESYSTEM_TYPE="ext4"
-        else
-            FILESYSTEM_TYPE="$TARGET_OS_FILE_SYSTEM"
-        fi
-        "$SRC_DIR/scripts/build_fs_image.sh" "$FILESYSTEM_TYPE" \
-            -o "$TMP_DIR/$PARTITION.img" -S \
-            "$WORK_DIR/$PARTITION" "$WORK_DIR/configs/file_context-$PARTITION" "$WORK_DIR/configs/fs_config-$PARTITION" || exit 1
-        LOG_STEP_OUT
-    ) &
-done < <(find "$WORK_DIR" -maxdepth 1 -type d)
-LOG_STEP_OUT
-
-# shellcheck disable=SC2046
-wait $(jobs -p) || exit 1
-
-if [ -d "$WORK_DIR/kernel" ]; then
+    LOG_STEP_IN "- Building OS partitions"
     while IFS= read -r f; do
-        IMG="$(basename "$f")"
-        LOG "- Copying $IMG"
-        cp -fa "$WORK_DIR/kernel/$IMG" "$TMP_DIR/$IMG"
-    done < <(find "$WORK_DIR/kernel" -maxdepth 1 -type f -name "*.img")
-fi
+        PARTITION=$(basename "$f")
+        IS_VALID_PARTITION_NAME "$PARTITION" || continue
 
-if [ -f "$WORK_DIR/up_param.bin" ]; then
-    LOG "- Copying up_param.bin"
-    cp -fa "$WORK_DIR/up_param.bin" "$TMP_DIR/up_param.bin"
-fi
+        (
+            LOG_STEP_IN "- Building $PARTITION.img"
+            if [[ "$PARTITION" == "prism" || "$PARTITION" == "optics" ]]; then
+                FILESYSTEM_TYPE="ext4"
+            else
+                FILESYSTEM_TYPE="$TARGET_OS_FILE_SYSTEM"
+            fi
+            "$SRC_DIR/scripts/build_fs_image.sh" "$FILESYSTEM_TYPE" \
+                -o "$TMP_DIR/$PARTITION.img" -S \
+                "$WORK_DIR/$PARTITION" "$WORK_DIR/configs/file_context-$PARTITION" "$WORK_DIR/configs/fs_config-$PARTITION" || exit 1
+            LOG_STEP_OUT
+        ) &
+    done < <(find "$WORK_DIR" -maxdepth 1 -type d)
+    LOG_STEP_OUT
 
-COPY_TARGET_RECOVERY_IMAGE_TO_TMP
+    # shellcheck disable=SC2046
+    wait $(jobs -p) || exit 1
+
+    if [ -d "$WORK_DIR/kernel" ]; then
+        while IFS= read -r f; do
+            IMG="$(basename "$f")"
+            LOG "- Copying $IMG"
+            cp -fa "$WORK_DIR/kernel/$IMG" "$TMP_DIR/$IMG"
+        done < <(find "$WORK_DIR/kernel" -maxdepth 1 -type f -name "*.img")
+    fi
+
+    if [ -f "$WORK_DIR/up_param.bin" ]; then
+        LOG "- Copying up_param.bin"
+        cp -fa "$WORK_DIR/up_param.bin" "$TMP_DIR/up_param.bin"
+    fi
+
+    COPY_TARGET_RECOVERY_IMAGE_TO_TMP
+fi
 
 if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_AP_IMAGES; then
     LOG_STEP_IN "- Samsung-signing AP images before AVB"
@@ -1709,7 +1759,7 @@ if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_AP_IMAGES; then
     LOG_STEP_OUT
 fi
 
-if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_BOOTLOADER; then
+if ! $TARGET_BUILD_KERNEL_ONLY && $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_BOOTLOADER; then
     LOG_STEP_IN "- Samsung-signing bootloader"
     RUN_SAMSUNG_BOOTLOADER_SIGNING
     LOG_STEP_OUT
@@ -1728,7 +1778,7 @@ if $TARGET_ENABLE_CUSTOM_AVB; then
     COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP
 fi
 
-if $TARGET_BUILD_ODIN_PACKAGE || $TARGET_BUILD_HEIMDALL_PACKAGE; then
+if ! $TARGET_BUILD_KERNEL_ONLY && { $TARGET_BUILD_ODIN_PACKAGE || $TARGET_BUILD_HEIMDALL_PACKAGE; }; then
     LOG_STEP_IN "- Preparing extra firmware images"
     PREPARE_ODIN_EXTRA_FIRMWARE_IMAGES
     LOG_STEP_OUT
@@ -1756,7 +1806,11 @@ fi
 
 if $TARGET_BUILD_HEIMDALL_PACKAGE; then
     LOG_STEP_IN "- Building Heimdall flash folder"
-    BUILD_HEIMDALL_PACKAGE
+    if $TARGET_BUILD_KERNEL_ONLY; then
+        BUILD_KERNEL_ONLY_HEIMDALL_PACKAGE
+    else
+        BUILD_HEIMDALL_PACKAGE
+    fi
     LOG_STEP_OUT
 fi
 

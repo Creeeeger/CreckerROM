@@ -20,10 +20,16 @@ set -e
 
 # [
 source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
+source "$SRC_DIR/scripts/utils/module_utils.sh" || exit 1
 
 FORCE=false
 BUILD_ROM=false
 BUILD_ZIP=true
+TARGET_BUILD_KERNEL_ONLY="${TARGET_BUILD_KERNEL_ONLY:-false}"
+if [ "$TARGET_BUILD_KERNEL_ONLY" != "true" ] && [ "$TARGET_BUILD_KERNEL_ONLY" != "false" ]; then
+    LOGE "TARGET_BUILD_KERNEL_ONLY must be true or false (got: $TARGET_BUILD_KERNEL_ONLY)"
+    exit 1
+fi
 
 START_TIME="$(date +%s)"
 
@@ -49,6 +55,85 @@ GET_WORK_DIR_HASH()
     )"
 
     printf '%s\n' "${TREE_HASH}${OPTS_HASH}" | sha1sum | cut -d " " -f 1
+}
+
+PREPARE_REQUIRED_FIRMWARE()
+{
+    if [ ! -f "$FW_DIR/$SOURCE_FIRMWARE_PATH/.extracted" ] || [ ! -f "$FW_DIR/$TARGET_FIRMWARE_PATH/.extracted" ]; then
+        if [ ! -f "$ODIN_DIR/$SOURCE_FIRMWARE_PATH/.downloaded" ] || [ ! -f "$ODIN_DIR/$TARGET_FIRMWARE_PATH/.downloaded" ]; then
+            LOG_STEP_IN true "Downloading required firmwares"
+            "$SRC_DIR/scripts/download_fw.sh" || exit 1
+            LOG_STEP_OUT
+        fi
+        LOG_STEP_IN true "Extracting required firmwares"
+        "$SRC_DIR/scripts/extract_fw.sh" || exit 1
+        LOG_STEP_OUT
+    fi
+}
+
+FIND_KERNEL_BUILD_MODULE()
+{
+    local CONFIGURED_PATH="${TARGET_KERNEL_BUILD_MODULE_PATH:-none}"
+    local MODULE_PROP
+    local MODULE_ID
+    local MATCH=""
+
+    if [ "$CONFIGURED_PATH" != "none" ]; then
+        [[ "$CONFIGURED_PATH" == /* ]] || CONFIGURED_PATH="$SRC_DIR/$CONFIGURED_PATH"
+        [ -f "$CONFIGURED_PATH/customize.sh" ] || {
+            LOGE "Configured kernel build module does not contain customize.sh: $CONFIGURED_PATH"
+            return 1
+        }
+        echo "$CONFIGURED_PATH"
+        return 0
+    fi
+
+    for MODULE_PROP in "$SRC_DIR/platform/$TARGET_PLATFORM/patches"/*/module.prop; do
+        [ -f "$MODULE_PROP" ] || continue
+        MODULE_ID="$(sed -n 's/^id=//p' "$MODULE_PROP" | head -n 1)"
+        case "$MODULE_ID" in
+            *krnl*)
+                if [ -n "$MATCH" ]; then
+                    LOGE "Multiple kernel build modules found for $TARGET_PLATFORM. Set TARGET_KERNEL_BUILD_MODULE_PATH."
+                    return 1
+                fi
+                MATCH="$(dirname "$MODULE_PROP")"
+                ;;
+        esac
+    done
+
+    [ -n "$MATCH" ] || {
+        LOGE "No kernel build module found for $TARGET_PLATFORM. Set TARGET_KERNEL_BUILD_MODULE_PATH."
+        return 1
+    }
+    [ -f "$MATCH/customize.sh" ] || {
+        LOGE "Kernel build module does not contain customize.sh: $MATCH"
+        return 1
+    }
+
+    echo "$MATCH"
+}
+
+BUILD_KERNEL_TEST_IMAGES()
+{
+    local MODULE_PATH
+    local IMAGE
+
+    MODULE_PATH="$(FIND_KERNEL_BUILD_MODULE)" || exit 1
+    mkdir -p "$WORK_DIR/kernel"
+
+    LOG_STEP_IN true "Building kernel test images"
+    (
+        source "$MODULE_PATH/customize.sh"
+    ) || exit 1
+    LOG_STEP_OUT
+
+    for IMAGE in boot dtbo; do
+        [ -f "$WORK_DIR/kernel/$IMAGE.img" ] || {
+            LOGE "Kernel build did not produce $IMAGE.img"
+            exit 1
+        }
+    done
 }
 
 PREPARE_SCRIPT()
@@ -101,7 +186,10 @@ PRINT_USAGE()
 
 PREPARE_SCRIPT "$@"
 
-if $FORCE; then
+if $TARGET_BUILD_KERNEL_ONLY; then
+    BUILD_ROM=false
+    BUILD_ZIP=true
+elif $FORCE; then
     BUILD_ROM=true
 else
     if [ -f "$WORK_DIR/.completed" ]; then
@@ -128,16 +216,7 @@ if $BUILD_ROM; then
     [ -d "$APKTOOL_DIR" ] && rm -rf "$APKTOOL_DIR"
     [ -f "$WORK_DIR/.completed" ] && rm -f "$WORK_DIR/.completed"
 
-    if [ ! -f "$FW_DIR/$SOURCE_FIRMWARE_PATH/.extracted" ] || [ ! -f "$FW_DIR/$TARGET_FIRMWARE_PATH/.extracted" ]; then
-        if [ ! -f "$ODIN_DIR/$SOURCE_FIRMWARE_PATH/.downloaded" ] || [ ! -f "$ODIN_DIR/$TARGET_FIRMWARE_PATH/.downloaded" ]; then
-            LOG_STEP_IN true "Downloading required firmwares"
-            "$SRC_DIR/scripts/download_fw.sh" || exit 1
-            LOG_STEP_OUT
-        fi
-        LOG_STEP_IN true "Extracting required firmwares"
-        "$SRC_DIR/scripts/extract_fw.sh" || exit 1
-        LOG_STEP_OUT
-    fi
+    PREPARE_REQUIRED_FIRMWARE
 
     LOG_STEP_IN true "Creating work dir"
     "$SRC_DIR/scripts/internal/create_work_dir.sh" || exit 1
@@ -192,6 +271,11 @@ if $BUILD_ROM; then
     fi
 
     echo -n "$(GET_WORK_DIR_HASH)" > "$WORK_DIR/.completed"
+fi
+
+if $TARGET_BUILD_KERNEL_ONLY; then
+    PREPARE_REQUIRED_FIRMWARE
+    BUILD_KERNEL_TEST_IMAGES
 fi
 
 if [ -n "$GITHUB_ACTIONS" ]; then

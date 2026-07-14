@@ -58,6 +58,8 @@ _PRINT_USAGE()
     echo " --avb-low-security : Create valid vbmeta images without signing partition images" >&2
     echo " --avb-model MODEL : Select the Exynos990 signing model" >&2
     echo " --zip : Build a flashable ZIP in addition to the default Odin package" >&2
+    echo " --heimdall-only : Build only the Heimdall image folder" >&2
+    echo " --kernel-only : Build and sign only kernel test images for Heimdall" >&2
     echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
     echo " --no-debloat : Alias for --debloat none" >&2
     echo " --ultra-debloat : Alias for --debloat ultra" >&2
@@ -155,6 +157,8 @@ export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="${ROM_AVB_INCLUDE_PARTITION_DESCRI
 export ROM_AVB_VBMETA_ONLY="${ROM_AVB_VBMETA_ONLY:-false}"
 export ROM_AVB_MODEL="${ROM_AVB_MODEL:-}"
 export ROM_BUILD_FLASHABLE_ZIP="${ROM_BUILD_FLASHABLE_ZIP:-false}"
+export ROM_BUILD_HEIMDALL_ONLY="${ROM_BUILD_HEIMDALL_ONLY:-false}"
+export ROM_BUILD_KERNEL_ONLY="${ROM_BUILD_KERNEL_ONLY:-false}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
 export TMP_DIR="$OUT_DIR/tmp"
@@ -194,6 +198,10 @@ while [[ "$1" == "-"* ]]; do
         export ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
     elif [[ "$1" == "--zip" ]]; then
         export ROM_BUILD_FLASHABLE_ZIP="true"
+    elif [[ "$1" == "--heimdall-only" ]]; then
+        export ROM_BUILD_HEIMDALL_ONLY="true"
+    elif [[ "$1" == "--kernel-only" ]]; then
+        export ROM_BUILD_KERNEL_ONLY="true"
     elif [[ "$1" == "--no-debloat" ]]; then
         export ROM_DEBLOAT_LEVEL="none"
     elif [[ "$1" == "--ultra-debloat" ]]; then
@@ -251,6 +259,22 @@ if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && [[ "$ROM_BUILD_FLASHABLE_ZIP" !
     _PRINT_USAGE
     return 1
 fi
+if [[ "$ROM_BUILD_HEIMDALL_ONLY" != "true" ]] && [[ "$ROM_BUILD_HEIMDALL_ONLY" != "false" ]]; then
+    echo "Invalid heimdall-only state: $ROM_BUILD_HEIMDALL_ONLY (expected: true|false)" >&2
+    return 1
+fi
+if [[ "$ROM_BUILD_KERNEL_ONLY" != "true" ]] && [[ "$ROM_BUILD_KERNEL_ONLY" != "false" ]]; then
+    echo "Invalid kernel-only state: $ROM_BUILD_KERNEL_ONLY (expected: true|false)" >&2
+    return 1
+fi
+if [[ "$ROM_BUILD_KERNEL_ONLY" == "true" ]]; then
+    export ROM_BUILD_HEIMDALL_ONLY="true"
+    export ROM_ENABLE_AVB="true"
+    export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
+fi
+if [[ "$ROM_BUILD_HEIMDALL_ONLY" == "true" ]]; then
+    export ROM_BUILD_FLASHABLE_ZIP="false"
+fi
 if [[ "$ROM_AVB_LOW_SECURITY" != "true" ]] && [[ "$ROM_AVB_LOW_SECURITY" != "false" ]]; then
     echo "Invalid AVB low-security state: $ROM_AVB_LOW_SECURITY (expected: true|false)" >&2
     _PRINT_USAGE
@@ -299,6 +323,8 @@ _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIP
 _SAVED_ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY"
 _SAVED_ROM_AVB_MODEL="$ROM_AVB_MODEL"
 _SAVED_ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
+_SAVED_ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY"
+_SAVED_ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY"
 [ -f "$OUT_DIR/config.sh" ] && unset $(sed "/Automatically/d" "$OUT_DIR/config.sh" | cut -d "=" -f 1)
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
 export ROM_ENABLE_ENCRYPTION="$_SAVED_ROM_ENABLE_ENCRYPTION"
@@ -310,6 +336,8 @@ export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_
 export ROM_AVB_VBMETA_ONLY="$_SAVED_ROM_AVB_VBMETA_ONLY"
 export ROM_AVB_MODEL="$_SAVED_ROM_AVB_MODEL"
 export ROM_BUILD_FLASHABLE_ZIP="$_SAVED_ROM_BUILD_FLASHABLE_ZIP"
+export ROM_BUILD_HEIMDALL_ONLY="$_SAVED_ROM_BUILD_HEIMDALL_ONLY"
+export ROM_BUILD_KERNEL_ONLY="$_SAVED_ROM_BUILD_KERNEL_ONLY"
 unset _SAVED_FORCE_EXT4_IMAGES
 unset _SAVED_ROM_ENABLE_ENCRYPTION
 unset _SAVED_ROM_DEBLOAT_LEVEL
@@ -320,6 +348,8 @@ unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
 unset _SAVED_ROM_AVB_VBMETA_ONLY
 unset _SAVED_ROM_AVB_MODEL
 unset _SAVED_ROM_BUILD_FLASHABLE_ZIP
+unset _SAVED_ROM_BUILD_HEIMDALL_ONLY
+unset _SAVED_ROM_BUILD_KERNEL_ONLY
 env -i \
     PATH="$PATH" \
     HOME="${HOME:-}" \
@@ -337,6 +367,8 @@ env -i \
     ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY" \
     ROM_AVB_MODEL="$ROM_AVB_MODEL" \
     ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP" \
+    ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY" \
+    ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY" \
     "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport
 
