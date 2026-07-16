@@ -186,6 +186,20 @@ PRINT_USAGE()
 
 PREPARE_SCRIPT "$@"
 
+if [ "${TARGET_BUILD_MODE:-normal}" = "rollback" ]; then
+    trap 'PRINT_BUILD_OUTCOME' EXIT
+    trap 'echo' INT
+
+    LOG_STEP_IN true "Preparing signing keys"
+    PRINT_SHARED_SIGNING_KEY_INFO || exit 1
+    LOG_STEP_OUT
+
+    LOG_STEP_IN true "Building rollback firmware"
+    "$SRC_DIR/scripts/internal/build_rollback_firmware.sh" || exit 1
+    LOG_STEP_OUT
+    exit 0
+fi
+
 if $TARGET_BUILD_KERNEL_ONLY; then
     BUILD_ROM=false
     BUILD_ZIP=true

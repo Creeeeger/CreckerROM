@@ -54,15 +54,18 @@ _PRINT_USAGE()
     echo " --unofficial : Mark the generated config/build as unofficial" >&2
     echo " --ext4-images : Force EROFS target partitions to be built as ext4" >&2
     echo " --encrypt : Enable data encryption in the generated config" >&2
-    echo " --avb : Enable AVB signing, image signing and vbmeta creation" >&2
-    echo " --avb-low-security : Create valid vbmeta images without signing partition images" >&2
-    echo " --avb-model MODEL : Select the Exynos990 signing model" >&2
-    echo " --zip : Build a flashable ZIP in addition to the default Odin package" >&2
-    echo " --heimdall-only : Build only the Heimdall image folder" >&2
-    echo " --kernel-only : Build and sign only kernel test images for Heimdall" >&2
     echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
     echo " --no-debloat : Alias for --debloat none" >&2
     echo " --ultra-debloat : Alias for --debloat ultra" >&2
+    echo " --zip : Build the flashable zip in addition to the default Odin package" >&2
+    echo " --heimdall-only : Build only the Heimdall image folder" >&2
+    echo " --kernel-only : Build and sign only kernel test images for Heimdall" >&2
+    echo " --avb : Enable AVB signing, image signing and vbmeta creation" >&2
+    echo " --avb-low-security : Enable AVB low-security mode without partition image signing" >&2
+    echo " --avb-model <model> : Set the BL1 model for AVB-enabled Exynos990 builds" >&2
+    echo "                       Valid models: G780F G980F G981B G985F G986B G988B N980F N981B N985F N986B" >&2
+    echo " --rollback : Re-sign an old Odin firmware without running the custom ROM modification flow" >&2
+    echo " --rollback-firmware <name> : Old Odin firmware directory name, for example SM-G985F_AUT" >&2
     echo "Available devices:" >&2
     printf '%s\n' "${TARGETS[@]}" >&2
 }
@@ -96,7 +99,7 @@ run_cmd()
         local CMDS=()
         while IFS= read -r f; do
             CMDS+=("$f")
-        done < <(find "$SRC_DIR/scripts" -maxdepth 1 ! -type d -printf '%f\n' | sort | sed "s/.sh//")
+        done < <(find "$SRC_DIR/scripts" -maxdepth 1 ! -type d -exec basename {} \; | sort | sed "s/.sh//")
 
         if [ "$CMD" ]; then
             if [[ "$CMD" == "--help" ]] || [[ "$CMD" == "-h" ]]; then
@@ -115,6 +118,19 @@ run_cmd()
         printf '%s\n' "${CMDS[@]}" >&2
         return 1
     fi
+}
+
+_CLEAR_GENERATED_CONFIG_ENV()
+{
+    local VAR
+
+    while IFS= read -r VAR; do
+        case "$VAR" in
+            SOURCE_*|TARGET_*|ROM_VERSION|ROM_CODENAME|ROM_DISPLAY_NAME|ROM_TYPE|ROM_BUILD_TIMESTAMP|ROM_IS_OFFICIAL)
+                unset "$VAR"
+                ;;
+        esac
+    done < <(set | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p')
 }
 
 alias unica=run_cmd
@@ -150,15 +166,16 @@ export DEBUG=false
 export FORCE_EXT4_IMAGES="${FORCE_EXT4_IMAGES:-false}"
 export ROM_ENABLE_ENCRYPTION="${ROM_ENABLE_ENCRYPTION:-false}"
 export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
+export ROM_BUILD_FLASHABLE_ZIP="false"
+export ROM_BUILD_HEIMDALL_ONLY="false"
+export ROM_BUILD_KERNEL_ONLY="false"
+export ROM_ENABLE_AVB="false"
+export ROM_AVB_LOW_SECURITY="false"
+export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
+export ROM_AVB_MODEL=""
+export ROM_BUILD_MODE="normal"
+export ROM_ROLLBACK_FIRMWARE=""
 export ROM_IS_OFFICIAL="${ROM_IS_OFFICIAL:-true}"
-export ROM_ENABLE_AVB="${ROM_ENABLE_AVB:-false}"
-export ROM_AVB_LOW_SECURITY="${ROM_AVB_LOW_SECURITY:-false}"
-export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="${ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS:-true}"
-export ROM_AVB_VBMETA_ONLY="${ROM_AVB_VBMETA_ONLY:-false}"
-export ROM_AVB_MODEL="${ROM_AVB_MODEL:-}"
-export ROM_BUILD_FLASHABLE_ZIP="${ROM_BUILD_FLASHABLE_ZIP:-false}"
-export ROM_BUILD_HEIMDALL_ONLY="${ROM_BUILD_HEIMDALL_ONLY:-false}"
-export ROM_BUILD_KERNEL_ONLY="${ROM_BUILD_KERNEL_ONLY:-false}"
 export SRC_DIR
 export OUT_DIR="$SRC_DIR/out"
 export TMP_DIR="$OUT_DIR/tmp"
@@ -171,7 +188,7 @@ export PATH="$TOOLS_DIR/bin:$PATH"
 TARGETS=()
 while IFS= read -r t; do
     TARGETS+=("$t")
-done < <(find "$SRC_DIR/target" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | sort)
+done < <(find "$SRC_DIR/target" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
 
 while [[ "$1" == "-"* ]]; do
     if [[ "$1" == "--debug" ]]; then
@@ -184,24 +201,6 @@ while [[ "$1" == "-"* ]]; do
         export FORCE_EXT4_IMAGES=true
     elif [[ "$1" == "--encrypt" ]]; then
         export ROM_ENABLE_ENCRYPTION="true"
-    elif [[ "$1" == "--avb" ]]; then
-        export ROM_ENABLE_AVB="true"
-    elif [[ "$1" == "--avb-low-security" ]]; then
-        export ROM_ENABLE_AVB="true"
-        export ROM_AVB_LOW_SECURITY="true"
-        export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
-    elif [[ "$1" == "--avb-model" ]]; then
-        shift
-        export ROM_AVB_MODEL="${1^^}"
-    elif [[ "$1" == "--avb-model="* ]]; then
-        export ROM_AVB_MODEL="${1#--avb-model=}"
-        export ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
-    elif [[ "$1" == "--zip" ]]; then
-        export ROM_BUILD_FLASHABLE_ZIP="true"
-    elif [[ "$1" == "--heimdall-only" ]]; then
-        export ROM_BUILD_HEIMDALL_ONLY="true"
-    elif [[ "$1" == "--kernel-only" ]]; then
-        export ROM_BUILD_KERNEL_ONLY="true"
     elif [[ "$1" == "--no-debloat" ]]; then
         export ROM_DEBLOAT_LEVEL="none"
     elif [[ "$1" == "--ultra-debloat" ]]; then
@@ -216,6 +215,43 @@ while [[ "$1" == "-"* ]]; do
         export ROM_DEBLOAT_LEVEL="$1"
     elif [[ "$1" == "--debloat="* ]]; then
         export ROM_DEBLOAT_LEVEL="${1#--debloat=}"
+    elif [[ "$1" == "--zip" ]]; then
+        export ROM_BUILD_FLASHABLE_ZIP="true"
+    elif [[ "$1" == "--heimdall-only" ]]; then
+        export ROM_BUILD_HEIMDALL_ONLY="true"
+    elif [[ "$1" == "--kernel-only" ]]; then
+        export ROM_BUILD_KERNEL_ONLY="true"
+    elif [[ "$1" == "--avb" ]]; then
+        export ROM_ENABLE_AVB="true"
+    elif [[ "$1" == "--avb-low-security" ]]; then
+        export ROM_ENABLE_AVB="true"
+        export ROM_AVB_LOW_SECURITY="true"
+        export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
+    elif [[ "$1" == "--avb-model" ]]; then
+        shift
+        if [ ! "$1" ]; then
+            echo "--avb-model requires an argument" >&2
+            _PRINT_USAGE
+            return 1
+        fi
+        export ROM_AVB_MODEL="${1^^}"
+    elif [[ "$1" == "--avb-model="* ]]; then
+        export ROM_AVB_MODEL="${1#--avb-model=}"
+        export ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
+    elif [[ "$1" == "--rollback" ]]; then
+        export ROM_BUILD_MODE="rollback"
+        export ROM_ENABLE_AVB="true"
+        export ROM_BUILD_HEIMDALL_ONLY="true"
+    elif [[ "$1" == "--rollback-firmware" ]]; then
+        shift
+        if [ ! "$1" ]; then
+            echo "--rollback-firmware requires an argument" >&2
+            _PRINT_USAGE
+            return 1
+        fi
+        export ROM_ROLLBACK_FIRMWARE="$1"
+    elif [[ "$1" == "--rollback-firmware="* ]]; then
+        export ROM_ROLLBACK_FIRMWARE="${1#--rollback-firmware=}"
     elif [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
         _PRINT_USAGE
         return 0
@@ -235,6 +271,53 @@ if [[ "$ROM_DEBLOAT_LEVEL" != "default" ]] && \
     return 1
 fi
 
+case "$ROM_AVB_MODEL" in
+    ""|"G780F"|"G980F"|"G981B"|"G985F"|"G986B"|"G988B"|"N980F"|"N981B"|"N985F"|"N986B")
+        ;;
+    *)
+        echo "Invalid --avb-model value: $ROM_AVB_MODEL" >&2
+        _PRINT_USAGE
+        return 1
+        ;;
+esac
+
+case "$ROM_BUILD_MODE" in
+    "normal"|"rollback")
+        ;;
+    *)
+        echo "Invalid build mode: $ROM_BUILD_MODE" >&2
+        return 1
+        ;;
+esac
+
+if [[ "$ROM_BUILD_MODE" == "rollback" ]]; then
+    if [ -z "$ROM_ROLLBACK_FIRMWARE" ]; then
+        echo "Rollback mode requires --rollback-firmware <name>" >&2
+        _PRINT_USAGE
+        return 1
+    fi
+    if [[ "$ROM_ROLLBACK_FIRMWARE" == *"/"* ]] || \
+            [[ ! "$ROM_ROLLBACK_FIRMWARE" =~ ^SM-[A-Za-z0-9]+_[A-Za-z0-9]{3}$ ]]; then
+        echo "Invalid rollback firmware directory name: $ROM_ROLLBACK_FIRMWARE" >&2
+        echo "Expected a name such as SM-G985F_AUT under out/odin" >&2
+        return 1
+    fi
+fi
+
+if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && \
+        [[ "$ROM_BUILD_FLASHABLE_ZIP" != "false" ]]; then
+    echo "Invalid zip flag state: $ROM_BUILD_FLASHABLE_ZIP (expected: true|false)" >&2
+    _PRINT_USAGE
+    return 1
+fi
+
+if [[ "$ROM_BUILD_HEIMDALL_ONLY" != "true" ]] && \
+        [[ "$ROM_BUILD_HEIMDALL_ONLY" != "false" ]]; then
+    echo "Invalid heimdall-only flag state: $ROM_BUILD_HEIMDALL_ONLY (expected: true|false)" >&2
+    _PRINT_USAGE
+    return 1
+fi
+
 if [[ "$ROM_ENABLE_ENCRYPTION" != "true" ]] && \
         [[ "$ROM_ENABLE_ENCRYPTION" != "false" ]]; then
     echo "Invalid encryption flag state: $ROM_ENABLE_ENCRYPTION (expected: true|false)" >&2
@@ -242,46 +325,47 @@ if [[ "$ROM_ENABLE_ENCRYPTION" != "true" ]] && \
     return 1
 fi
 
-if [[ "$ROM_IS_OFFICIAL" != "true" ]] && \
-        [[ "$ROM_IS_OFFICIAL" != "false" ]]; then
-    echo "Invalid official flag state: $ROM_IS_OFFICIAL (expected: true|false)" >&2
+if [[ "$ROM_BUILD_KERNEL_ONLY" != "true" ]] && \
+        [[ "$ROM_BUILD_KERNEL_ONLY" != "false" ]]; then
+    echo "Invalid kernel-only flag state: $ROM_BUILD_KERNEL_ONLY (expected: true|false)" >&2
     _PRINT_USAGE
     return 1
 fi
 
-if [[ "$ROM_ENABLE_AVB" != "true" ]] && [[ "$ROM_ENABLE_AVB" != "false" ]]; then
-    echo "Invalid AVB flag state: $ROM_ENABLE_AVB (expected: true|false)" >&2
-    _PRINT_USAGE
-    return 1
-fi
-if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && [[ "$ROM_BUILD_FLASHABLE_ZIP" != "false" ]]; then
-    echo "Invalid zip flag state: $ROM_BUILD_FLASHABLE_ZIP (expected: true|false)" >&2
-    _PRINT_USAGE
-    return 1
-fi
-if [[ "$ROM_BUILD_HEIMDALL_ONLY" != "true" ]] && [[ "$ROM_BUILD_HEIMDALL_ONLY" != "false" ]]; then
-    echo "Invalid heimdall-only state: $ROM_BUILD_HEIMDALL_ONLY (expected: true|false)" >&2
-    return 1
-fi
-if [[ "$ROM_BUILD_KERNEL_ONLY" != "true" ]] && [[ "$ROM_BUILD_KERNEL_ONLY" != "false" ]]; then
-    echo "Invalid kernel-only state: $ROM_BUILD_KERNEL_ONLY (expected: true|false)" >&2
-    return 1
-fi
 if [[ "$ROM_BUILD_KERNEL_ONLY" == "true" ]]; then
     export ROM_BUILD_HEIMDALL_ONLY="true"
     export ROM_ENABLE_AVB="true"
     export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
 fi
+
 if [[ "$ROM_BUILD_HEIMDALL_ONLY" == "true" ]]; then
     export ROM_BUILD_FLASHABLE_ZIP="false"
 fi
-if [[ "$ROM_AVB_LOW_SECURITY" != "true" ]] && [[ "$ROM_AVB_LOW_SECURITY" != "false" ]]; then
-    echo "Invalid AVB low-security state: $ROM_AVB_LOW_SECURITY (expected: true|false)" >&2
+
+if [[ "$ROM_ENABLE_AVB" != "true" ]] && \
+        [[ "$ROM_ENABLE_AVB" != "false" ]]; then
+    echo "Invalid AVB flag state: $ROM_ENABLE_AVB (expected: true|false)" >&2
     _PRINT_USAGE
     return 1
 fi
-if [[ "$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ]] && [[ "$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "false" ]]; then
-    echo "Invalid AVB descriptor state: $ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS (expected: true|false)" >&2
+
+if [[ "$ROM_AVB_LOW_SECURITY" != "true" ]] && \
+        [[ "$ROM_AVB_LOW_SECURITY" != "false" ]]; then
+    echo "Invalid AVB low-security flag state: $ROM_AVB_LOW_SECURITY (expected: true|false)" >&2
+    _PRINT_USAGE
+    return 1
+fi
+
+if [[ "$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "true" ]] && \
+        [[ "$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" != "false" ]]; then
+    echo "Invalid AVB vbmeta partition descriptor state: $ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS (expected: true|false)" >&2
+    _PRINT_USAGE
+    return 1
+fi
+
+if [[ "$ROM_IS_OFFICIAL" != "true" ]] && \
+        [[ "$ROM_IS_OFFICIAL" != "false" ]]; then
+    echo "Invalid official flag state: $ROM_IS_OFFICIAL (expected: true|false)" >&2
     _PRINT_USAGE
     return 1
 fi
@@ -316,63 +400,69 @@ mkdir -p "$OUT_DIR/target/$SELECTED_TARGET"
 _SAVED_FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES"
 _SAVED_ROM_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION"
 _SAVED_ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL"
-_SAVED_ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL"
-_SAVED_ROM_ENABLE_AVB="$ROM_ENABLE_AVB"
-_SAVED_ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY"
-_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
-_SAVED_ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY"
-_SAVED_ROM_AVB_MODEL="$ROM_AVB_MODEL"
 _SAVED_ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
 _SAVED_ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY"
 _SAVED_ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY"
-[ -f "$OUT_DIR/config.sh" ] && unset $(sed "/Automatically/d" "$OUT_DIR/config.sh" | cut -d "=" -f 1)
+_SAVED_ROM_ENABLE_AVB="$ROM_ENABLE_AVB"
+_SAVED_ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY"
+_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
+_SAVED_ROM_AVB_MODEL="$ROM_AVB_MODEL"
+_SAVED_ROM_BUILD_MODE="$ROM_BUILD_MODE"
+_SAVED_ROM_ROLLBACK_FIRMWARE="$ROM_ROLLBACK_FIRMWARE"
+_SAVED_ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL"
+_CLEAR_GENERATED_CONFIG_ENV
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
 export ROM_ENABLE_ENCRYPTION="$_SAVED_ROM_ENABLE_ENCRYPTION"
 export ROM_DEBLOAT_LEVEL="$_SAVED_ROM_DEBLOAT_LEVEL"
-export ROM_IS_OFFICIAL="$_SAVED_ROM_IS_OFFICIAL"
-export ROM_ENABLE_AVB="$_SAVED_ROM_ENABLE_AVB"
-export ROM_AVB_LOW_SECURITY="$_SAVED_ROM_AVB_LOW_SECURITY"
-export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
-export ROM_AVB_VBMETA_ONLY="$_SAVED_ROM_AVB_VBMETA_ONLY"
-export ROM_AVB_MODEL="$_SAVED_ROM_AVB_MODEL"
 export ROM_BUILD_FLASHABLE_ZIP="$_SAVED_ROM_BUILD_FLASHABLE_ZIP"
 export ROM_BUILD_HEIMDALL_ONLY="$_SAVED_ROM_BUILD_HEIMDALL_ONLY"
 export ROM_BUILD_KERNEL_ONLY="$_SAVED_ROM_BUILD_KERNEL_ONLY"
+export ROM_ENABLE_AVB="$_SAVED_ROM_ENABLE_AVB"
+export ROM_AVB_LOW_SECURITY="$_SAVED_ROM_AVB_LOW_SECURITY"
+export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
+export ROM_AVB_MODEL="$_SAVED_ROM_AVB_MODEL"
+export ROM_BUILD_MODE="$_SAVED_ROM_BUILD_MODE"
+export ROM_ROLLBACK_FIRMWARE="$_SAVED_ROM_ROLLBACK_FIRMWARE"
+export ROM_IS_OFFICIAL="$_SAVED_ROM_IS_OFFICIAL"
 unset _SAVED_FORCE_EXT4_IMAGES
 unset _SAVED_ROM_ENABLE_ENCRYPTION
 unset _SAVED_ROM_DEBLOAT_LEVEL
-unset _SAVED_ROM_IS_OFFICIAL
-unset _SAVED_ROM_ENABLE_AVB
-unset _SAVED_ROM_AVB_LOW_SECURITY
-unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
-unset _SAVED_ROM_AVB_VBMETA_ONLY
-unset _SAVED_ROM_AVB_MODEL
 unset _SAVED_ROM_BUILD_FLASHABLE_ZIP
 unset _SAVED_ROM_BUILD_HEIMDALL_ONLY
 unset _SAVED_ROM_BUILD_KERNEL_ONLY
+unset _SAVED_ROM_ENABLE_AVB
+unset _SAVED_ROM_AVB_LOW_SECURITY
+unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
+unset _SAVED_ROM_AVB_MODEL
+unset _SAVED_ROM_BUILD_MODE
+unset _SAVED_ROM_ROLLBACK_FIRMWARE
+unset _SAVED_ROM_IS_OFFICIAL
 env -i \
     PATH="$PATH" \
     HOME="${HOME:-}" \
     USER="${USER:-}" \
     SHELL="${SHELL:-}" \
+    DEBUG="$DEBUG" \
     SRC_DIR="$SRC_DIR" \
     OUT_DIR="$OUT_DIR" \
     FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES" \
     ROM_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION" \
     ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL" \
-    ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL" \
-    ROM_ENABLE_AVB="$ROM_ENABLE_AVB" \
-    ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY" \
-    ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" \
-    ROM_AVB_VBMETA_ONLY="$ROM_AVB_VBMETA_ONLY" \
-    ROM_AVB_MODEL="$ROM_AVB_MODEL" \
     ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP" \
     ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY" \
     ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY" \
+    ROM_ENABLE_AVB="$ROM_ENABLE_AVB" \
+    ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY" \
+    ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" \
+    ROM_AVB_MODEL="$ROM_AVB_MODEL" \
+    ROM_BUILD_MODE="$ROM_BUILD_MODE" \
+    ROM_ROLLBACK_FIRMWARE="$ROM_ROLLBACK_FIRMWARE" \
+    ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL" \
     "$SRC_DIR/scripts/internal/gen_config_file.sh" "$SELECTED_TARGET" || return 1
 set -o allexport; source "$OUT_DIR/config.sh"; set +o allexport
 
 unset TARGETS SELECTED_TARGET
+unset -f _CLEAR_GENERATED_CONFIG_ENV
 
 echo "=============================="
 sed "/Automatically/d" "$OUT_DIR/config.sh"

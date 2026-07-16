@@ -8,10 +8,15 @@
 1|0x00014AA0|0120|8122|cm_otp_check_rom_sec_boot_key|mov x1,#0x114
 1|0x00014BB4|4100|E102|cm_otp_write_use_rom_sec_boot_key|mov x1,#0x17
 1|0x00014C60|2120|A122|cm_otp_read_use_rom_sec_boot_key|mov x1,#0x115
+1|0x00015C04|820200F9|9F0200F9|cm_otp_read_test|str xzr,[x20]
 1|0x00015D50|F30300AA|130080D2|cm_otp_read_warranty|mov x19,#0x0
 1|0x00015D64|820200F9E10302AA|9F0200F9010080D2|cm_otp_read_warranty|str xzr,[x20]; mov x1,#0x0
+1|0x0003935C|A0230791|E00313AA|load_and_verify_vbmeta|mov x0,x19
 1|0x00083000|223407B9|3F3407B9|set_warranty_void_bit_reason|str wzr,[x1,#0x734]
+1|0x00085480|600440F9|000080D2|initialize_efuse_data|mov x0,#0x0
 1|0x000854D8|210C40F9|010080D2|initialize_efuse_data|mov x1,#0x0
+1|0x00085E80|600800B4|1F2003D5|CheckKernelRP|nop
+1|0x00085E94|A00300B4|1D000014|CheckKernelRP|b commercial_bit_not_set
 1|0x0008629C|00|20|emc_get_fuse_status|mov w0,#0x1
 1|0x000862A0|820000B5203840F9|1F2003D51F2003D5|emc_get_fuse_status|nop
 1|0x000862A9|001FEBE0079F1A|2003D51F2003D5|emc_get_fuse_status|

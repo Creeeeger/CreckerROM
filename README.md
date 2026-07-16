@@ -68,6 +68,24 @@ When Samsung bootchain signing is enabled on Exynos990 targets:
   `TARGET_SAMSUNG_DECRYPTED_TZSW_PATH` only when you want to override the stock
   `tzsw.img` source used for that step.
 
+# Exynos990 rollback firmware builds
+
+Rollback mode re-signs an old downloaded Odin firmware without running the
+normal custom-ROM extraction, module, or patch flow. It preserves opaque image
+contents, unpacks only the logical partitions in `super.img`, replaces stock
+recovery with the target TWRP image, and uses the configured target firmware as
+the source for the patched `sboot.bin`.
+
+```sh
+source ./buildenv.sh --rollback \
+    --rollback-firmware SM-G985F_AUT \
+    --avb-model G985F y2s
+```
+
+The Heimdall folder is written to
+`out/rollback_SM-G985F_AUT_y2s-heimdall`. It includes the re-signed images,
+`flash_all.sh`, and `sha256sums.txt`.
+
 # Bugs
 See the <a href="https://github.com/ExtremeXT/ExtremeROM/issues">⚠ Issues</a> tab
 
