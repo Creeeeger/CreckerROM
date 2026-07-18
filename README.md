@@ -68,6 +68,32 @@ When Samsung bootchain signing is enabled on Exynos990 targets:
   `TARGET_SAMSUNG_DECRYPTED_TZSW_PATH` only when you want to override the stock
   `tzsw.img` source used for that step.
 
+# Exynos990 BL1 model selection
+
+AVB-enabled Exynos990 builds require the exact phone model so the regenerated
+`fwbl1.img` uses the correct Samsung BL1 signing tag:
+
+```sh
+source ./buildenv.sh --avb --avb-model G981B x1s
+```
+
+The supported values and metadata extracted from stock firmware are shown
+below. Rollback revisions are decimal values and are applied to both AVB and
+Samsung signatures.
+
+| Model flag | Runtime artifact | Runtime firmware | Model ID | EVT  | Rollback |
+|------------|------------------|------------------|----------|------|----------|
+| `G780F`    | `G780F`          | `G780FXXSOFYJ1`  | `0x154`  | `11` | `24`     |
+| `G980F`    | `G981B`          | `G981BXXSNHYB1`  | `0x143`  | `11` | `23`     |
+| `G981B`    | `G981B`          | `G981BXXSNHYB1`  | `0x13D`  | `11` | `23`     |
+| `G985F`    | `G986B`          | `G986BXXSNHYB1`  | `0x142`  | `11` | `23`     |
+| `G986B`    | `G986B`          | `G986BXXSNHYB1`  | `0x13C`  | `11` | `23`     |
+| `G988B`    | `G988B`          | `G988BXXSNHYB1`  | `0x13E`  | `11` | `23`     |
+| `N980F`    | `N981B`          | `N981BXXSIHYH3`  | `0x153`  | `11` | `18`     |
+| `N981B`    | `N981B`          | `N981BXXSIHYH3`  | `0x14E`  | `11` | `18`     |
+| `N985F`    | `N986B`          | `N986BXXSIHYH3`  | `0x152`  | `11` | `18`     |
+| `N986B`    | `N986B`          | `N986BXXSIHYH3`  | `0x14D`  | `11` | `18`     |
+
 # Exynos990 rollback firmware builds
 
 Rollback mode re-signs an old downloaded Odin firmware without running the

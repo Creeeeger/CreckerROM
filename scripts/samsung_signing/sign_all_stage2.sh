@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SOC="exynos990"
-ROLLBACK_REVISION=23
+ROLLBACK_REVISION="${ROLLBACK_REVISION:?Set ROLLBACK_REVISION for the target model}"
 
 TEE_KEY="crecker_stage2_tee_private.pem"
 REE_KEY="crecker_stage2_ree_private.pem"
