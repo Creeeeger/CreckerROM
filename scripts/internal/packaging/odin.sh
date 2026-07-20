@@ -21,8 +21,8 @@ RUN_SAMSUNG_BOOTLOADER_SIGNING()
 BUILD_ODIN_BL_PACKAGE()
 {
     local BL_DIR="$TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR"
-    local BL_TAR_PATH="$OUT_DIR/BL_${FILE_NAME%.zip}.tar"
-    local BL_TAR_MD5="$OUT_DIR/BL_${FILE_NAME%.zip}.tar.md5"
+    local BL_TAR_PATH="$OUT_DIR/BL_${PACKAGE_NAME}.tar"
+    local BL_TAR_MD5="$OUT_DIR/BL_${PACKAGE_NAME}.tar.md5"
     local BL_CHECKSUM
     local -a BL_ARCHIVE_ENTRIES=()
 
@@ -57,8 +57,8 @@ BUILD_ODIN_PACKAGE_FROM_DIR()
 {
     local PACKAGE_PREFIX="$1"
     local PACKAGE_DIR="$2"
-    local TAR_PATH="$OUT_DIR/${PACKAGE_PREFIX}_${FILE_NAME%.zip}.tar"
-    local TAR_MD5="$OUT_DIR/${PACKAGE_PREFIX}_${FILE_NAME%.zip}.tar.md5"
+    local TAR_PATH="$OUT_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar"
+    local TAR_MD5="$OUT_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar.md5"
     local CHECKSUM
     local -a ARCHIVE_ENTRIES=()
 

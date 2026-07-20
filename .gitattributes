@@ -22,7 +22,6 @@
 *.pdf binary
 
 # ROM-specific prebuilt blobs
-prebuilts/bootable/deprecated-ota/updater binary
 prebuilts/*/*/*/** binary
 unica/mods/csc/*/** binary
 unica/mods/rezetprop/system/bin/rezetprop binary

@@ -24,7 +24,6 @@ source "$SRC_DIR/scripts/utils/module_utils.sh" || exit 1
 
 FORCE=false
 BUILD_ROM=false
-BUILD_ZIP=true
 TARGET_BUILD_KERNEL_ONLY="${TARGET_BUILD_KERNEL_ONLY:-false}"
 if [ "$TARGET_BUILD_KERNEL_ONLY" != "true" ] && [ "$TARGET_BUILD_KERNEL_ONLY" != "false" ]; then
     LOGE "TARGET_BUILD_KERNEL_ONLY must be true or false (got: $TARGET_BUILD_KERNEL_ONLY)"
@@ -143,13 +142,9 @@ PREPARE_SCRIPT()
             "-f" | "--force")
                 FORCE=true
                 ;;
-            "--no-rom-zip")
-                BUILD_ZIP=false
-                ;;
             *)
                 echo "Usage: make_rom [options]"
                 echo " -f, --force : Force build"
-                echo " --no-rom-zip : Do not build ROM zip"
                 exit 1
                 ;;
         esac
@@ -179,7 +174,6 @@ PRINT_USAGE()
 {
     echo "Usage: make_rom [options]" >&2
     echo " -f, --force : Force ROM build" >&2
-    echo " --no-rom-zip : Do not build ROM zip" >&2
 }
 
 # ]
@@ -202,7 +196,6 @@ fi
 
 if $TARGET_BUILD_KERNEL_ONLY; then
     BUILD_ROM=false
-    BUILD_ZIP=true
 elif $FORCE; then
     BUILD_ROM=true
 else
@@ -296,10 +289,8 @@ if [ -n "$GITHUB_ACTIONS" ]; then
     bash "$SRC_DIR/scripts/cleanup.sh" fw kernel
 fi
 
-if $BUILD_ZIP; then
-    LOG_STEP_IN true "Creating zip"
-    "$SRC_DIR/scripts/internal/build_flashable_zip.sh" || exit 1
-    LOG_STEP_OUT
-fi
+LOG_STEP_IN true "Creating flash packages"
+"$SRC_DIR/scripts/internal/build_packages.sh" || exit 1
+LOG_STEP_OUT
 
 exit 0

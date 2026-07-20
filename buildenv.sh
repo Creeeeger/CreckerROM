@@ -57,7 +57,6 @@ _PRINT_USAGE()
     echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
     echo " --no-debloat : Alias for --debloat none" >&2
     echo " --ultra-debloat : Alias for --debloat ultra" >&2
-    echo " --zip : Build the flashable zip in addition to the default Odin package" >&2
     echo " --heimdall-only : Build only the Heimdall image folder" >&2
     echo " --kernel-only : Build and sign only kernel test images for Heimdall" >&2
     echo " --avb : Enable AVB signing, image signing and vbmeta creation" >&2
@@ -166,7 +165,6 @@ export DEBUG=false
 export FORCE_EXT4_IMAGES="${FORCE_EXT4_IMAGES:-false}"
 export ROM_ENABLE_ENCRYPTION="${ROM_ENABLE_ENCRYPTION:-false}"
 export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
-export ROM_BUILD_FLASHABLE_ZIP="false"
 export ROM_BUILD_HEIMDALL_ONLY="false"
 export ROM_BUILD_KERNEL_ONLY="false"
 export ROM_ENABLE_AVB="false"
@@ -215,8 +213,6 @@ while [[ "$1" == "-"* ]]; do
         export ROM_DEBLOAT_LEVEL="$1"
     elif [[ "$1" == "--debloat="* ]]; then
         export ROM_DEBLOAT_LEVEL="${1#--debloat=}"
-    elif [[ "$1" == "--zip" ]]; then
-        export ROM_BUILD_FLASHABLE_ZIP="true"
     elif [[ "$1" == "--heimdall-only" ]]; then
         export ROM_BUILD_HEIMDALL_ONLY="true"
     elif [[ "$1" == "--kernel-only" ]]; then
@@ -304,13 +300,6 @@ if [[ "$ROM_BUILD_MODE" == "rollback" ]]; then
     fi
 fi
 
-if [[ "$ROM_BUILD_FLASHABLE_ZIP" != "true" ]] && \
-        [[ "$ROM_BUILD_FLASHABLE_ZIP" != "false" ]]; then
-    echo "Invalid zip flag state: $ROM_BUILD_FLASHABLE_ZIP (expected: true|false)" >&2
-    _PRINT_USAGE
-    return 1
-fi
-
 if [[ "$ROM_BUILD_HEIMDALL_ONLY" != "true" ]] && \
         [[ "$ROM_BUILD_HEIMDALL_ONLY" != "false" ]]; then
     echo "Invalid heimdall-only flag state: $ROM_BUILD_HEIMDALL_ONLY (expected: true|false)" >&2
@@ -336,10 +325,6 @@ if [[ "$ROM_BUILD_KERNEL_ONLY" == "true" ]]; then
     export ROM_BUILD_HEIMDALL_ONLY="true"
     export ROM_ENABLE_AVB="true"
     export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
-fi
-
-if [[ "$ROM_BUILD_HEIMDALL_ONLY" == "true" ]]; then
-    export ROM_BUILD_FLASHABLE_ZIP="false"
 fi
 
 if [[ "$ROM_ENABLE_AVB" != "true" ]] && \
@@ -400,7 +385,6 @@ mkdir -p "$OUT_DIR/target/$SELECTED_TARGET"
 _SAVED_FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES"
 _SAVED_ROM_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION"
 _SAVED_ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL"
-_SAVED_ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP"
 _SAVED_ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY"
 _SAVED_ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY"
 _SAVED_ROM_ENABLE_AVB="$ROM_ENABLE_AVB"
@@ -414,7 +398,6 @@ _CLEAR_GENERATED_CONFIG_ENV
 export FORCE_EXT4_IMAGES="$_SAVED_FORCE_EXT4_IMAGES"
 export ROM_ENABLE_ENCRYPTION="$_SAVED_ROM_ENABLE_ENCRYPTION"
 export ROM_DEBLOAT_LEVEL="$_SAVED_ROM_DEBLOAT_LEVEL"
-export ROM_BUILD_FLASHABLE_ZIP="$_SAVED_ROM_BUILD_FLASHABLE_ZIP"
 export ROM_BUILD_HEIMDALL_ONLY="$_SAVED_ROM_BUILD_HEIMDALL_ONLY"
 export ROM_BUILD_KERNEL_ONLY="$_SAVED_ROM_BUILD_KERNEL_ONLY"
 export ROM_ENABLE_AVB="$_SAVED_ROM_ENABLE_AVB"
@@ -427,7 +410,6 @@ export ROM_IS_OFFICIAL="$_SAVED_ROM_IS_OFFICIAL"
 unset _SAVED_FORCE_EXT4_IMAGES
 unset _SAVED_ROM_ENABLE_ENCRYPTION
 unset _SAVED_ROM_DEBLOAT_LEVEL
-unset _SAVED_ROM_BUILD_FLASHABLE_ZIP
 unset _SAVED_ROM_BUILD_HEIMDALL_ONLY
 unset _SAVED_ROM_BUILD_KERNEL_ONLY
 unset _SAVED_ROM_ENABLE_AVB
@@ -448,7 +430,6 @@ env -i \
     FORCE_EXT4_IMAGES="$FORCE_EXT4_IMAGES" \
     ROM_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION" \
     ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL" \
-    ROM_BUILD_FLASHABLE_ZIP="$ROM_BUILD_FLASHABLE_ZIP" \
     ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY" \
     ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY" \
     ROM_ENABLE_AVB="$ROM_ENABLE_AVB" \

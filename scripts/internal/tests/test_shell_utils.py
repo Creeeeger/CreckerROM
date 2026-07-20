@@ -9,6 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parents[3]
 WORD_LIST_UTILS = ROOT_DIR / "scripts" / "utils" / "word_list_utils.sh"
 AVB_CONFIG = ROOT_DIR / "scripts" / "internal" / "avb" / "configuration.sh"
 AVB_IMAGE_METADATA = ROOT_DIR / "scripts" / "internal" / "avb" / "image_metadata.sh"
+HEIMDALL_PACKAGING = ROOT_DIR / "scripts" / "internal" / "packaging" / "heimdall.sh"
 
 
 def run_bash(body: str) -> subprocess.CompletedProcess[str]:
@@ -102,6 +103,92 @@ printf "<%s>\\n" "${command[@]}"
                 "<aa bb>",
             ],
         )
+
+
+class HeimdallPackagingTests(unittest.TestCase):
+    def run_packaging(self, body: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                "bash",
+                "-c",
+                'source "$1"; shift; TEST_ROOT="$1"; shift; eval "$1"',
+                "heimdall-packaging-test",
+                str(HEIMDALL_PACKAGING),
+                self.temp_dir,
+                body,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    def setUp(self) -> None:
+        import tempfile
+
+        self._temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir = self._temp_dir.name
+
+    def tearDown(self) -> None:
+        self._temp_dir.cleanup()
+
+    def test_unsigned_build_does_not_copy_stale_signed_bootloader(self) -> None:
+        result = self.run_packaging(
+            r'''
+mkdir -p "$TEST_ROOT"/{tmp,avb,odin,extra-ap,extra-cp,extra-csc,signed,heimdall,src/prebuilts/extras}
+touch "$TEST_ROOT/tmp/boot.img" "$TEST_ROOT/signed/sboot.bin"
+printf '#!/bin/sh\n' > "$TEST_ROOT/src/prebuilts/extras/flash_heimdall.sh"
+TMP_DIR="$TEST_ROOT/tmp"
+TARGET_AVB_IMAGE_PACK_DIR="$TEST_ROOT/avb"
+ODIN_AP_DIR="$TEST_ROOT/odin"
+ODIN_EXTRA_AP_DIR="$TEST_ROOT/extra-ap"
+ODIN_EXTRA_CP_DIR="$TEST_ROOT/extra-cp"
+ODIN_EXTRA_CSC_DIR="$TEST_ROOT/extra-csc"
+TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR="$TEST_ROOT/signed"
+HEIMDALL_DIR="$TEST_ROOT/heimdall"
+SRC_DIR="$TEST_ROOT/src"
+TARGET_SUPER_PARTITION_SIZE=0
+TARGET_ENABLE_CUSTOM_AVB=false
+TARGET_ENABLE_SAMSUNG_SIGNING=false
+TARGET_SAMSUNG_SIGN_BOOTLOADER=false
+LOG() { :; }
+LOGE() { printf '%s\n' "$*" >&2; }
+BUILD_HEIMDALL_PACKAGE
+find "$HEIMDALL_DIR" -maxdepth 1 -type f -printf '%f\n' | sort
+'''
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["boot.img", "flash_all.sh"])
+
+    def test_heimdall_only_build_does_not_reuse_stale_odin_super(self) -> None:
+        result = self.run_packaging(
+            r'''
+mkdir -p "$TEST_ROOT"/{tmp,avb,odin,extra-ap,extra-cp,extra-csc,signed,heimdall,src/prebuilts/extras}
+touch "$TEST_ROOT/tmp/boot.img"
+printf stale > "$TEST_ROOT/odin/super.img"
+printf '#!/bin/sh\n' > "$TEST_ROOT/src/prebuilts/extras/flash_heimdall.sh"
+TMP_DIR="$TEST_ROOT/tmp"
+TARGET_AVB_IMAGE_PACK_DIR="$TEST_ROOT/avb"
+ODIN_AP_DIR="$TEST_ROOT/odin"
+ODIN_EXTRA_AP_DIR="$TEST_ROOT/extra-ap"
+ODIN_EXTRA_CP_DIR="$TEST_ROOT/extra-cp"
+ODIN_EXTRA_CSC_DIR="$TEST_ROOT/extra-csc"
+TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR="$TEST_ROOT/signed"
+HEIMDALL_DIR="$TEST_ROOT/heimdall"
+SRC_DIR="$TEST_ROOT/src"
+TARGET_SUPER_PARTITION_SIZE=1
+TARGET_ENABLE_CUSTOM_AVB=false
+TARGET_ENABLE_SAMSUNG_SIGNING=false
+TARGET_SAMSUNG_SIGN_BOOTLOADER=false
+TARGET_BUILD_ODIN_PACKAGE=false
+LOG() { :; }
+LOGE() { printf '%s\n' "$*" >&2; }
+BUILD_ODIN_SUPER_IMAGE() { printf fresh > "$1"; }
+BUILD_HEIMDALL_PACKAGE
+cat "$HEIMDALL_DIR/super.img"
+'''
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "fresh")
 
 
 if __name__ == "__main__":

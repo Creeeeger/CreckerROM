@@ -26,7 +26,7 @@ CREATE_IMAGE_PACK()
     done
 
     {
-        # This manifest is the handoff contract from AVB signing to Odin, ZIP,
+        # This manifest is the handoff contract from AVB signing to Odin,
         # Heimdall, and image-pack consumers.
         echo "device=$TARGET_CODENAME"
         echo "firmware=$TARGET_FIRMWARE"
@@ -59,16 +59,6 @@ CREATE_IMAGE_PACK()
 
     if [ -f "$KEY_EXPORT_REPORT" ]; then
         cp -fa "$KEY_EXPORT_REPORT" "$PACK_DIR/avb_keys.txt"
-    fi
-
-    if [ "$TARGET_AVB_CREATE_IMAGE_PACK_ZIP" = "true" ]; then
-        rm -f "$PACK_ZIP"
-        pushd "$PACK_DIR" > /dev/null
-        EVAL "7z a -tzip -mx=$TARGET_AVB_IMAGE_PACK_COMPRESSION_LEVEL \"$PACK_ZIP\" ./*" || exit 1
-        popd > /dev/null
-    else
-        rm -f "$PACK_ZIP"
-        LOG "- Skipping signed image zip compression (TARGET_AVB_CREATE_IMAGE_PACK_ZIP=false)"
     fi
 
     PRINT_KEY_SUMMARY

@@ -61,7 +61,7 @@ COPY_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS_TO_TMP()
         [ "$PARTITION" = "bootloader" ] && continue
         [ -f "$TARGET_AVB_IMAGE_PACK_DIR/$COMPONENT_FILE" ] || continue
 
-        LOG "- Copying AVB firmware component for zip: $PARTITION ($COMPONENT_FILE)"
+        LOG "- Copying AVB firmware component for flash packages: $PARTITION ($COMPONENT_FILE)"
         cp -fa "$TARGET_AVB_IMAGE_PACK_DIR/$COMPONENT_FILE" "$TMP_DIR/$COMPONENT_FILE"
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 }

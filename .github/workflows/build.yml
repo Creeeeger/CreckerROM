@@ -85,17 +85,23 @@ jobs:
           source ./buildenv.sh ${{ matrix.target }}
           ./scripts/make_rom.sh --force
 
-      - name: Upload to GoFile
+      - name: Upload Odin packages to GoFile
         run: |
-          ZIP_FILE=$(find out -maxdepth 1 -type f -name "*.zip" | head -n 1)
+          mapfile -t PACKAGE_FILES < <(find out -maxdepth 1 -type f -name "*.tar.md5" | sort)
+          if [ "${#PACKAGE_FILES[@]}" -eq 0 ]; then
+            echo "No Odin packages were generated" >&2
+            exit 1
+          fi
 
-          RESPONSE=$(curl -s -F "file=@$ZIP_FILE" -F "token=${{ secrets.GOFILE_TOKEN }}" -F "folderId=${{ secrets.GOFILE_FOLDER_ID }}" "https://upload-eu-par.gofile.io/uploadFile")
+          for PACKAGE_FILE in "${PACKAGE_FILES[@]}"; do
+            RESPONSE=$(curl -s -F "file=@$PACKAGE_FILE" -F "token=${{ secrets.GOFILE_TOKEN }}" -F "folderId=${{ secrets.GOFILE_FOLDER_ID }}" "https://upload-eu-par.gofile.io/uploadFile")
 
-          echo "Uploaded successfully! Download link:"
-          echo "$RESPONSE" | jq -r '.data.downloadPage'
+            echo "Uploaded $(basename "$PACKAGE_FILE") successfully. Download link:"
+            echo "$RESPONSE" | jq -r '.data.downloadPage'
 
-          echo "MD5:"
-          md5sum "$ZIP_FILE"
+            echo "MD5:"
+            md5sum "$PACKAGE_FILE"
 
-          echo "SHA256:"
-          sha256sum "$ZIP_FILE"
+            echo "SHA256:"
+            sha256sum "$PACKAGE_FILE"
+          done
