@@ -32,37 +32,24 @@ BOOTLOADER_FILES="sboot.bin ldfw.img tzsw.img keystorage.bin harx.bin ssp.img tz
 TARGET_FIRMWARE_MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_CSC="$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 TARGET_FIRMWARE_PATH="${TARGET_FIRMWARE_MODEL}_${TARGET_FIRMWARE_CSC}"
-TARGET_FIRMWARE_MODEL_PATCH_ID="${TARGET_FIRMWARE_MODEL#SM-}"
-TARGET_FIRMWARE_MODEL_PATCH_ID="$(tr "[:upper:]" "[:lower:]" <<< "$TARGET_FIRMWARE_MODEL_PATCH_ID")"
-# LK patch tables are keyed by binary family; several LTE/5G model variants
-# share the same selected patch offsets.
-case "$TARGET_FIRMWARE_MODEL_PATCH_ID" in
-    "g780f")
-        ;;
-    "g980f"|"g981b")
-        TARGET_FIRMWARE_MODEL_PATCH_ID="g981b"
-        ;;
-    "g985f"|"g986b")
-        TARGET_FIRMWARE_MODEL_PATCH_ID="g986b"
-        ;;
-    "g988b")
-        ;;
-    "n980f"|"n981b")
-        TARGET_FIRMWARE_MODEL_PATCH_ID="n981b"
-        ;;
-    "n985f"|"n986b")
-        TARGET_FIRMWARE_MODEL_PATCH_ID="n986b"
+TARGET_LK_PATCH_MODEL_ID="${TARGET_SAMSUNG_BL1_MODEL#SM-}"
+TARGET_LK_PATCH_MODEL_ID="$(tr "[:upper:]" "[:lower:]" <<< "$TARGET_LK_PATCH_MODEL_ID")"
+# Patch selection follows the physical/BL1 model. Coupled LTE builds still use
+# their 5G runtime SBoot, but their exact-model TSV rewrites LK's model IDs.
+case "$TARGET_LK_PATCH_MODEL_ID" in
+    "g780f"|"g980f"|"g981b"|"g985f"|"g986b"|"g988b"|\
+    "n980f"|"n981b"|"n985f"|"n986b")
         ;;
     *)
         if [ -z "${TARGET_SAMSUNG_LK_PATCH_TABLE:-}" ]; then
-            LOGE "No Samsung LK patch table for TARGET_FIRMWARE model: ${TARGET_FIRMWARE_MODEL:-<empty>}"
+            LOGE "No Samsung LK patch table for selected BL1 model: ${TARGET_SAMSUNG_BL1_MODEL:-<empty>}"
             exit 1
         fi
-        TARGET_FIRMWARE_MODEL_PATCH_ID=""
+        TARGET_LK_PATCH_MODEL_ID=""
         ;;
 esac
-if [ -n "$TARGET_FIRMWARE_MODEL_PATCH_ID" ]; then
-    TARGET_SAMSUNG_LK_PATCH_TABLE="${TARGET_SAMSUNG_LK_PATCH_TABLE:-$SRC_DIR/security/samsung/patches/lk_${TARGET_FIRMWARE_MODEL_PATCH_ID}_selected_patches.tsv}"
+if [ -n "$TARGET_LK_PATCH_MODEL_ID" ]; then
+    TARGET_SAMSUNG_LK_PATCH_TABLE="${TARGET_SAMSUNG_LK_PATCH_TABLE:-$SRC_DIR/security/samsung/patches/lk_${TARGET_LK_PATCH_MODEL_ID}_selected_patches.tsv}"
 fi
 if [ -z "${TARGET_SAMSUNG_LK_PATCH_TABLE:-}" ] || [ "$TARGET_SAMSUNG_LK_PATCH_TABLE" = "none" ]; then
     LOGE "TARGET_SAMSUNG_LK_PATCH_TABLE is required for Samsung bootloader signing"

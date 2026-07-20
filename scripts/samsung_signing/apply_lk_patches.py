@@ -6,5 +6,5 @@ from apply_binary_patches import main
 if __name__ == "__main__":
     main(
         target_label="LK",
-        description="Apply byte-exact LK patches from a default-model TSV table",
+        description="Apply byte-exact LK patches from an exact-model TSV table",
     )

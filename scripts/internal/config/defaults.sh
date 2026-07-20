@@ -62,29 +62,19 @@ GET_DEFAULT_SAMSUNG_LK_PATCH_TABLE()
     local PATCH_ID
     local PATCH_TABLE
 
-    MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
+    MODEL="${TARGET_SAMSUNG_BL1_MODEL:-}"
+    if [ -z "$MODEL" ] || [ "$MODEL" = "none" ]; then
+        MODEL="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")"
+    fi
     PATCH_ID="${MODEL#SM-}"
     PATCH_ID="$(tr "[:upper:]" "[:lower:]" <<< "$PATCH_ID")"
     case "$PATCH_ID" in
-        "g780f")
-            ;;
-        "g980f"|"g981b")
-            PATCH_ID="g981b"
-            ;;
-        "g985f"|"g986b")
-            PATCH_ID="g986b"
-            ;;
-        "g988b")
-            ;;
-        "n980f"|"n981b")
-            PATCH_ID="n981b"
-            ;;
-        "n985f"|"n986b")
-            PATCH_ID="n986b"
+        "g780f"|"g980f"|"g981b"|"g985f"|"g986b"|"g988b"|\
+        "n980f"|"n981b"|"n985f"|"n986b")
             ;;
         *)
             if [ "$TARGET_PLATFORM" = "exynos990" ]; then
-                LOGE "No Samsung LK patch table for TARGET_FIRMWARE model: ${MODEL:-<empty>}"
+                LOGE "No Samsung LK patch table for selected BL1 model: ${MODEL:-<empty>}"
                 return 1
             fi
             echo "none"
