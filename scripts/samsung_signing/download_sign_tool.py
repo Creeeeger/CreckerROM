@@ -32,7 +32,6 @@ from stage2_common import (
 )
 
 STAGE2_SOC_HELP = "Target SoC: exynos990/exynos9830"
-DEFAULT_RP_COUNT = 23
 
 
 def optional_existing_file(path):
@@ -122,10 +121,7 @@ def resolve_download_values(args, layout):
     return rp_count, args.sign_type, key_type, key_index
 
 
-def main():
-    print("2024-56426 Sparse Download Signing Utility")
-    print()
-
+def build_argument_parser():
     parser = argparse.ArgumentParser(
         description="Sign Samsung SignerVer03 download signatures in Android sparse images"
     )
@@ -136,8 +132,9 @@ def main():
                         help=("Stage-2 private key PEM. Defaults to crecker_stage2_tee_private.pem, "
                               "or crecker_stage2_ree_private.pem for --key-type 1. "
                               "key_type 2 requires an explicit key file."))
-    parser.add_argument("-r", "--rp-cnt", type=lambda x: int(x, 0), default=DEFAULT_RP_COUNT,
-                        help=f"Rollback counter stored in the download signature header. Default: {DEFAULT_RP_COUNT}")
+    parser.add_argument("-r", "--rp-cnt", type=lambda x: int(x, 0),
+                        help=("Rollback counter stored in the download signature header. "
+                              "Defaults to the signed input or super reference; otherwise required"))
     parser.add_argument("--sign-type", type=lambda x: int(x, 0), default=SIGN_TYPE_ECDSA_NIST_P384,
                         help="Signing algorithm type. Only 4, ECDSA NIST P-384, is implemented")
     parser.add_argument("--key-type", type=lambda x: int(x, 0),
@@ -151,6 +148,14 @@ def main():
                               "Set to an empty string to disable. Default: super_signed.img"))
     parser.add_argument("--signer-info",
                         help="Raw 0x100-byte SignerInfo blob to insert for super.img signing")
+    return parser
+
+
+def main():
+    print("2024-56426 Sparse Download Signing Utility")
+    print()
+
+    parser = build_argument_parser()
     args = parser.parse_args()
 
     try:

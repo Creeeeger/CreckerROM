@@ -89,8 +89,19 @@ def process_header(bl1, size):
     bl1[4:8] = write_u32(0)  # We have to clear the hash to sign properly
 
 
+def read_bl1_input(bl1_path, size):
+    with open(bl1_path, 'rb') as f:
+        data = f.read(size + 1)
+
+    if len(data) > size:
+        raise ValueError(f"BL1 input exceeds the requested output size of {size} bytes")
+
+    return data
+
+
 def sign_bl1(bl1_path, output_path, size, private_key_path, evt, machine_id, rp_count, stagetwo_tee_key_path,
              stagetwo_ree_key_path, model_id, hmac_path, soc_config):
+    data = read_bl1_input(bl1_path, size)
     bl1_file = bytearray(size)
     signature_offset = size - BL1_FOOTER_OFFSET + 1840
 
@@ -100,10 +111,7 @@ def sign_bl1(bl1_path, output_path, size, private_key_path, evt, machine_id, rp_
     public_key = private_key.public_key()
     padded_pub_key = generate_padded_pub_key(public_key, soc_config["name"])
 
-    with open(bl1_path, 'rb') as f:
-        data = f.read()
-        bl1_file[:len(data)] = data
-        f.close()
+    bl1_file[:len(data)] = data
 
     with open(hmac_path, 'rb') as f:
         hmac = f.read()
@@ -237,8 +245,11 @@ def main():
         print("EVT is not stored for this SoC; ignoring --evt")
     print()
 
-    sign_bl1(args.input, args.output, args.size, args.key_file, args.evt, machine_id, args.rp_cnt,
-             args.tee_pub_key, args.ree_pub_key, args.model_id, args.hmac, soc_config)
+    try:
+        sign_bl1(args.input, args.output, args.size, args.key_file, args.evt, machine_id, args.rp_cnt,
+                 args.tee_pub_key, args.ree_pub_key, args.model_id, args.hmac, soc_config)
+    except ValueError as e:
+        parser.error(str(e))
 
 
 if __name__ == "__main__":
