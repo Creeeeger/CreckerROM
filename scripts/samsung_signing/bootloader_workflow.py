@@ -6,6 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 
+from apply_binary_patches import PatchRow, load_patch_rows, patch_file
 from bootloader_signing import (
     append_manifest,
     key_paths,
@@ -15,6 +16,7 @@ from bootloader_signing import (
     sign_stage2,
     verify_stage2,
 )
+from el3_mon_crypto import crypt_el3_mon_region
 from path_validation import require_file
 from tzsw_crypt_tool import (
     decrypt_tzsw,
@@ -78,17 +80,82 @@ def patch_lk(args: argparse.Namespace, lk_path: Path) -> None:
     if not args.patch_table.is_file():
         raise FileNotFoundError(args.patch_table)
 
+    command = [
+        sys.executable,
+        str(TOOLS_DIR / "apply_lk_patches.py"),
+        "--input",
+        str(lk_path),
+        "--patch-table",
+        str(args.patch_table),
+    ]
+    if args.kvm:
+        command.append("--kvm")
+    if args.rollback_mode:
+        command.append("--rollback-mode")
+
     run_step(
-        [
-            sys.executable,
-            str(TOOLS_DIR / "apply_lk_patches.py"),
-            "--input",
-            str(lk_path),
-            "--patch-table",
-            str(args.patch_table),
-        ],
+        command,
         "Applying LK selected byte patches",
     )
+
+
+def _matches_clear_patch_bytes(image: bytes, rows: list[PatchRow]) -> bool:
+    return all(
+        image[row.offset:row.offset + len(row.old_bytes)]
+        in {row.old_bytes, row.new_bytes}
+        for row in rows
+    )
+
+
+def patch_el3_mon(args: argparse.Namespace, image: Path, manifest: Path) -> None:
+    if not args.kvm:
+        return
+
+    patch_table = require_file(args.el3_patch_table)
+    rows, _ = load_patch_rows(patch_table, kvm=True)
+    if not rows:
+        raise ValueError(f"no KVM rows found in {patch_table}")
+
+    clear_image = image.read_bytes()
+    if not _matches_clear_patch_bytes(clear_image, rows):
+        clear_image, backend, start, end = crypt_el3_mon_region(
+            clear_image,
+            decrypt=True,
+        )
+        if not _matches_clear_patch_bytes(clear_image, rows):
+            raise ValueError(
+                f"EL3 monitor bytes do not match {patch_table.name} before or "
+                "after AES-CBC decryption"
+            )
+        append_manifest(
+            manifest,
+            "el3_crypto",
+            f"{image.name}=decrypted:{backend}:0x{start:X}-0x{end:X}",
+        )
+
+    image.write_bytes(clear_image)
+    patch_file(
+        image,
+        patch_table,
+        target_label="EL3 monitor",
+        kvm=True,
+    )
+
+    patched_clear = image.read_bytes()
+    encrypted, backend, start, end = crypt_el3_mon_region(
+        patched_clear,
+        decrypt=False,
+    )
+    roundtrip, _, _, _ = crypt_el3_mon_region(encrypted, decrypt=True)
+    if roundtrip != patched_clear:
+        raise RuntimeError("EL3 monitor encrypt/decrypt round-trip verification failed")
+    image.write_bytes(encrypted)
+    append_manifest(
+        manifest,
+        "el3_crypto",
+        f"{image.name}=recrypted:{backend}:0x{start:X}-0x{end:X}",
+    )
+    append_manifest(manifest, "kvm_patch", f"{image.name}={patch_table}")
 
 
 def merge_sboot(parts_dir: Path, work_dir: Path) -> Path:

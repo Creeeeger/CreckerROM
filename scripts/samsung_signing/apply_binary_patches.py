@@ -25,7 +25,12 @@ def parse_hex_blob(value: str, label: str, line_no: int) -> bytes:
         raise ValueError(f"line {line_no}: invalid {label} hex: {value!r}") from exc
 
 
-def load_patch_rows(path: Path) -> tuple[list[PatchRow], int]:
+def load_patch_rows(
+        path: Path,
+        *,
+        kvm: bool = False,
+        rollback_mode: bool = False,
+) -> tuple[list[PatchRow], int]:
     rows: list[PatchRow] = []
     disabled = 0
 
@@ -39,8 +44,13 @@ def load_patch_rows(path: Path) -> tuple[list[PatchRow], int]:
             if len(fields) < 4:
                 raise ValueError(f"line {line_no}: expected at least 4 pipe-separated columns")
 
-            enabled = fields[0].strip()
-            if enabled != "1":
+            profile = fields[0].strip().lower()
+            enabled = (
+                profile == "1"
+                or (profile == "kvm" and kvm)
+                or (profile == "rollback" and rollback_mode)
+            )
+            if not enabled:
                 disabled += 1
                 continue
 
@@ -118,13 +128,19 @@ def patch_file(
         force: bool = False,
         dry_run: bool = False,
         target_label: str = "binary",
+        kvm: bool = False,
+        rollback_mode: bool = False,
 ) -> tuple[int, int, int]:
     if not input_path.is_file():
         raise FileNotFoundError(input_path)
     if not patch_table.is_file():
         raise FileNotFoundError(patch_table)
 
-    rows, disabled = load_patch_rows(patch_table)
+    rows, disabled = load_patch_rows(
+        patch_table,
+        kvm=kvm,
+        rollback_mode=rollback_mode,
+    )
     data = bytearray(input_path.read_bytes())
     applied, already = apply_patches(
         data,
@@ -153,6 +169,16 @@ def main(*, target_label: str = "binary", description: str | None = None) -> Non
     parser.add_argument("--patch-table", "-p", type=Path, required=True, help="TSV patch table")
     parser.add_argument("--force", action="store_true", help="Patch even when old bytes do not match")
     parser.add_argument("--dry-run", action="store_true", help="Validate and print changes without writing")
+    parser.add_argument(
+        "--kvm",
+        action="store_true",
+        help="Enable rows whose profile column is 'kvm'",
+    )
+    parser.add_argument(
+        "--rollback-mode",
+        action="store_true",
+        help="Enable rows whose profile column is 'rollback'",
+    )
     args = parser.parse_args()
 
     patch_file(
@@ -162,6 +188,8 @@ def main(*, target_label: str = "binary", description: str | None = None) -> Non
         force=args.force,
         dry_run=args.dry_run,
         target_label=target_label,
+        kvm=args.kvm,
+        rollback_mode=args.rollback_mode,
     )
 
 

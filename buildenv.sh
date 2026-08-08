@@ -63,6 +63,7 @@ _PRINT_USAGE()
     echo " --avb-low-security : Enable AVB low-security mode without partition image signing" >&2
     echo " --avb-model <model> : Set the BL1 model for AVB-enabled Exynos990 builds" >&2
     echo "                       Valid models: G780F G980F G981B G985F G986B G988B N980F N981B N985F N986B" >&2
+    echo " --kvm : Enable the G985F/G986B LK and EL3 monitor EL2 boot patches" >&2
     echo " --rollback : Re-sign an old Odin firmware without running the custom ROM modification flow" >&2
     echo " --rollback-firmware <name> : Old Odin firmware directory name, for example SM-G985F_AUT" >&2
     echo "Available devices:" >&2
@@ -171,6 +172,7 @@ export ROM_ENABLE_AVB="false"
 export ROM_AVB_LOW_SECURITY="false"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
 export ROM_AVB_MODEL=""
+export ROM_ENABLE_KVM="false"
 export ROM_BUILD_MODE="normal"
 export ROM_ROLLBACK_FIRMWARE=""
 export ROM_IS_OFFICIAL="${ROM_IS_OFFICIAL:-true}"
@@ -234,6 +236,9 @@ while [[ "$1" == "-"* ]]; do
     elif [[ "$1" == "--avb-model="* ]]; then
         export ROM_AVB_MODEL="${1#--avb-model=}"
         export ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
+    elif [[ "$1" == "--kvm" ]]; then
+        export ROM_ENABLE_KVM="true"
+        export ROM_ENABLE_AVB="true"
     elif [[ "$1" == "--rollback" ]]; then
         export ROM_BUILD_MODE="rollback"
         export ROM_ENABLE_AVB="true"
@@ -276,6 +281,19 @@ case "$ROM_AVB_MODEL" in
         return 1
         ;;
 esac
+
+if [[ "$ROM_ENABLE_KVM" != "true" ]] && [[ "$ROM_ENABLE_KVM" != "false" ]]; then
+    echo "Invalid KVM flag state: $ROM_ENABLE_KVM (expected: true|false)" >&2
+    _PRINT_USAGE
+    return 1
+fi
+
+if [[ "$ROM_ENABLE_KVM" == "true" ]] && \
+        [[ "$ROM_AVB_MODEL" != "G985F" ]] && [[ "$ROM_AVB_MODEL" != "G986B" ]]; then
+    echo "--kvm requires --avb-model G985F or --avb-model G986B" >&2
+    _PRINT_USAGE
+    return 1
+fi
 
 case "$ROM_BUILD_MODE" in
     "normal"|"rollback")
@@ -391,6 +409,7 @@ _SAVED_ROM_ENABLE_AVB="$ROM_ENABLE_AVB"
 _SAVED_ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY"
 _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
 _SAVED_ROM_AVB_MODEL="$ROM_AVB_MODEL"
+_SAVED_ROM_ENABLE_KVM="$ROM_ENABLE_KVM"
 _SAVED_ROM_BUILD_MODE="$ROM_BUILD_MODE"
 _SAVED_ROM_ROLLBACK_FIRMWARE="$ROM_ROLLBACK_FIRMWARE"
 _SAVED_ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL"
@@ -404,6 +423,7 @@ export ROM_ENABLE_AVB="$_SAVED_ROM_ENABLE_AVB"
 export ROM_AVB_LOW_SECURITY="$_SAVED_ROM_AVB_LOW_SECURITY"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
 export ROM_AVB_MODEL="$_SAVED_ROM_AVB_MODEL"
+export ROM_ENABLE_KVM="$_SAVED_ROM_ENABLE_KVM"
 export ROM_BUILD_MODE="$_SAVED_ROM_BUILD_MODE"
 export ROM_ROLLBACK_FIRMWARE="$_SAVED_ROM_ROLLBACK_FIRMWARE"
 export ROM_IS_OFFICIAL="$_SAVED_ROM_IS_OFFICIAL"
@@ -416,6 +436,7 @@ unset _SAVED_ROM_ENABLE_AVB
 unset _SAVED_ROM_AVB_LOW_SECURITY
 unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
 unset _SAVED_ROM_AVB_MODEL
+unset _SAVED_ROM_ENABLE_KVM
 unset _SAVED_ROM_BUILD_MODE
 unset _SAVED_ROM_ROLLBACK_FIRMWARE
 unset _SAVED_ROM_IS_OFFICIAL
@@ -436,6 +457,7 @@ env -i \
     ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY" \
     ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" \
     ROM_AVB_MODEL="$ROM_AVB_MODEL" \
+    ROM_ENABLE_KVM="$ROM_ENABLE_KVM" \
     ROM_BUILD_MODE="$ROM_BUILD_MODE" \
     ROM_ROLLBACK_FIRMWARE="$ROM_ROLLBACK_FIRMWARE" \
     ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL" \

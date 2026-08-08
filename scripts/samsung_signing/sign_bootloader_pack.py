@@ -27,6 +27,10 @@ def default_patch_table_for_model(model: str) -> Path:
     return DEFAULT_PATCH_DIR / f"lk_{normalize_model_id(model)}_selected_patches.tsv"
 
 
+def default_el3_patch_table_for_model(model: str) -> Path:
+    return DEFAULT_PATCH_DIR / f"el3_mon_{normalize_model_id(model)}_kvm_patches.tsv"
+
+
 def infer_model_from_stock_dir(stock_dir: Path) -> str | None:
     for part in reversed(stock_dir.parts):
         candidate = part.split("_", 1)[0]
@@ -44,6 +48,7 @@ from bootloader_workflow import (
     copy_stock_bootloader_inputs,
     merge_sboot,
     patch_lk,
+    patch_el3_mon,
     sign_external_bootloader_images,
     sign_split_sboot,
     split_sboot,
@@ -63,6 +68,12 @@ def main() -> None:
                         help="Physical BL1 target model. Selects the exact-model LK table by default.")
     parser.add_argument("--patch-table", type=Path,
                         help=f"LK TSV patch table. Default: {DEFAULT_PATCH_DIR}/lk_<bl1-model>_selected_patches.tsv")
+    parser.add_argument("--kvm", action="store_true",
+                        help="Enable the G985F/G986B LK and EL3 monitor EL2 patch profile")
+    parser.add_argument("--el3-patch-table", type=Path,
+                        help=f"EL3 KVM TSV. Default with --kvm: {DEFAULT_PATCH_DIR}/el3_mon_<bl1-model>_kvm_patches.tsv")
+    parser.add_argument("--rollback-mode", action="store_true",
+                        help="Enable LK rows reserved for the rollback firmware workflow")
     parser.add_argument("--avbtool", type=Path, default=DEFAULT_AVBTOOL,
                         help=f"Official avbtool.py path. Default: {DEFAULT_AVBTOOL}")
     parser.add_argument("--avb-key", type=Path, default=DEFAULT_AVB_KEY,
@@ -107,6 +118,13 @@ def main() -> None:
         if patch_model_id is None:
             parser.error("--patch-table, --bl1-model, or --model is required when --stock-dir does not include an SM-* model")
         args.patch_table = default_patch_table_for_model(patch_model)
+    if args.kvm:
+        if patch_model_id not in {"g985f", "g986b"}:
+            parser.error("--kvm is supported only for G985F and G986B")
+        if args.el3_patch_table is None:
+            args.el3_patch_table = default_el3_patch_table_for_model(patch_model)
+    elif args.el3_patch_table is not None:
+        parser.error("--el3-patch-table requires --kvm")
 
     stock_sboot = require_file(args.stock_dir / "sboot.bin")
     paths = key_paths(args.keys_dir)
@@ -138,6 +156,9 @@ def main() -> None:
                 f"bl1_model_id=0x{args.model_id:X}",
                 f"bl1_evt={args.evt}",
                 f"patch_table={args.patch_table}",
+                f"kvm={str(args.kvm).lower()}",
+                f"el3_patch_table={args.el3_patch_table or 'none'}",
+                f"rollback_mode={str(args.rollback_mode).lower()}",
                 f"tzar_patch_file={args.tzar_patch_file or 'none'}",
                 f"tzar_patch_table={args.tzar_patch_table or 'none'}",
                 f"avb_key={args.avb_key}",
@@ -150,6 +171,7 @@ def main() -> None:
 
     split_sboot(stock_sboot, parts_dir)
     patch_lk(args, require_file(parts_dir / "lk.bin"))
+    patch_el3_mon(args, require_file(parts_dir / "el3_mon.img"), manifest)
     sign_split_sboot(args, paths, parts_dir, manifest)
 
     merged_sboot = merge_sboot(parts_dir, args.work_dir)

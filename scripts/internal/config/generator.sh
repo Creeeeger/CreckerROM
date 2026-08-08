@@ -104,7 +104,21 @@ if [[ "$ROM_BUILD_KERNEL_ONLY" == "true" ]]; then
     TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS="false"
 fi
 
+ROM_ENABLE_KVM="${ROM_ENABLE_KVM:-false}"
 ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
+if [[ "$ROM_ENABLE_KVM" != "true" ]] && [[ "$ROM_ENABLE_KVM" != "false" ]]; then
+    LOGE "ROM_ENABLE_KVM must be \"true\" or \"false\" (got: $ROM_ENABLE_KVM)"
+    exit 1
+fi
+if [[ "$ROM_ENABLE_KVM" == "true" ]] && \
+        [[ "$ROM_AVB_MODEL" != "G985F" ]] && [[ "$ROM_AVB_MODEL" != "G986B" ]]; then
+    LOGE "ROM_ENABLE_KVM requires ROM_AVB_MODEL=G985F or G986B"
+    exit 1
+fi
+if [[ "$ROM_ENABLE_KVM" == "true" ]]; then
+    ROM_ENABLE_AVB="true"
+fi
+
 if [ "$TARGET_PLATFORM" = "exynos990" ] && [ "$ROM_ENABLE_AVB" = "true" ]; then
     SET_SAMSUNG_BL1_METADATA
 fi
@@ -258,6 +272,8 @@ fi
     GET_BUILD_VAR "TARGET_SAMSUNG_SIGNING_KEY_DIR" "$SRC_DIR/security/samsung/exynos9830_crecker"
     GET_BUILD_VAR "TARGET_SAMSUNG_SUPER_REFERENCE_IMAGE" "auto"
     GET_BUILD_VAR "TARGET_SAMSUNG_LK_PATCH_TABLE" "$DEFAULT_SAMSUNG_LK_PATCH_TABLE"
+    GET_BUILD_VAR "TARGET_SAMSUNG_ENABLE_KVM" "$ROM_ENABLE_KVM"
+    GET_BUILD_VAR "TARGET_SAMSUNG_EL3_PATCH_TABLE" "none"
     GET_BUILD_VAR "TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" "${TARGET_AVB_ROLLBACK_INDEX:-0}"
     GET_BUILD_VAR "TARGET_SAMSUNG_AVBTOOL_PATH" "$SRC_DIR/external/android-tools/vendor/avb/avbtool.py"
     GET_BUILD_VAR "TARGET_SAMSUNG_AVB_KEY_PATH" "$(GET_DEFAULT_AVB_KEY_PATH)"

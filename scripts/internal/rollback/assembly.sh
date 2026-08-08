@@ -28,6 +28,7 @@ BUILD_BOOTLOADER()
         --machine-id "$TARGET_SAMSUNG_BL1_MACHINE_ID"
         --model-id "$TARGET_SAMSUNG_BL1_MODEL_ID"
         --evt "$TARGET_SAMSUNG_BL1_EVT"
+        --rollback-mode
     )
 
     mkdir -p "$COMPOSITE_BL_DIR"
@@ -45,6 +46,13 @@ BUILD_BOOTLOADER()
     if [ -n "${TARGET_SAMSUNG_KEYSTORAGE_VBMETA_KEY_PATH:-}" ] && \
             [ "$TARGET_SAMSUNG_KEYSTORAGE_VBMETA_KEY_PATH" != "none" ]; then
         ARGS+=(--keystorage-vbmeta-key "$TARGET_SAMSUNG_KEYSTORAGE_VBMETA_KEY_PATH")
+    fi
+    if [ "${TARGET_SAMSUNG_ENABLE_KVM:-false}" = "true" ]; then
+        ARGS+=(--kvm)
+        if [ -n "${TARGET_SAMSUNG_EL3_PATCH_TABLE:-}" ] && \
+                [ "$TARGET_SAMSUNG_EL3_PATCH_TABLE" != "none" ]; then
+            ARGS+=(--el3-patch-table "$TARGET_SAMSUNG_EL3_PATCH_TABLE")
+        fi
     fi
 
     python3 "${ARGS[@]}"

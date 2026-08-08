@@ -8,7 +8,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 ROOT_DIR = Path(__file__).resolve().parents[3]
 SIGNING_DIR = ROOT_DIR / "scripts" / "samsung_signing"
 sys.path.insert(0, str(SIGNING_DIR))
@@ -97,6 +96,57 @@ class BinaryIoTests(unittest.TestCase):
         self.assertEqual(binary_io.ascii_name(b"vbmeta\x00ignored"), "vbmeta")
 
 
+class BinaryPatchProfileTests(unittest.TestCase):
+    def test_kvm_and_rollback_profiles_are_independent(self) -> None:
+        binary_patches = load_module(
+            "apply_binary_patches_test",
+            "apply_binary_patches.py",
+        )
+        table = """# profile test
+1|0x00|00|01|always|always
+kvm|0x01|00|01|kvm|kvm
+rollback|0x02|00|01|rollback|rollback
+0|0x03|00|01|disabled|disabled
+"""
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "profiles.tsv"
+            path.write_text(table, encoding="utf-8")
+            normal, _ = binary_patches.load_patch_rows(path)
+            kvm, _ = binary_patches.load_patch_rows(path, kvm=True)
+            rollback, _ = binary_patches.load_patch_rows(
+                path,
+                rollback_mode=True,
+            )
+            combined, _ = binary_patches.load_patch_rows(
+                path,
+                kvm=True,
+                rollback_mode=True,
+            )
+
+        self.assertEqual([row.function for row in normal], ["always"])
+        self.assertEqual([row.function for row in kvm], ["always", "kvm"])
+        self.assertEqual(
+            [row.function for row in rollback],
+            ["always", "rollback"],
+        )
+        self.assertEqual(
+            [row.function for row in combined],
+            ["always", "kvm", "rollback"],
+        )
+
+    def test_exact_model_lk_tables_have_five_rollback_only_rows(self) -> None:
+        patch_dir = ROOT_DIR / "security" / "samsung" / "patches"
+        for path in sorted(patch_dir.glob("lk_*_selected_patches.tsv")):
+            with self.subTest(table=path.name):
+                rows = [
+                    line
+                    for line in path.read_text(encoding="utf-8").splitlines()
+                    if line.startswith("rollback|")
+                ]
+                self.assertEqual(len(rows), 5)
+
+
 class BootloaderModuleWiringTests(unittest.TestCase):
     def test_cross_module_dependencies_are_available(self) -> None:
         bootloader_signing = load_module("bootloader_signing_test", "bootloader_signing.py")
@@ -104,9 +154,9 @@ class BootloaderModuleWiringTests(unittest.TestCase):
         sign_bootloader_pack = load_module("sign_bootloader_pack_test", "sign_bootloader_pack.py")
 
         for module, names in (
-            (bootloader_signing, ("append_manifest", "tempfile")),
-            (bootloader_workflow, ("key_paths", "require_file")),
-            (sign_bootloader_pack, ("sign_stage2",)),
+                (bootloader_signing, ("append_manifest", "tempfile")),
+                (bootloader_workflow, ("key_paths", "require_file")),
+                (sign_bootloader_pack, ("sign_stage2",)),
         ):
             for name in names:
                 with self.subTest(module=module.__name__, name=name):

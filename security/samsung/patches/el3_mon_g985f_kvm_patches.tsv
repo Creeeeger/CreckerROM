@@ -1,0 +1,49 @@
+# Ghidra EL3 monitor patch file v1
+# source_program=el3_mon.img
+# baseline=G986BXXSNHYB1 decrypted EL3 monitor
+# target_hint=EL3_MON_G985F_FROM_G986B_KVM
+# format: profile|offset|old_hex|new_hex|function|instruction
+# Rows marked kvm are selected only by the --kvm profile.
+kvm|0x00001E2C|21004039|21044039|setup_el2_state|ldrb w1,[x1,#0x1]
+kvm|0x00001E4C|810000F0|23A68052|setup_el2_state|mov w3,#0x531
+kvm|0x00001E50|220080D2|6300132A|setup_el2_state|orr w3,w3,w19
+kvm|0x00001E54|23A68052|01009ED2|setup_el2_state|mov x1,#0xf000
+kvm|0x00001E58|6300132A|E1FFB7F2|setup_el2_state|movk x1,#0xbfff,LSL #16
+kvm|0x00001E5C|214444F9|22798052|setup_el2_state|mov w2,#0x3c9
+kvm|0x00001E60|025000F9|040681D2|setup_el2_state|mov x4,#0x830
+kvm|0x00001E64|02009ED2|A418A6F2|setup_el2_state|movk x4,#0x30c5,LSL #16
+kvm|0x00001E68|E2FFB7F2|04101CD5|setup_el2_state|msr sctlr_el2,x4
+kvm|0x00001E6C|025400F9|1F111CD5|setup_el2_state|msr hcr_el2,xzr
+kvm|0x00001E70|210040F9|1F211CD5|setup_el2_state|msr vttbr_el2,xzr
+kvm|0x00001E74|A25880D2|7FE01CD5|setup_el2_state|msr cntvoff_el2,xzr
+kvm|0x00001E78|025800F9|1F2003D5|setup_el2_state|nop
+kvm|0x00001E7C|22598052|1F2003D5|setup_el2_state|nop
+kvm|0x00009214|FD7BBDA9|E90300AA|boot_android_into_EL2|mov x9,x0
+kvm|0x00009218|FD030091|EA0301AA|boot_android_into_EL2|mov x10,x1
+kvm|0x0000921C|F35301A9|6A0200F9|boot_android_into_EL2|str x10,[x19]
+kvm|0x00009220|F51300F9|7F0600F9|boot_android_into_EL2|str xzr,[x19,#0x8]
+kvm|0x00009224|F30300AA|7F0A00F9|boot_android_into_EL2|str xzr,[x19,#0x10]
+kvm|0x00009228|F50301AA|7F0E00F9|boot_android_into_EL2|str xzr,[x19,#0x18]
+kvm|0x0000922C|D41F0094|6B8240F9|boot_android_into_EL2|ldr x11,[x19,#0x100]
+kvm|0x00009230|F403002A|2CA080D2|boot_android_into_EL2|mov x12,#0x501
+kvm|0x00009234|400000F0|6B010CAA|boot_android_into_EL2|orr x11,x11,x12
+kvm|0x00009238|005C44F9|6B8200F9|boot_android_into_EL2|str x11,[x19,#0x100]
+kvm|0x0000923C|00004039|2B7980D2|boot_android_into_EL2|mov x11,#0x3c9
+kvm|0x00009240|00060035|6B8A00F9|boot_android_into_EL2|str x11,[x19,#0x110]
+kvm|0x00009244|E00313AA|698E00F9|boot_android_into_EL2|str x9,[x19,#0x118]
+kvm|0x00009248|E10315AA|0B0681D2|boot_android_into_EL2|mov x11,#0x830
+kvm|0x0000924C|B3EFFF97|AB18A6F2|boot_android_into_EL2|movk x11,#0x30c5,LSL #16
+kvm|0x00009250|80010035|0B101CD5|boot_android_into_EL2|msr sctlr_el2,x11
+kvm|0x00009254|410000B0|1F111CD5|boot_android_into_EL2|msr hcr_el2,xzr
+kvm|0x00009258|60420091|1F211CD5|boot_android_into_EL2|msr vttbr_el2,xzr
+kvm|0x0000925C|21783491|7FE01CD5|boot_android_into_EL2|msr cntvoff_el2,xzr
+kvm|0x00009260|A20180D2|4B0000F0|boot_android_into_EL2|adrp x11,0xbfe94000
+kvm|0x00009264|A5130094|6B5D44F9|boot_android_into_EL2|ldr x11,[x11,#0x8b8]
+kvm|0x00009268|00050035|2C008052|boot_android_into_EL2|mov w12,#0x1
+kvm|0x0000926C|E00313AA|6C050039|boot_android_into_EL2|strb w12,[x11,#0x1]
+kvm|0x00009270|E10315AA|2B7A0BD5|boot_android_into_EL2|dc cvac,x11
+kvm|0x00009274|02008052|E0030AAA|boot_android_into_EL2|mov x0,x10
+kvm|0x00009278|79E7FF97|C0035FD6|boot_android_into_EL2|ret
+kvm|0x0000927C|60000034|1F2003D5|boot_android_into_EL2|nop
+kvm|0x00009280|E003002A|1F2003D5|boot_android_into_EL2|nop
+kvm|0x00009284|23000014|1F2003D5|boot_android_into_EL2|nop
