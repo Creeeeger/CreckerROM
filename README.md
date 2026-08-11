@@ -246,9 +246,14 @@ The Heimdall folder is written to
 `out/rollback_SM-G985F_AUT_y2s-heimdall`. It includes the re-signed images,
 `flash_all.sh`, and `sha256sums.txt`.
 
-LK rows marked `rollback` are activated only by this build path. Normal AVB,
-kernel-only, and KVM builds leave them disabled; the internal signing CLI uses
-`--rollback-mode` when the rollback workflow invokes it.
+Re-signing updates the required Samsung and AVB rollback metadata, but it does
+not make very old secure-world components compatible with the newer boot
+chain. If every signature and RP check passes but the firmware still does not
+boot, use a newer donor firmware from the desired Android generation. In one
+tested G985F case, the first Android 10/revision-1 firmware initialized H-Arx
+but H-Arx rejected `uh.bin` with return `0x51002` and continued without the UH
+plug-in. The last Android 10/revision-5 firmware registered the UH plug-in and
+booted successfully with the same revision-23 `sboot.bin` chain.
 
 # Bugs
 
