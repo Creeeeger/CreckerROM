@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">استيراد خصائص PIF من مِلَف مخصص</string>
+    <string name="unica_pif_summary">تزييف جهازك لتجاوز مصادقة Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">جارٍ التحقق من التحديثات…</string>
+    <string name="unica_pif_toast_custom">تم تحميل مِلَفّ الخصائص.</string>
+    <string name="unica_pif_toast_error">حدث خطأ ما.</string>
+    <string name="unica_pif_toast_error_custom">المِلَف غير صالح.</string>
+    <string name="unica_pif_toast_up_to_date">"أنت تستخدم أحدث إصدار."</string>
+    <string name="unica_pif_toast_updated">تم التحديث بنجاح.</string>
+    <string name="unica_pif_update_title">تحديث إضافة Play Integrity Fix</string>
+</resources>
+

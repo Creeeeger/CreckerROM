@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Fayldan xüsusi PIF xassələrini idxal et</string>
+    <string name="unica_pif_summary">Cihazını Google Play attestiyasından keçmək üçün saxtalaşdır.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Yeniləmələr yoxlanılır…</string>
+    <string name="unica_pif_toast_custom">Xüsusi konfiqurasiya yükləndi.</string>
+    <string name="unica_pif_toast_error">Xəta baş verdi.</string>
+    <string name="unica_pif_toast_error_custom">Etibarsız fayl.</string>
+    <string name="unica_pif_toast_up_to_date">"Ən son versiyanı işlədirsiniz."</string>
+    <string name="unica_pif_toast_updated">Yeniləmə uğurla tamamlandı.</string>
+    <string name="unica_pif_update_title">Play Integrity Fix’i yenilə</string>
+</resources>
+

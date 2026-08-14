@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Egyedi PIF props importálása fájlból</string>
+    <string name="unica_pif_summary">Az eszköz hamisítása a Google Play hitelesítés eléréséhez.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Frissítések keresése…</string>
+    <string name="unica_pif_toast_custom">Egyéni props betöltve.</string>
+    <string name="unica_pif_toast_error">Hiba történt.</string>
+    <string name="unica_pif_toast_error_custom">Érvénytelen fájl.</string>
+    <string name="unica_pif_toast_up_to_date">"Ön a legfrissebb verziót futtatja."</string>
+    <string name="unica_pif_toast_updated">A frissítés sikeresen befejeződött.</string>
+    <string name="unica_pif_update_title">Play Integrity Fix frissítése</string>
+</resources>
+

@@ -1,0 +1,5 @@
+id=pif
+name=Play Integrity Fix
+author=salvogiangri
+description=Framework-level Play Integrity hooks with in-ROM property updates.
+

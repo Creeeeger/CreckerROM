@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Імпартаваць прыстасаваныя ўласцівасці PIF з файла</string>
+    <string name="unica_pif_summary">Падмяніць ваша прылада для праходжання атэстацыі Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Праверка абнаўленняў…</string>
+    <string name="unica_pif_toast_custom">Прыстасаваныя ўласцівасці загружаны.</string>
+    <string name="unica_pif_toast_error">Адбылася памылка.</string>
+    <string name="unica_pif_toast_error_custom">Недапушчальны файл.</string>
+    <string name="unica_pif_toast_up_to_date">"Вы карыстаецеся апошнюю версію."</string>
+    <string name="unica_pif_toast_updated">Абнаўленне паспяхова завершана.</string>
+    <string name="unica_pif_update_title">Абнавіць Play Integrity Fix</string>
+</resources>
+

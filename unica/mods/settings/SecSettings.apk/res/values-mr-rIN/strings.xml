@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">फाइलमधून सानुकूल PIF गुणधर्म आयात करा</string>
+    <string name="unica_pif_summary">Google Play प्रमाणीकरण उत्तीर्ण होण्यासाठी तुमच्या डिव्हाइसची माहिती बदलून दाखवा.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">अपडेट तपासत आहे…</string>
+    <string name="unica_pif_toast_custom">सानुकूल गुणधर्म लोड झाले.</string>
+    <string name="unica_pif_toast_error">एक त्रुटी आली.</string>
+    <string name="unica_pif_toast_error_custom">अवैध फाइल.</string>
+    <string name="unica_pif_toast_up_to_date">तुम्ही नवीनतम आवृत्ती वापरत आहात.</string>
+    <string name="unica_pif_toast_updated">अपडेट यशस्वीरीत्या पूर्ण झाले.</string>
+    <string name="unica_pif_update_title">Play Integrity Fix अपडेट करा</string>
+</resources>
+

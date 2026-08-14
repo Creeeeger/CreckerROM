@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Імпортувати власні властивості PIF із файлу</string>
+    <string name="unica_pif_summary">Підробити ваш пристрій, щоб пройти сертифікацію Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Пошук оновлень…</string>
+    <string name="unica_pif_toast_custom">Власні властивості завантажено.</string>
+    <string name="unica_pif_toast_error">Сталася помилка.</string>
+    <string name="unica_pif_toast_error_custom">Недійсний файл.</string>
+    <string name="unica_pif_toast_up_to_date">"Ви використовуєте останню версію."</string>
+    <string name="unica_pif_toast_updated">Оновлення успішно завершено.</string>
+    <string name="unica_pif_update_title">Оновити Play Integrity Fix</string>
+</resources>
+

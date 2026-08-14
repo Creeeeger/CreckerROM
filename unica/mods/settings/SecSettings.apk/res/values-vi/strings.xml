@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Nhập thông tin PIF tùy chỉnh từ tệp</string>
+    <string name="unica_pif_summary">Giả mạo thiết bị để vượt qua chứng thực Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Đang kiểm tra cập nhật…</string>
+    <string name="unica_pif_toast_custom">Đã tải thông tin tùy chỉnh.</string>
+    <string name="unica_pif_toast_error">Đã xảy ra lỗi.</string>
+    <string name="unica_pif_toast_error_custom">Tệp không hợp lệ.</string>
+    <string name="unica_pif_toast_up_to_date">"Bạn đang sử dụng phiên bản mới nhất."</string>
+    <string name="unica_pif_toast_updated">Cập nhật thành công.</string>
+    <string name="unica_pif_update_title">Cập nhật Play Integrity Fix</string>
+</resources>
+

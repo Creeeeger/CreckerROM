@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Importa configurazione PIF da file</string>
+    <string name="unica_pif_summary">Consente di passare i controlli di attestazione di Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Controllo aggiornamenti…</string>
+    <string name="unica_pif_toast_custom">Configurazione caricata.</string>
+    <string name="unica_pif_toast_error">Si è verificato un errore.</string>
+    <string name="unica_pif_toast_error_custom">File non valido.</string>
+    <string name="unica_pif_toast_up_to_date">"Hai già l'ultima versione."</string>
+    <string name="unica_pif_toast_updated">Aggiornamento completato.</string>
+    <string name="unica_pif_update_title">Aggiorna Play Integrity Fix</string>
+</resources>
+

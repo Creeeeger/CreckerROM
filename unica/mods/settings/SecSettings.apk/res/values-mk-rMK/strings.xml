@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Увези прилагодени PIF својства од датотека</string>
+    <string name="unica_pif_summary">Лажирај го твојот уред за да го помине атестот на Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Проверка за ажурирања…</string>
+    <string name="unica_pif_toast_custom">Прилагодените својства се вчитани.</string>
+    <string name="unica_pif_toast_error">Настана грешка.</string>
+    <string name="unica_pif_toast_error_custom">Невалидна датотека.</string>
+    <string name="unica_pif_toast_up_to_date">"Ја користиш најновата верзија."</string>
+    <string name="unica_pif_toast_updated">Ажурирањето е успешно завршено.</string>
+    <string name="unica_pif_update_title">Ажурирај ја Поправката на интегритетот на Play</string>
+</resources>
+

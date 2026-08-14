@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">PIF parametrelerini dosyadan içe aktar</string>
+    <string name="unica_pif_summary">"Google Play kontrollerini geçmek için cihazınızı spoof'layın."</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Güncellemeler kontrol ediliyor…</string>
+    <string name="unica_pif_toast_custom">Özel konfigürasyon yüklendi.</string>
+    <string name="unica_pif_toast_error">Bir hata oluştu.</string>
+    <string name="unica_pif_toast_error_custom">Geçersiz dosya.</string>
+    <string name="unica_pif_toast_up_to_date">"Son sürüme sahipsiniz."</string>
+    <string name="unica_pif_toast_updated">Güncelleme başarıyla tamamlandı.</string>
+    <string name="unica_pif_update_title">"Play Integrity Fix'i güncelle"</string>
+</resources>
+

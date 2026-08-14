@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Εισαγωγή προσαρμοσμένων PIF props από αρχείο</string>
+    <string name="unica_pif_summary">Πλαστογράφηση της συσκευής για επιτυχή έλεγχο Google Play Integrity.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Έλεγχος για ενημερώσεις…</string>
+    <string name="unica_pif_toast_custom">Τα προσαρμοσμένα props φορτώθηκαν.</string>
+    <string name="unica_pif_toast_error">Παρουσιάστηκε σφάλμα.</string>
+    <string name="unica_pif_toast_error_custom">Μη έγκυρο αρχείο.</string>
+    <string name="unica_pif_toast_up_to_date">"Εκτελείτε την πιο πρόσφατη έκδοση."</string>
+    <string name="unica_pif_toast_updated">Η ενημέρωση ολοκληρώθηκε με επιτυχία.</string>
+    <string name="unica_pif_update_title">Ενημέρωση Play Integrity Fix</string>
+</resources>
+

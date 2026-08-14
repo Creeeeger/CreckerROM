@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Увези прилагођене PIF реквизите из датотеке</string>
+    <string name="unica_pif_summary">Лажно преуредите свој уређај да бисте прошли Google Play блокирање.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Провера ажурирања…</string>
+    <string name="unica_pif_toast_custom">Прилагођени реквизити су учитани.</string>
+    <string name="unica_pif_toast_error">Дошло је до грешке.</string>
+    <string name="unica_pif_toast_error_custom">Неважећа датотека.</string>
+    <string name="unica_pif_toast_up_to_date">"Користите најновију верзију."</string>
+    <string name="unica_pif_toast_updated">Ажурирање је успешно завршено.</string>
+    <string name="unica_pif_update_title">Ажурирај Play Integrity Fix</string>
+</resources>
+

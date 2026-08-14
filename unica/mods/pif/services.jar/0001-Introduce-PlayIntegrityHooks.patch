@@ -1,0 +1,56 @@
+From 7cf693c9e91909663c730e89273661e9d34187bd Mon Sep 17 00:00:00 2001
+From: Salvo Giangreco <giangrecosalvo9@gmail.com>
+Date: Thu, 2 Oct 2025 20:48:54 +0200
+Subject: [PATCH] Introduce PlayIntegrityHooks
+
+Adapted for the One UI 7 ActivityTaskManagerService layout used by ExtremeROM.
+---
+ .../wm/ActivityTaskManagerService.smali       | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/smali_classes2/com/android/server/wm/ActivityTaskManagerService.smali b/smali_classes2/com/android/server/wm/ActivityTaskManagerService.smali
+--- a/smali_classes2/com/android/server/wm/ActivityTaskManagerService.smali
++++ b/smali_classes2/com/android/server/wm/ActivityTaskManagerService.smali
+@@ -6768,10 +6768,19 @@
+ .method public final getFocusedRootTaskInfo()Landroid/app/ActivityTaskManager$RootTaskInfo;
+     .locals 5
+ 
++    iget-object v0, p0, Lcom/android/server/wm/ActivityTaskManagerService;->mContext:Landroid/content/Context;
++
++    invoke-static {v0}, Lio/mesalabs/unica/PlayIntegrityHooks;->shouldBypassTaskPermission(Landroid/content/Context;)Z
++
++    move-result v0
++
++    if-nez v0, :unica_pif_focused_task_permission_done
++
+     const-string v0, "getFocusedRootTaskInfo()"
+ 
+     invoke-static {v0}, Lcom/android/server/wm/ActivityTaskManagerService;->enforceTaskPermission(Ljava/lang/String;)V
+ 
++    :unica_pif_focused_task_permission_done
+     invoke-static {}, Landroid/os/Binder;->clearCallingIdentity()J
+ 
+     move-result-wide v0
+@@ -12871,10 +12880,19 @@
+ .method public final registerTaskStackListener(Landroid/app/ITaskStackListener;)V
+     .locals 2
+ 
++    iget-object v0, p0, Lcom/android/server/wm/ActivityTaskManagerService;->mContext:Landroid/content/Context;
++
++    invoke-static {v0}, Lio/mesalabs/unica/PlayIntegrityHooks;->shouldBypassTaskPermission(Landroid/content/Context;)Z
++
++    move-result v0
++
++    if-nez v0, :unica_pif_task_listener_permission_done
++
+     const-string/jumbo v0, "registerTaskStackListener()"
+ 
+     invoke-static {v0}, Lcom/android/server/wm/ActivityTaskManagerService;->enforceTaskPermission(Ljava/lang/String;)V
+ 
++    :unica_pif_task_listener_permission_done
+     iget-object p0, p0, Lcom/android/server/wm/ActivityTaskManagerService;->mTaskChangeNotificationController:Lcom/android/server/wm/TaskChangeNotificationController;
+ 
+     invoke-virtual {p0}, Ljava/lang/Object;->getClass()Ljava/lang/Class;
+-- 
+2.51.0
+

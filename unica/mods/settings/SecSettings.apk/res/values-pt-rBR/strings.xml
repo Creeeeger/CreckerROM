@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Importar props PIF customizados de um arquivo</string>
+    <string name="unica_pif_summary">Mascarar dispositivo para burlar certificação do Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Verificando atualizações…</string>
+    <string name="unica_pif_toast_custom">Propriedades customizadas carregadas.</string>
+    <string name="unica_pif_toast_error">Ocorreu um erro.</string>
+    <string name="unica_pif_toast_error_custom">Arquivo inválido.</string>
+    <string name="unica_pif_toast_up_to_date">"Você já está usando a versão mais atual."</string>
+    <string name="unica_pif_toast_updated">Atualização concluída.</string>
+    <string name="unica_pif_update_title">Atualizar Play Integrity Fix</string>
+</resources>
+

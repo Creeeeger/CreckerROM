@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keywords_unica_pif_settings">Play Integrity Fix, PIF, attestation, spoof</string>
+    <string name="menu_key_unica_pif_settings">top_level_unica_pif</string>
+    <string name="unica_pif_custom_title">Import custom PIF props from file</string>
+    <string name="unica_pif_summary">Spoof your device to pass Google Play attestation.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Checking for updates…</string>
+    <string name="unica_pif_toast_custom">Custom props loaded.</string>
+    <string name="unica_pif_toast_error">An error occurred.</string>
+    <string name="unica_pif_toast_error_custom">Invalid file.</string>
+    <string name="unica_pif_toast_up_to_date">You’re running the latest version.</string>
+    <string name="unica_pif_toast_updated">Update completed successfully.</string>
+    <string name="unica_pif_update_title">Update Play Integrity Fix</string>
+</resources>
+

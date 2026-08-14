@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">从文件导入自定义PIF props</string>
+    <string name="unica_pif_summary">伪造您的设备以通过 Google Play 认证。</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">检查更新…</string>
+    <string name="unica_pif_toast_custom">自定义props已加载。</string>
+    <string name="unica_pif_toast_error">发生错误。</string>
+    <string name="unica_pif_toast_error_custom">无效的文件。</string>
+    <string name="unica_pif_toast_up_to_date">"你正在使用最新版本。"</string>
+    <string name="unica_pif_toast_updated">更新成功。</string>
+    <string name="unica_pif_update_title">更新Play Integrity Fix</string>
+</resources>
+

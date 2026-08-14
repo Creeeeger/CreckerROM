@@ -4,8 +4,9 @@
 > and will erase all user data, so make a backup first.
 
 > [!IMPORTANT]
-> **Google Wallet:** Install [Play Integrity Fork v17](https://github.com/osm0sis/PlayIntegrityFork/releases/tag/v17)
-> to restore Google Wallet functionality.
+> **Google Wallet:** Play Integrity Fix is integrated and enabled by default. After flashing, use
+> **Settings → Play Integrity Fix → Update Play Integrity Fix** to refresh the bundled spoofing profile;
+> an external Play Integrity module is not required.
 
 <h1 align="center">
   <img loading="lazy" src="readme-res/banner.png"/>

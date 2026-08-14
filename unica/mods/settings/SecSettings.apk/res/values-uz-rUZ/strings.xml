@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Fayldan maxsus PIF rekvizitlarini import qilish</string>
+    <string name="unica_pif_summary">"Google Play attestatsiyasidan o'tish uchun qurilmani yashirish."</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Yangilanishlar tekshirilmoqda…</string>
+    <string name="unica_pif_toast_custom">Maxsus rekvizitlar joylandi.</string>
+    <string name="unica_pif_toast_error">Xatolik yuz berdi.</string>
+    <string name="unica_pif_toast_error_custom">"Noto'g'ri fayl."</string>
+    <string name="unica_pif_toast_up_to_date">"Siz eng yangi versiyani ishlatayapsiz."</string>
+    <string name="unica_pif_toast_updated">Yangilanish muvafaqqiyatli yakunlandi.</string>
+    <string name="unica_pif_update_title">Play Integrity Fix yangilash</string>
+</resources>
+

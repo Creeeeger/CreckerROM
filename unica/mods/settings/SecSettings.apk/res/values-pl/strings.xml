@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="unica_pif_custom_title">Importuj własną konfigurację PIF z pliku</string>
+    <string name="unica_pif_summary">Spoofuj urządzenie, aby przechodziło atest Google Play.</string>
+    <string name="unica_pif_title">Play Integrity Fix</string>
+    <string name="unica_pif_toast_checking">Sprawdzanie aktualizacji…</string>
+    <string name="unica_pif_toast_custom">Załadowano własną konfigurację.</string>
+    <string name="unica_pif_toast_error">Wystąpił błąd.</string>
+    <string name="unica_pif_toast_error_custom">Nieprawidłowy plik.</string>
+    <string name="unica_pif_toast_up_to_date">"Korzystasz z najnowszej wersji."</string>
+    <string name="unica_pif_toast_updated">Aktualizacja zakończona pomyślnie.</string>
+    <string name="unica_pif_update_title">Zaktualizuj Play Integrity Fix</string>
+</resources>
+
