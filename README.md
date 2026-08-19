@@ -1,41 +1,12 @@
 > [!CAUTION]
-> Before booting ExtremeROM, **lock the bootloader** and wipe the `data`,
+> Before booting CreckerROM, **lock the bootloader** and wipe the `data`,
 > `keystorage`, `keyrefuge`, and `metadata` partitions. These steps are mandatory
 > and will erase all user data, so make a backup first.
 
 > [!IMPORTANT]
-> **Google Wallet:** Play Integrity Fix is integrated and enabled by default. After flashing, use
+> **Play Integrity Fix** is integrated and enabled by default. After flashing, use
 > **Settings → Play Integrity Fix → Update Play Integrity Fix** to refresh the bundled spoofing profile;
 > an external Play Integrity module is not required.
-
-<h1 align="center">
-  <img loading="lazy" src="readme-res/banner.png"/>
-</h1>
-<p align="center">
-  <a href="https://github.com/ExtremeXT/ExtremeROM/blob/fifteen/LICENSE"><img loading="lazy" src="https://img.shields.io/github/license/ExtremeXT/ExtremeROM?style=for-the-badge&logo=github"/></a>
-  <a href="https://github.com/ExtremeXT/ExtremeROM/commits/fifteen"><img loading="lazy" src="https://img.shields.io/github/last-commit/ExtremeXT/ExtremeROM/fifteen?style=for-the-badge"/></a>
-  <a href="https://github.com/ExtremeXT/ExtremeROM/stargazers"><img loading="lazy" src="https://img.shields.io/github/stars/ExtremeXT/ExtremeROM?style=for-the-badge"/></a>
-  <a href="https://github.com/ExtremeXT/ExtremeROM/graphs/contributors"><img loading="lazy" src="https://img.shields.io/github/contributors/ExtremeXT/ExtremeROM?style=for-the-badge"/></a>
-</p>
-<p align="center">ExtremeROM Nexus is a work-in-progress custom firmware for Samsung Galaxy devices.</p>
-
-<p align="center">
-  <a href="https://t.me/extremerom">💬 Telegram</a>
-  <a href="https://github.com/ExtremeXT/ExtremeROM/wiki">📖 Wiki</a>
-  <a href="https://github.com/ExtremeXT/ExtremeROM/blob/fifteen/CHANGELOG.md">📝 Changelog</a>
-  <a href="https://github.com/ExtremeXT/ExtremeROM/blob/fifteen/MAINTAINERS">🧑‍💻 Maintainers</a>
-</p>
-
-# What is ExtremeROM Nexus?
-
-ExtremeROM Nexus is a work-in-progress custom firmware for Samsung Galaxy devices. It's based on the latest and greatest
-iteration of Samsung's UX and it also includes additional features and tweaks to ensure the best possible experience out
-of the box.
-It is based on the UN1CA build system which allows automatic downloading/extraction of the firmware, applying the
-required patches and generating Odin and Heimdall flash packages for the specified target device.
-ExtremeROM Nexus supports devices using the Exynos 990, Exynos 2100 and Exynos 2200 SoCs
-
-Any form of contribution, suggestions, bug report or feature request for the project will be welcome.
 
 # Features
 
@@ -43,7 +14,6 @@ Any form of contribution, suggestions, bug report or feature request for the pro
 - All software features from S24 FE
 - S25 Ultra CSC, ringtones and more
 - Moderately Debloated
-- Heavily DeKnoxed
 - Full SELinux Support
 - Full Galaxy AI support
 - Completely upstreamed kernels for all officially supported devices
@@ -61,11 +31,42 @@ Any form of contribution, suggestions, bug report or feature request for the pro
 - Native/live blur support
 - Debloated from useless system services/additional apps
 - [BluetoothLibraryPatcher](https://github.com/3arthur6/BluetoothLibraryPatcher) included
-- [KnoxPatch](https://github.com/salvogiangri/KnoxPatch) implemented in system frameworks
 - Extra mods (Disable Secure Flag, OutDoor mode, more coming soon)
 - Extra CSC features (Call recording, Network speed in status bar, 5GHz Hotspot)
 - Countless other small optimizations
-- More that I can't remember right now and will have to be added in the future
+
+## CreckerROM-exclusive features and fixes
+
+- Full custom AVB and Samsung signing for Exynos990, covering AP images, `vbmeta_samsung`, sparse `super`, the boot
+  chain and rebuilt platform applications so locked-bootloader builds use one consistent signing identity
+- Exact physical-model boot-chain support for every supported Exynos990 S20, S20 FE and Note20 variant, including
+  correct BL1 metadata, rollback/RP revisions, LTE/5G runtime aliases and signed PIT handling
+- Encrypted Exynos990 boot support with selectable encrypted or unencrypted builds
+- Correct Exynos990 HIDL DRK path, restoring proper IMEI and device-identity reporting
+- Working Samsung Cloud E2EE, Pass, Pay, Wallet, other Samsung services, Knox Guard and literally everything else broken
+  before
+- Crecker Kernel integration with preloaded KernelSU Next 3.2.0
+- 100x photo and video zoom on supported Exynos990 devices
+- S24 ICCC vendor stack with repaired fabric-crypto and FKeyM secure-world integration
+- Preserved PROCA, Secure ADB, the OEM unlock toggle, target-aware StrongBox handling and the stock Knox services needed
+  by Wallet-related components
+- Built-in Play Integrity Fix with profile updates directly from Settings; no external PIF module is required
+  (integrated with thanks to [salvogiangri](https://github.com/salvogiangri))
+- Three debloat levels while preserving the applications and services required for messaging, Samsung accounts, firmware
+  updates, Motion Photos, SIM unlocking and storage sharing
+- S26 Ultra wallpaper resources integrated into the ROM
+- Exact-model KVM/EL2 profiles and mode-specific Crecker Kernel builds for every supported Exynos990 model
+- Model-labelled Odin and Heimdall output, plus signed rollback-firmware and kernel-only testing workflows
+
+# Known bugs
+
+- Samsung Log video recording at 4K 60 FPS and 8K 24 FPS is broken
+- The camera feed flickers at high zoom levels (>40x) while recording video
+- Live/Motion Photos can be captured, but their animated portion cannot be viewed in Samsung Gallery
+- Passkey creation in Samsung Pass is broken because the FKeyMaster trusted application has not been ported yet; other
+  passkey providers continue to work
+- Factory reset from Android Settings does not work. Boot into TWRP through KernelSU or the hardware key combination and
+  wipe the device from recovery instead
 
 # Building
 
@@ -80,20 +81,19 @@ m
 
 The locked-bootloader Exynos990 flow uses the
 [CVE-2024-56426 repository](https://github.com/Creeeeger/CVE-2024-56426)
-for the initial EUB and temporary signed boot-chain startup. Start its local
-control center before flashing a CreckerROM build:
+for the initial EUB and temporary signed boot-chain startup. Start its local control center before flashing a CreckerROM
+build:
 
 ```sh
 python3 exynos990_control_center.py
 ```
 
-Select the exact physical model and the intended fuse profile. If the phone is
-not already in EUB, run **Flash Tampered Loader / Enter EUB**, then run the
-temporary signed-chain step. The CVE control center establishes the bootloader
-path; it does not replace flashing CreckerROM's complete generated package.
+Select the exact physical model and the intended fuse profile. If the phone is not already in EUB, run **Flash Tampered
+Loader / Enter EUB**, then run the temporary signed-chain step. The CVE control center establishes the bootloader path;
+it does not replace flashing CreckerROM's complete generated package.
 
-For a full-featured Samsung build, start CreckerROM from its repository root
-with `--no-debloat` in the build-environment command. For example, the S20+
+For a full-featured Samsung build, start CreckerROM from its repository root with `--no-debloat` in the
+build-environment command. For example, the S20+
 `G985F` command is:
 
 ```sh
@@ -102,35 +102,25 @@ m
 ```
 
 Replace both the AVB model and target codename for the physical device.
-`--no-debloat` is required when the goal is to retain the complete available
-Samsung feature set: the normal and ultra debloat profiles remove Samsung apps
-or services on which some features depend. The small essential compatibility
-list is still applied.
-
-The default build writes Odin `AP_` and `CSC_` `.tar.md5` packages to `out/`,
-and also creates an `<build-name>-heimdall` folder. AVB-enabled Exynos990
-builds additionally produce a `BL_` package containing the re-signed bootloader
-components.
+`--no-debloat` is required when the goal is to retain the complete available Samsung feature set: the normal and ultra
+debloat profiles remove Samsung apps or services on which some features depend. The small essential compatibility list
+is still applied.
 
 ### Exynos 990 KVM mode
 
-Every supported Galaxy S20, S20 FE, and Note20 Exynos 990 target has an
-opt-in, exact-model EL2 boot profile for KVM. Add `--kvm` with the physical
-phone's exact AVB model:
+Every supported Galaxy S20, S20 FE, and Note20 Exynos 990 target has an opt-in, exact-model EL2 boot profile for KVM.
+Add `--kvm` with the physical phone's exact AVB model:
 
 ```sh
 source ./buildenv.sh --kvm --avb-model G985F y2s
 m
 ```
 
-`--kvm` implies `--avb` and enables only the conditional LK H-Arx-removal,
-LK-to-EL3 SMC, and EL3-to-EL2 patch rows. The kernel checkout fetches every
-remote branch and selects the first branch, sorted by ref name, whose name
-contains `kvm` case-insensitively. A non-KVM build selects the stable
-`OneUI7_8_stable` branch. KVM and rollback builds are mutually exclusive. Pair
-the resulting boot chain and kernel with
-[WindowsInQemu](https://github.com/Creeeeger/WindowsInQemu) to run Windows in
-QEMU on the phone.
+`--kvm` implies `--avb` and enables only the conditional LK H-Arx-removal, LK-to-EL3 SMC, and EL3-to-EL2 patch rows. The
+kernel checkout fetches every remote branch and selects the first branch, sorted by ref name, whose name contains `kvm`
+case-insensitively. A non-KVM build selects the stable
+`OneUI7_8_stable` branch. KVM and rollback builds are mutually exclusive. Pair the resulting boot chain and kernel with
+[WindowsInQemu](https://github.com/Creeeeger/WindowsInQemu) to run Windows in QEMU on the phone.
 
 ## Build-environment flags
 
@@ -149,14 +139,13 @@ QEMU on the phone.
 | `--avb`                            | Enables full custom AVB image signing, vbmeta generation, and the platform's bootloader-signing flow.                                                                                                      | Complete AVB builds intended for flashing.                                                                                         |
 | `--avb-low-security`               | Enables AVB but skips partition-image footer signing and omits partition descriptors from vbmeta. It implies `--avb`.                                                                                      | Development and recovery testing only; do not use it for a normal release.                                                         |
 | `--avb-model <model>`              | Selects the exact Exynos990 handset model and its BL1 signing metadata. `--avb-model=<model>` is also accepted.                                                                                            | Every AVB, low-security AVB, kernel-only, or rollback build for an Exynos990 target. Use the phone model, not the target codename. |
-| `--kvm`                            | Enables the exact-model LK and EL3 monitor EL2 boot patches, selects the first remote branch containing `kvm`, and implies `--avb`.                                                                         | Supported for every listed Exynos990 model; cannot be combined with `--rollback`.                                                |
+| `--kvm`                            | Enables the exact-model LK and EL3 monitor EL2 boot patches, selects the first remote branch containing `kvm`, and implies `--avb`.                                                                        | Supported for every listed Exynos990 model; cannot be combined with `--rollback`.                                                  |
 | `--rollback`                       | Re-signs an old Exynos990 Odin firmware and replaces its recovery without running the custom-ROM modification flow. It implies AVB and Heimdall-only mode.                                                 | Creating a bootable rollback firmware set. Must be paired with `--rollback-firmware` and `--avb-model`.                            |
 | `--rollback-firmware <name>`       | Selects an old downloaded firmware directory under `out/odin`, for example `SM-G985F_AUT`. `--rollback-firmware=<name>` is also accepted.                                                                  | Only with `--rollback`.                                                                                                            |
 | `-h`, `--help`                     | Prints option help and the available target codenames.                                                                                                                                                     | Checking syntax or finding the correct target.                                                                                     |
 
-The `m` command accepts `-f` or `--force`. A normal `m` invocation reuses the
-prepared work directory when its source and build-affecting options have not
-changed; `m --force` rebuilds that work directory before creating fresh flash
+The `m` command accepts `-f` or `--force`. A normal `m` invocation reuses the prepared work directory when its source
+and build-affecting options have not changed; `m --force` rebuilds that work directory before creating fresh flash
 packages.
 
 ## Common examples
@@ -198,10 +187,8 @@ When Samsung bootchain signing is enabled on Exynos990 targets:
   `security/samsung/patches/tzar_root_task_selected_patches.tsv`;
 - `tzar.img` is unpacked, the selected member is patched from the TSV, and
   `tzar.img` is repacked and Stage-2 signed again;
-- when `tzar.img` changes, encrypted `tzsw.img` is decrypted, userboot's
-  embedded `startup.tzar` object hash table is patched, `tzsw.img` is
-  re-encrypted with a refreshed `BiEn` digest, and `tzsw.img` is Stage-2 signed
-  again. Set
+- when `tzar.img` changes, encrypted `tzsw.img` is decrypted, userboot's embedded `startup.tzar` object hash table is
+  patched, `tzsw.img` is re-encrypted with a refreshed `BiEn` digest, and `tzsw.img` is Stage-2 signed again. Set
   `TARGET_SAMSUNG_DECRYPTED_TZSW_PATH` only when you want to override the stock
   `tzsw.img` source used for that step.
 
@@ -214,9 +201,8 @@ AVB-enabled Exynos990 builds require the exact phone model so the regenerated
 source ./buildenv.sh --avb --avb-model G981B x1s
 ```
 
-The supported values and metadata extracted from stock firmware are shown
-below. Rollback revisions are decimal values and are applied to both AVB and
-Samsung signatures.
+The supported values and metadata extracted from stock firmware are shown below. Rollback revisions are decimal values
+and are applied to both AVB and Samsung signatures.
 
 | Model flag | Runtime artifact | Runtime firmware | Model ID | EVT  | Rollback |
 |------------|------------------|------------------|----------|------|----------|
@@ -233,11 +219,9 @@ Samsung signatures.
 
 # Exynos990 rollback firmware builds
 
-Rollback mode re-signs an old downloaded Odin firmware without running the
-normal custom-ROM extraction, module, or patch flow. It preserves opaque image
-contents, unpacks only the logical partitions in `super.img`, replaces stock
-recovery with the target TWRP image, and uses the configured target firmware as
-the source for the patched `sboot.bin`.
+Rollback mode re-signs an old downloaded Odin firmware without running the normal custom-ROM extraction, module, or
+patch flow. It preserves opaque image contents, unpacks only the logical partitions in `super.img`, replaces stock
+recovery with the target TWRP image, and uses the configured target firmware as the source for the patched `sboot.bin`.
 
 ```sh
 source ./buildenv.sh --rollback \
@@ -249,18 +233,12 @@ The Heimdall folder is written to
 `out/rollback_SM-G985F_AUT_y2s-heimdall`. It includes the re-signed images,
 `flash_all.sh`, and `sha256sums.txt`.
 
-Re-signing updates the required Samsung and AVB rollback metadata, but it does
-not make very old secure-world components compatible with the newer boot
-chain. If every signature and RP check passes but the firmware still does not
-boot, use a newer donor firmware from the desired Android generation. In one
-tested G985F case, the first Android 10/revision-1 firmware initialized H-Arx
-but H-Arx rejected `uh.bin` with return `0x51002` and continued without the UH
-plug-in. The last Android 10/revision-5 firmware registered the UH plug-in and
-booted successfully with the same revision-23 `sboot.bin` chain.
-
-# Bugs
-
-See the <a href="https://github.com/ExtremeXT/ExtremeROM/issues">⚠ Issues</a> tab
+Re-signing updates the required Samsung and AVB rollback metadata, but it does not make very old secure-world components
+compatible with the newer boot chain. If every signature and RP check passes but the firmware still does not boot, use a
+newer donor firmware from the desired Android generation. In one tested G985F case, the first Android 10/revision-1
+firmware initialized H-Arx but H-Arx rejected `uh.bin` with return `0x51002` and continued without the UH plug-in. The
+last Android 10/revision-5 firmware registered the UH plug-in and booted successfully with the same revision-23
+`sboot.bin` chain.
 
 # Licensing
 
@@ -271,8 +249,8 @@ be distributed under a different license, such as:
   the [Apache License 2.0](https://github.com/nmeum/android-tools/blob/master/LICENSE)
 - [apktool](https://github.com/iBotPeaches/Apktool), licensed under
   the [Apache License 2.0](https://github.com/iBotPeaches/Apktool/blob/master/LICENSE.md)
-- [erofs-utils](https://github.com/sekaiacg/erofs-utils/), dual
-  license ([GPL-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/GPL-2.0), [Apache-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/Apache-2.0))
+- [erofs-utils](https://github.com/sekaiacg/erofs-utils/), dual license
+  ([GPL-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/GPL-2.0), [Apache-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/Apache-2.0))
 - [img2sdat](https://github.com/xpirt/img2sdat), licensed under
   the [MIT License](https://github.com/xpirt/img2sdat/blob/master/LICENSE)
 - [platform_build](https://android.googlesource.com/platform/build/) (ext4_utils, f2fs_utils, signapk), licensed under
@@ -359,7 +337,3 @@ Original UN1CA credits:
 - 2100 Device Tree Code (Maintainer: @xfwdrev/@maximusXZ): https://github.com/xfwdrev/android_device_samsung_exynos2100
 - 2200 Kernel Source Code (Maintainer: @dupazlasu): https://github.com/ExtremeXT/android_kernel_samsung_s5e9925
 - 2200 Device Tree Code (Maintainer: @dupazlasu): https://github.com/dupazlasu/android_device_samsung_s5e9925
-
-# Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/ExtremeXT/ExtremeROM.svg)](https://starchart.cc/ExtremeXT/ExtremeROM)
