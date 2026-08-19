@@ -12,6 +12,7 @@ from stage2_common import (
     STAGE2_FOOTER_HEADER_SIZE,
     STAGE2_SIGNATURE_SIZE,
     read_u32,
+    signer_info_with_rollback,
     write_u32,
 )
 
@@ -172,6 +173,25 @@ def read_download_signer_info(path, layout):
         raise ValueError("Could not read the full SignerInfo block")
     if signer_info_version(signer_info) == 0:
         raise ValueError("SignerInfo block does not contain a SignerVer marker")
+    return signer_info
+
+
+def write_download_signer_info(path, layout, signer_info):
+    if len(signer_info) != SIGNER_INFO_SIZE:
+        raise ValueError("SignerInfo block must be 0x100 bytes")
+    if signer_info_version(signer_info) != 3:
+        raise ValueError("Only SignerVer03 sparse download signatures are implemented")
+    with Path(path).open("r+b") as f:
+        f.seek(layout.signer_info_offset)
+        f.write(signer_info)
+
+
+def update_download_signer_info_rollback(path, layout, rollback):
+    signer_info = signer_info_with_rollback(
+        read_download_signer_info(path, layout),
+        rollback,
+    )
+    write_download_signer_info(path, layout, signer_info)
     return signer_info
 
 

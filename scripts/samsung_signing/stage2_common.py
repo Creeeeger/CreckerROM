@@ -29,6 +29,17 @@ STAGE2_FOOTER_HEADER_SIZE = 0x10
 STAGE2_SIGNATURE_SIZE = 0x200
 STAGE2_FOOTER_SIZE = STAGE2_FOOTER_HEADER_SIZE + STAGE2_SIGNATURE_SIZE
 
+# SignerVer03 is a separate policy record immediately before many Samsung
+# signature footers (and in the reserved signer block of sparse images).  LK's
+# CheckSystemRP reads the three decimal digits at SignerInfo + 0x78 directly;
+# changing only the binary Stage-2/download footer rollback counter therefore
+# leaves an old firmware blocked even when its ECDSA signature is valid.
+SIGNER_INFO_SIZE = 0x100
+SIGNER_INFO_VERSION = b"SignerVer03"
+SIGNER_INFO_SYSTEM_RP = slice(0x70, 0x80)
+SIGNER_INFO_KERNEL_RP = slice(0x80, 0x90)
+SIGNER_INFO_RP_DIGITS_OFFSET = 8
+
 EPBL_HEADER_SIZE = 0x10
 EPBL_MAGIC_OFFSET = 0x08
 EPBL_MAGIC = 0x68656164
@@ -162,6 +173,69 @@ class SignTarget:
     total_size: int
     zero_epbl_checksum: bool = False
     update_epbl_checksum: bool = False
+
+
+def signer_info_rollback_values(signer_info):
+    """Return the system/kernel rollback values encoded by SignerVer03."""
+    if len(signer_info) != SIGNER_INFO_SIZE:
+        raise ValueError(
+            f"SignerInfo block must be 0x{SIGNER_INFO_SIZE:X} bytes, "
+            f"got 0x{len(signer_info):X}"
+        )
+    if not signer_info.startswith(SIGNER_INFO_VERSION):
+        raise ValueError("SignerInfo block is not SignerVer03")
+
+    values = []
+    for name, field in (
+        ("system", SIGNER_INFO_SYSTEM_RP),
+        ("kernel", SIGNER_INFO_KERNEL_RP),
+    ):
+        start = field.start + SIGNER_INFO_RP_DIGITS_OFFSET
+        digits = signer_info[start:start + 3]
+        if len(digits) != 3 or not digits.isdigit():
+            raise ValueError(
+                f"SignerVer03 {name} rollback field has no three-digit "
+                f"revision at +0x{start:X}"
+            )
+        values.append(int(digits))
+    return tuple(values)
+
+
+def signer_info_with_rollback(signer_info, rollback):
+    """Return SignerVer03 with both LK rollback-policy fields updated."""
+    if not 0 <= rollback <= 999:
+        raise ValueError("SignerInfo rollback revision must fit three decimal digits")
+    # Validate both existing fields before changing either one.  Refusing an
+    # unfamiliar record is safer than producing a correctly signed malformed
+    # metadata block.
+    signer_info_rollback_values(signer_info)
+
+    result = bytearray(signer_info)
+    digits = f"{rollback:03d}".encode("ascii")
+    for field in (SIGNER_INFO_SYSTEM_RP, SIGNER_INFO_KERNEL_RP):
+        start = field.start + SIGNER_INFO_RP_DIGITS_OFFSET
+        result[start:start + 3] = digits
+    return bytes(result)
+
+
+def adjacent_signer_info_offset(data, total_size):
+    """Locate SignerVer03 immediately before a Stage-2 signed extent."""
+    offset = total_size - STAGE2_FOOTER_SIZE - SIGNER_INFO_SIZE
+    if offset < 0 or offset + SIGNER_INFO_SIZE > len(data):
+        return None
+    if data[offset:offset + len(SIGNER_INFO_VERSION)] != SIGNER_INFO_VERSION:
+        return None
+    return offset
+
+
+def update_adjacent_signer_info_rollback(data, total_size, rollback):
+    """Update an adjacent SignerVer03 block in a mutable image, if present."""
+    offset = adjacent_signer_info_offset(data, total_size)
+    if offset is None:
+        return None
+    end = offset + SIGNER_INFO_SIZE
+    data[offset:end] = signer_info_with_rollback(bytes(data[offset:end]), rollback)
+    return offset
 
 
 def write_file(path, data):

@@ -8,6 +8,7 @@ from download_signature_common import (
     download_final_digest,
     download_signature_header,
     parse_download_signature_layout,
+    read_download_signer_info,
     read_download_signature_blob,
     read_super_embedded_signer_info,
     signer_info_binary_name,
@@ -19,6 +20,7 @@ from stage2_common import (
     SIGN_TYPE_ECDSA_NIST_P384,
     add_stage2_pubkey_args,
     load_stage2_key_map,
+    signer_info_rollback_values,
     verify_digest,
 )
 
@@ -67,6 +69,20 @@ def main():
         if not signature_ok:
             errors.append("ECDSA signature check failed")
 
+    signer_info_rp = None
+    try:
+        signer_info_rp = signer_info_rollback_values(
+            read_download_signer_info(args.input, layout)
+        )
+        if signer_info_rp != (layout.rp_count, layout.rp_count):
+            errors.append(
+                "SignerInfo rollback mismatch: "
+                f"system={signer_info_rp[0]}, kernel={signer_info_rp[1]}, "
+                f"header={layout.rp_count}"
+            )
+    except ValueError as error:
+        errors.append(str(error))
+
     print(f"Target SoC: {soc_config['display_name']}")
     print(f"Sparse header/chunk header: 0x{layout.file_header_size:X}/0x{layout.chunk_header_size:X}")
     print(f"Signature record: 0x{layout.signature_record_offset:X}")
@@ -74,15 +90,31 @@ def main():
     if sparse_image_has_super_metadata(args.input):
         try:
             super_signer_info = read_super_embedded_signer_info(args.input)
+            super_signer_rp = signer_info_rollback_values(super_signer_info)
             print(f"Super SignerInfo: 0x{super_signer_info_output_offset(args.input):X}")
             print(
                 f"Build-id/binary:  {signer_info_quick_build_id(super_signer_info)} / "
                 f"{signer_info_binary_name(super_signer_info)}"
             )
+            print(
+                f"Super rollback:   system={super_signer_rp[0]} "
+                f"kernel={super_signer_rp[1]}"
+            )
+            if super_signer_rp != (layout.rp_count, layout.rp_count):
+                errors.append(
+                    "embedded super SignerInfo rollback mismatch: "
+                    f"system={super_signer_rp[0]}, kernel={super_signer_rp[1]}, "
+                    f"header={layout.rp_count}"
+                )
         except ValueError as e:
             errors.append(str(e))
     print(f"Payload hashed:   0x{layout.payload_offset:X}..0x{layout.file_size:X}")
     print(f"rp/sign/key/key-index: {layout.rp_count}/0x{layout.sign_type:X}/{layout.key_type}/0x{layout.key_index:X}")
+    if signer_info_rp is not None:
+        print(
+            f"SignerInfo rollback: system={signer_info_rp[0]} "
+            f"kernel={signer_info_rp[1]}"
+        )
     print(f"Payload SHA-512: {payload_digest.hex()}")
     print(f"Signature SHA-512: {digest.hex()}")
     print(f"signature: {'OK' if signature_ok else 'FAIL'}")

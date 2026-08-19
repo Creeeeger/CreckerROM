@@ -19,15 +19,19 @@ from download_signature_common import (
     signer_info_binary_name,
     signer_info_quick_build_id,
     sparse_image_has_super_metadata,
+    update_download_signer_info_rollback,
     write_download_signature,
 )
 from stage2_common import (
     DEFAULT_KEY_INDEX,
     SIGN_TYPE_ECDSA_NIST_P384,
+    STAGE2_SIGNATURE_SIZE,
     default_private_key_for_key_type,
     is_p384_private_key,
     load_private_key,
     sign_digest,
+    signer_info_rollback_values,
+    signer_info_with_rollback,
     validate_signing_args,
 )
 
@@ -198,6 +202,13 @@ def main():
         parser,
     )
 
+    # The 16-byte download header and SignerVer03 carry independent rollback
+    # values. LK checks SignerInfo directly before accepting an old system
+    # image, so both policy slots must be updated before the payload digest is
+    # calculated.
+    if is_super:
+        signer_info = signer_info_with_rollback(signer_info, rp_count)
+
     try:
         private_key_path = args.key_file if args.key_file is not None else default_private_key_for_key_type(key_type)
     except ValueError as e:
@@ -215,11 +226,29 @@ def main():
         write_download_signature(args.output, layout, header, sig_blob)
         digest_path = args.output
     else:
-        payload_digest, digest = download_final_digest(args.input, layout, header)
+        # Copy first, update SignerInfo in the destination, then hash that exact
+        # final payload.  Hashing the source would retain the old RP metadata.
+        copy_with_download_signature(
+            args.input,
+            args.output,
+            layout,
+            header,
+            b"\x00" * STAGE2_SIGNATURE_SIZE,
+        )
+        layout = parse_download_signature_layout(args.output)
+        signer_info = update_download_signer_info_rollback(
+            args.output,
+            layout,
+            rp_count,
+        )
+        payload_digest, digest = download_final_digest(args.output, layout, header)
         sig_blob = sign_digest(private_key, digest, args.soc)
-        copy_with_download_signature(args.input, args.output, layout, header, sig_blob)
+        write_download_signature(args.output, layout, header, sig_blob)
         embedded_signer_offset = None
-        digest_path = args.input
+        digest_path = args.output
+
+    final_signer_info = read_download_signer_info(args.output, layout)
+    system_rp, kernel_rp = signer_info_rollback_values(final_signer_info)
 
     print(f"Target SoC: {soc_config['display_name']}")
     print(f"Private key: {private_key_path}")
@@ -234,6 +263,7 @@ def main():
         print(f"Build-id/binary:  {signer_info_quick_build_id(signer_info)} / {signer_info_binary_name(signer_info)}")
     print(f"Payload hashed:   0x{layout.payload_offset:X}..0x{layout.file_size:X} ({digest_path})")
     print(f"rp/sign/key/key-index: {values[0]}/0x{values[1]:X}/{values[2]}/0x{values[3]:X}")
+    print(f"SignerInfo rollback: system={system_rp} kernel={kernel_rp}")
     print(f"Payload SHA-512: {payload_digest.hex()}")
     print(f"Signature SHA-512: {digest.hex()}")
     print()

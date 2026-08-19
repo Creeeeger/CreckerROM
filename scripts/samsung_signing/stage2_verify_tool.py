@@ -12,6 +12,7 @@ from common import (
 )
 from stage2_common import (
     SIGN_TYPE_ECDSA_NIST_P384,
+    SIGNER_INFO_SIZE,
     STAGE2_FOOTER_SIZE,
     STAGE2_SIGNATURE_SIZE,
     SignTarget,
@@ -26,6 +27,8 @@ from stage2_common import (
     parse_stage2_footer,
     read_file,
     signature_blob,
+    adjacent_signer_info_offset,
+    signer_info_rollback_values,
     signer_info_offset_from_avb_original,
     stage_type,
     verify_digest,
@@ -122,7 +125,31 @@ def verify_target(data, target, stage, key_map, soc):
         if not signature_ok:
             errors.append("ECDSA signature check failed")
 
-    return footer, digest, effective_key, signature_ok, errors
+    signer_info_rp = None
+    signer_info_offset = adjacent_signer_info_offset(data, target.total_size)
+    if signer_info_offset is not None:
+        try:
+            signer_info_rp = signer_info_rollback_values(
+                data[signer_info_offset:signer_info_offset + SIGNER_INFO_SIZE]
+            )
+            if signer_info_rp != (footer.rp_count, footer.rp_count):
+                errors.append(
+                    "SignerInfo rollback mismatch: "
+                    f"system={signer_info_rp[0]}, kernel={signer_info_rp[1]}, "
+                    f"footer={footer.rp_count}"
+                )
+        except ValueError as error:
+            errors.append(str(error))
+
+    return (
+        footer,
+        digest,
+        effective_key,
+        signature_ok,
+        errors,
+        signer_info_offset,
+        signer_info_rp,
+    )
 
 
 def main():
@@ -176,7 +203,15 @@ def main():
 
     all_ok = True
     for target in targets:
-        footer, digest, effective_key, signature_ok, errors = verify_target(data, target, stage, key_map, args.soc)
+        (
+            footer,
+            digest,
+            effective_key,
+            signature_ok,
+            errors,
+            signer_info_offset,
+            signer_info_rp,
+        ) = verify_target(data, target, stage, key_map, args.soc)
         all_ok = all_ok and signature_ok and not errors
 
         print(f"Verified {target.name}:")
@@ -186,6 +221,12 @@ def main():
         print(
             f"  rp/sign/key/key-index: {footer.rp_count}/0x{footer.sign_type:X}/{footer.key_type}/0x{footer.key_index:X}")
         print(f"  verifier key type: {effective_key}")
+        if signer_info_rp is not None:
+            print(
+                f"  SignerInfo: 0x{signer_info_offset:X}; "
+                f"system rollback={signer_info_rp[0]}, "
+                f"kernel rollback={signer_info_rp[1]}"
+            )
         print(f"  SHA-512: {digest.hex()}")
         print(f"  signature: {'OK' if signature_ok else 'FAIL'}")
         for error in errors:

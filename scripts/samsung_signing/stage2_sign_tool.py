@@ -32,6 +32,7 @@ from stage2_common import (
     sign_digest,
     signer_info_offset_from_avb_original,
     stage_type,
+    update_adjacent_signer_info_rollback,
     update_epbl_checksum,
     update_epbl_header,
     write_file,
@@ -230,6 +231,15 @@ def main():
         update_epbl_header(data, epbl_size)
 
     targets = resolve_targets(stage, data, args.mode, args.size, args.inner)
+    signer_info_offsets = []
+    for target in targets:
+        offset = update_adjacent_signer_info_rollback(
+            data,
+            target.total_size,
+            args.rp_cnt,
+        )
+        if offset is not None and offset not in signer_info_offsets:
+            signer_info_offsets.append(offset)
     private_key_path = resolve_private_key_path(args, stage, data, targets)
     private_key = load_private_key(private_key_path)
     if not isinstance(getattr(private_key, "curve", None), ec.SECP384R1):
@@ -239,6 +249,11 @@ def main():
     print(f"Stage: {stage}")
     print(f"Stage type: {stage_type(stage) if stage_type(stage) is not None else 'EPBL via BL1 wrapper'}")
     print(f"Private key: {private_key_path}")
+    for offset in signer_info_offsets:
+        print(
+            f"SignerInfo rollback: system={args.rp_cnt} kernel={args.rp_cnt} "
+            f"at 0x{offset:X}"
+        )
     print()
 
     for target in targets:
