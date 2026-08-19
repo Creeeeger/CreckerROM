@@ -144,6 +144,15 @@ if ! $TARGET_BUILD_KERNEL_ONLY && $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMS
     LOG_STEP_OUT
 fi
 
+if $TARGET_ENABLE_CUSTOM_AVB && $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_AP_IMAGES; then
+    LOG_STEP_IN "- Preparing Samsung download signer records before AVB"
+    # LK removes FullHashSig before writing sparse filesystem bytes. Put the
+    # final header and SignerInfo in place now, with FullHashSig zero, so AVB
+    # hashes exactly the representation that reaches the partition.
+    PREPARE_SAMSUNG_DOWNLOAD_IMAGES_FOR_AVB "$TMP_DIR"
+    LOG_STEP_OUT
+fi
+
 if $TARGET_ENABLE_CUSTOM_AVB; then
     LOG_STEP_IN "- Preparing AVB images"
     "$SRC_DIR/scripts/internal/sign_avb_images.sh" "$TMP_DIR" || exit 1

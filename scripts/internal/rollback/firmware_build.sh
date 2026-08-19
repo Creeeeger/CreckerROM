@@ -180,7 +180,17 @@ python3 "$SRC_DIR/scripts/samsung_signing/sign_ap_images.py" \
     --keys-dir "$TARGET_SAMSUNG_SIGNING_KEY_DIR" \
     --phase "before-avb" \
     --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
-    --rollback "$ROLLBACK_INDEX"
+    --rollback "$ROLLBACK_INDEX" \
+    --footer-reference "$IMAGE_DIR/boot.img" \
+    --strict
+LOG_STEP_OUT
+
+LOG_STEP_IN "- Preparing rollback download metadata before AVB"
+# prism/optics carry both Samsung sparse-download metadata and AVB footers.
+# SignerInfo is AVB-protected, so its RP fields must be finalized before the
+# AVB pass; only FullHashSig is populated afterward.
+PREPARE_DOWNLOAD_IMAGE_FOR_AVB "$IMAGE_DIR/prism.img"
+PREPARE_DOWNLOAD_IMAGE_FOR_AVB "$IMAGE_DIR/optics.img"
 LOG_STEP_OUT
 
 LOG_STEP_IN "- Re-signing old firmware AVB images"
@@ -197,6 +207,12 @@ python3 "$SRC_DIR/scripts/samsung_signing/sign_ap_images.py" \
 LOG_STEP_OUT
 
 COPY_SIGNED_BOOTLOADER_AVB_IMAGES
+
+LOG_STEP_IN "- Verifying final rollback Stage-2 images"
+VERIFY_STAGE2_IMAGE "$SIGNED_IMAGE_DIR/boot.img" "boot"
+VERIFY_STAGE2_IMAGE "$SIGNED_IMAGE_DIR/dtbo.img" "dtbo"
+VERIFY_STAGE2_IMAGE "$SIGNED_IMAGE_DIR/recovery.img" "recovery"
+LOG_STEP_OUT
 
 LOG_STEP_IN "- Samsung-signing opaque Odin components"
 SIGN_DOWNLOAD_IMAGE "$SIGNED_IMAGE_DIR/prism.img"

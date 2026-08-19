@@ -46,6 +46,21 @@ print(parse_stage2_footer(data, sizes[0]).key_type)
 PY
 }
 
+VERIFY_STAGE2_IMAGE()
+{
+    local IMAGE="$1"
+    local STAGE="$2"
+
+    [ -f "$IMAGE" ] || return 0
+    python3 "$SRC_DIR/scripts/samsung_signing/stage2_verify_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        --stage "$STAGE" \
+        -i "$IMAGE" \
+        --tee-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_tee_pubkey.bin" \
+        --ree-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_ree_pubkey.bin" \
+        --stage3-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage3_pubkey.bin"
+}
+
 VERIFY_SAMSUNG_DOWNLOAD()
 {
     python3 "$SRC_DIR/scripts/samsung_signing/download_verify_tool.py" \
@@ -54,6 +69,27 @@ VERIFY_SAMSUNG_DOWNLOAD()
         --tee-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_tee_pubkey.bin" \
         --ree-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_ree_pubkey.bin" \
         --stage3-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage3_pubkey.bin"
+}
+
+PREPARE_DOWNLOAD_IMAGE_FOR_AVB()
+{
+    local IMAGE="$1"
+    local PREPARED_TMP="$IMAGE.download-avb.tmp"
+
+    [ -f "$IMAGE" ] || return 0
+    LOG "- Preparing $(basename "$IMAGE") Samsung rollback metadata before AVB"
+    rm -f "$PREPARED_TMP"
+    # The stock image is its own layout/default reference.  The preparation
+    # pass updates the download header plus both SignerInfo RP fields and
+    # leaves FullHashSig zero, which is the exact representation LK writes and
+    # AVB must authenticate.
+    python3 "$SRC_DIR/scripts/samsung_signing/download_prepare_avb_tool.py" \
+        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
+        -i "$IMAGE" \
+        -o "$PREPARED_TMP" \
+        --reference "$IMAGE" \
+        -r "$ROLLBACK_INDEX"
+    mv -f "$PREPARED_TMP" "$IMAGE"
 }
 
 SIGN_DOWNLOAD_IMAGE()
@@ -118,13 +154,7 @@ SIGN_STAGE2_IMAGE()
         -k "$PRIVATE_KEY" \
         -r "$ROLLBACK_INDEX" \
         --key-type "$KEY_TYPE"
-    python3 "$SRC_DIR/scripts/samsung_signing/stage2_verify_tool.py" \
-        --soc "$TARGET_SAMSUNG_SIGNING_SOC" \
-        --stage "$STAGE" \
-        -i "$IMAGE" \
-        --tee-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_tee_pubkey.bin" \
-        --ree-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage2_ree_pubkey.bin" \
-        --stage3-pub-key "$TARGET_SAMSUNG_SIGNING_KEY_DIR/crecker_stage3_pubkey.bin"
+    VERIFY_STAGE2_IMAGE "$IMAGE" "$STAGE"
 }
 
 SIGN_SUPER_IMAGE()

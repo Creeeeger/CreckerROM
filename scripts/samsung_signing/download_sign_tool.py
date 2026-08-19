@@ -9,6 +9,7 @@ from download_signature_common import (
     DEFAULT_SUPER_REFERENCE,
     SIGNER_INFO_SIZE,
     copy_with_download_signature,
+    copy_with_download_reference,
     copy_with_super_signature,
     download_final_digest,
     download_signature_header,
@@ -150,6 +151,9 @@ def build_argument_parser():
     parser.add_argument("--super-reference", default=DEFAULT_SUPER_REFERENCE,
                         help=("Signed super.img used for default header and SignerInfo values. "
                               "Set to an empty string to disable. Default: super_signed.img"))
+    parser.add_argument("--reference",
+                        help=("Signed sparse image supplying Samsung header and SignerInfo defaults when "
+                              "the input image has no download signer block"))
     parser.add_argument("--signer-info",
                         help="Raw 0x100-byte SignerInfo blob to insert for super.img signing")
     return parser
@@ -185,7 +189,7 @@ def main():
         layout_error = None
 
     is_super = args.super or sparse_image_has_super_metadata(args.input)
-    if layout is None and not is_super:
+    if layout is None and not is_super and args.reference is None:
         parser.error(str(layout_error))
 
     if is_super:
@@ -193,9 +197,24 @@ def main():
             args, parser, layout
         )
     else:
-        reference_path = None
-        signer_info = None
-        rp_count, sign_type, key_type, key_index = resolve_download_values(args, layout)
+        reference_path = optional_existing_file(args.reference)
+        if layout is None:
+            if reference_path is None or not Path(reference_path).is_file():
+                parser.error("Unsigned sparse download images require an existing --reference")
+            try:
+                reference_defaults = load_super_signing_defaults(reference_path)
+            except (OSError, ValueError) as e:
+                parser.error(f"Could not read --reference {reference_path}: {e}")
+            signer_info = reference_defaults.signer_info
+            rp_count = args.rp_cnt if args.rp_cnt is not None else reference_defaults.rp_count
+            sign_type = args.sign_type
+            key_type = args.key_type if args.key_type is not None else reference_defaults.key_type
+            key_index = args.key_index
+            if key_index is None:
+                key_index = reference_defaults.key_index or DEFAULT_KEY_INDEX
+        else:
+            signer_info = None
+            rp_count, sign_type, key_type, key_index = resolve_download_values(args, layout)
 
     validate_signing_args(
         argparse.Namespace(rp_cnt=rp_count, sign_type=sign_type, key_type=key_type, key_index=key_index),
@@ -206,7 +225,7 @@ def main():
     # values. LK checks SignerInfo directly before accepting an old system
     # image, so both policy slots must be updated before the payload digest is
     # calculated.
-    if is_super:
+    if is_super or layout is None:
         signer_info = signer_info_with_rollback(signer_info, rp_count)
 
     try:
@@ -224,6 +243,13 @@ def main():
         payload_digest, digest = download_final_digest(args.output, layout, header)
         sig_blob = sign_digest(private_key, digest, args.soc)
         write_download_signature(args.output, layout, header, sig_blob)
+        digest_path = args.output
+    elif layout is None:
+        layout = copy_with_download_reference(args.input, args.output, header, signer_info)
+        payload_digest, digest = download_final_digest(args.output, layout, header)
+        sig_blob = sign_digest(private_key, digest, args.soc)
+        write_download_signature(args.output, layout, header, sig_blob)
+        embedded_signer_offset = None
         digest_path = args.output
     else:
         # Copy first, update SignerInfo in the destination, then hash that exact
@@ -254,7 +280,7 @@ def main():
     print(f"Private key: {private_key_path}")
     print(f"Mode: {'super.img' if is_super else 'sparse download'}")
     if reference_path:
-        print(f"Super defaults: {reference_path}")
+        print(f"Signer defaults: {reference_path}")
     print(f"Sparse header/chunk header: 0x{layout.file_header_size:X}/0x{layout.chunk_header_size:X}")
     print(f"Signature record: 0x{layout.signature_record_offset:X}")
     print(f"Signer info:      0x{layout.signer_info_offset:X} (SignerVer0{layout.signer_version})")

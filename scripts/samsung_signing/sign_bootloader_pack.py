@@ -172,10 +172,27 @@ def main() -> None:
     merged_sboot = merge_sboot(parts_dir, args.work_dir)
     signed_sboot = args.out_dir / "sboot.bin"
     shutil.copy2(merged_sboot, signed_sboot)
-    if sign_stage2(args, paths, signed_sboot, "sboot", key_type=None, require_existing_footer=True):
-        append_manifest(manifest, "signed_external", "sboot.bin=sboot")
-    else:
-        append_manifest(manifest, "copied_external", "sboot.bin=sboot-top-signature-not-present")
+    # This must be the final mutation of the merged Samsung payload. Odin's
+    # running LK verifies the outer BOOTLOADER footer with the Stage2 TEE key;
+    # a preserved stock footer is stale as soon as any split image changes.
+    if not sign_stage2(
+        args,
+        paths,
+        signed_sboot,
+        "sboot",
+        key_type=0,
+        require_existing_footer=True,
+        mode="avb",
+        inner="no",
+    ):
+        raise RuntimeError(
+            "Final merged sboot.bin has no signable outer BOOTLOADER footer"
+        )
+    append_manifest(
+        manifest,
+        "signed_container",
+        "sboot.bin=sboot:key_type0:mode-avb:inner-no",
+    )
 
     sign_external_bootloader_images(args, paths, work_stock_dir, args.out_dir, manifest)
 

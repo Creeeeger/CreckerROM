@@ -256,7 +256,15 @@ def sign_fwbl1(args: argparse.Namespace, paths: dict[str, Path], image: Path) ->
     run_step(cmd, f"Signing fwbl1.img, rp={args.rollback}")
 
 
-def verify_stage2(args: argparse.Namespace, paths: dict[str, Path], image: Path, stage: str) -> None:
+def verify_stage2(
+        args: argparse.Namespace,
+        paths: dict[str, Path],
+        image: Path,
+        stage: str,
+        *,
+        mode: str = "auto",
+        inner: str = "auto",
+) -> None:
     if not args.verify:
         return
 
@@ -275,6 +283,10 @@ def verify_stage2(args: argparse.Namespace, paths: dict[str, Path], image: Path,
         str(paths["stage2_ree_pub"]),
         "--stage3-pub-key",
         str(paths["stage3_pub"]),
+        "--mode",
+        mode,
+        "--inner",
+        inner,
     ]
     run_step(cmd, f"Verifying {image.name}")
 
@@ -287,6 +299,8 @@ def sign_stage2(
         *,
         key_type: int | None = None,
         require_existing_footer: bool,
+        mode: str = "auto",
+        inner: str = "auto",
 ) -> bool:
     stage = normalize_stage(stage)
     if require_existing_footer and not has_signable_footer(stage, image):
@@ -314,11 +328,15 @@ def sign_stage2(
         str(args.rollback),
         "--key-type",
         str(key_type),
+        "--mode",
+        mode,
+        "--inner",
+        inner,
     ]
     run_step(cmd, f"Signing {image.name} as {stage}, key_type={key_type}, rp={args.rollback}")
-    verify_stage2(args, paths, image, stage)
+    verify_stage2(args, paths, image, stage, mode=mode, inner=inner)
     # If an AVB footer is present, the footer must be re-signed after Samsung
     # signing and then the Samsung signature is verified again in wrapper mode.
     if resign_avb_footer_if_present(args, image, stage):
-        verify_stage2(args, paths, image, stage)
+        verify_stage2(args, paths, image, stage, mode=mode, inner=inner)
     return True

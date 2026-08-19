@@ -339,6 +339,47 @@ def copy_with_download_signature(input_path, output_path, layout, header, signat
     write_download_signature(output_path, layout, header, signature_blob)
 
 
+def copy_with_download_reference(input_path, output_path, header, signer_info):
+    """Initialize Samsung's signer block in an unsigned sparse ext4 image.
+
+    Exynos LK expects the 0x300-byte SignerSignatures record and the 0x100-byte
+    SignerInfo record in logical bytes 0..0x3ff.  Those bytes are ext4's
+    reserved boot area, so inserting the records does not move filesystem data.
+    """
+    input_path = Path(input_path)
+    output_path = Path(output_path)
+    if input_path.resolve() == output_path.resolve():
+        raise ValueError("Input and output paths must be different")
+    if len(header) != STAGE2_FOOTER_HEADER_SIZE:
+        raise ValueError("Download signature header must be 0x10 bytes")
+    if len(signer_info) != SIGNER_INFO_SIZE:
+        raise ValueError("SignerInfo block must be 0x100 bytes")
+    if signer_info_version(signer_info) != 3:
+        raise ValueError("Only SignerVer03 sparse download signatures are implemented")
+
+    sparse_header = read_sparse_header(input_path)
+    first_chunk = first_sparse_chunk(input_path, sparse_header)
+    if first_chunk.output_offset != 0 or first_chunk.chunk_type != SPARSE_RAW_CHUNK or first_chunk.chunk_blocks < 1:
+        raise ValueError("First sparse output block is not raw; cannot initialize Samsung signer records")
+
+    reserved = read_sparse_range(input_path, 0, DOWNLOAD_SIGNATURE_RECORD_SIZE + SIGNER_INFO_SIZE, sparse_header)
+    old_signer_info = reserved[DOWNLOAD_SIGNATURE_RECORD_SIZE:]
+    if signer_info_version(old_signer_info) == 0 and reserved != b"\x00" * len(reserved):
+        raise ValueError("Sparse image logical bytes 0..0x3ff are not empty; refusing to overwrite filesystem data")
+
+    with input_path.open("rb") as src, output_path.open("wb") as dst:
+        shutil.copyfileobj(src, dst, length=STREAM_CHUNK_SIZE)
+
+    signer_block = bytearray(DOWNLOAD_SIGNATURE_RECORD_SIZE + SIGNER_INFO_SIZE)
+    signer_block[:len(header)] = header
+    signer_block[DOWNLOAD_SIGNATURE_RECORD_SIZE:] = signer_info
+    with output_path.open("r+b") as f:
+        f.seek(first_chunk.data_offset)
+        f.write(signer_block)
+
+    return parse_download_signature_layout(output_path)
+
+
 def build_super_first_block(header, signer_info):
     if len(header) != STAGE2_FOOTER_HEADER_SIZE:
         raise ValueError("Download signature header must be 0x10 bytes")

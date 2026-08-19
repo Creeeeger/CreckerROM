@@ -59,11 +59,25 @@ BUILD_HEIMDALL_PACKAGE()
     if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_BOOTLOADER; then
         COPY_HEIMDALL_IMAGES_FROM_DIR "$TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR"
     fi
+    # Reuse the already finalized AP payloads when Odin was built in this run.
+    # This keeps Odin and Heimdall byte-identical, including the ECDSA download
+    # signature whose nonce would otherwise differ if generated twice.
+    if ${TARGET_BUILD_ODIN_PACKAGE:-false}; then
+        COPY_HEIMDALL_IMAGES_FROM_DIR "$ODIN_AP_DIR"
+    fi
     COPY_HEIMDALL_IMAGES_FROM_DIR "$ODIN_EXTRA_AP_DIR"
     COPY_HEIMDALL_IMAGES_FROM_DIR "$ODIN_EXTRA_CP_DIR"
     COPY_HEIMDALL_IMAGES_FROM_DIR "$ODIN_EXTRA_CSC_DIR"
     COPY_HEIMDALL_IMAGES_FROM_DIR "$IMAGE_DIR"
     [ "$IMAGE_DIR" != "$TMP_DIR" ] && COPY_HEIMDALL_IMAGES_FROM_DIR "$TMP_DIR"
+
+    # Heimdall is assembled from several staging directories rather than from
+    # the Odin archives. Finalize and verify this directory independently so
+    # rebuilt prism/optics and every copied Stage-2 image are checked on the
+    # exact bytes users will flash.
+    FINALIZE_SAMSUNG_DOWNLOAD_IMAGES_IN_DIR "$HEIMDALL_DIR"
+    VERIFY_SAMSUNG_STAGE2_IMAGES_IN_DIR "$HEIMDALL_DIR"
+    VERIFY_SAMSUNG_BOOTLOADER_STAGE2_IMAGES_IN_DIR "$HEIMDALL_DIR"
 
     cp -fa "$SRC_DIR/prebuilts/extras/flash_heimdall.sh" "$HEIMDALL_DIR/flash_all.sh"
     chmod 0755 "$HEIMDALL_DIR/flash_all.sh"

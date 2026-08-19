@@ -41,15 +41,19 @@ EXTERNAL_BOOTLOADER_TARGETS = [
     ("tzsw.img", "tzsw", True),
     ("keystorage.bin", "keystorage", True),
     ("harx.bin", "harx", True),
-    ("ssp.img", "spayload", False),
     ("tzar.img", "tzar", True),
     ("uh.bin", "uh", True),
     ("vbmeta_samsung.img", "vbmeta_samsung", False),
 ]
-PASSTHROUGH_BOOTLOADER_FILES = [
+PRESERVED_STOCK_BOOTLOADER_FILES = [
+    # SSP is not the TZSW secure OS payload ("spayload"). LK loads SSP through
+    # the dedicated 0x82000510 EL3 SMC as an opaque, at-most-0x80000-byte
+    # firmware blob; it does not pass it to LK's Stage-2 check_signature().
+    # Keep the vendor-authenticated stock bytes exactly intact.
+    ("ssp.img", "opaque-ssp-smc:not-stage2"),
     # up_param.bin is flashed with the bootloader package but is not a
     # Samsung Stage-2 signed boot-chain image.
-    "up_param.bin",
+    ("up_param.bin", "passthrough:not-stage2"),
 ]
 
 def copy_stock_bootloader_inputs(stock_dir: Path, work_stock_dir: Path) -> None:
@@ -219,12 +223,15 @@ def sign_external_bootloader_images(
             raise RuntimeError(f"{filename} is present but did not expose a signable Samsung Stage2 footer")
         append_manifest(manifest, "signed_external" if signed else "copied_external", f"{filename}={stage}")
 
-    for filename in PASSTHROUGH_BOOTLOADER_FILES:
+    for filename, classification in PRESERVED_STOCK_BOOTLOADER_FILES:
         source = work_stock_dir / filename
         if not source.is_file():
             continue
-        shutil.copy2(source, out_dir / filename)
-        append_manifest(manifest, "copied_external", f"{filename}=passthrough")
+        image = out_dir / filename
+        shutil.copy2(source, image)
+        if image.read_bytes() != source.read_bytes():
+            raise RuntimeError(f"stock passthrough changed while copying {filename}")
+        append_manifest(manifest, "preserved_stock", f"{filename}={classification}")
 
 
 def patch_tzar_member(args: argparse.Namespace, image: Path, manifest: Path) -> None:
