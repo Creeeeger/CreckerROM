@@ -25,10 +25,12 @@ PATCH_EXYNOS990_100X_ZOOM()
     HEX="$(xxd -p "$FILE" | tr -d "\n" | tr -d " ")"
 
     # Samsung's table is: photo min/max, then video min/max. Accept stock
-    # 30x/50x tables and workdirs where the photo-only 100x patch ran already.
+    # 30x/50x tables (including the N986B 50x/20x variant) and workdirs where
+    # the photo-only 100x patch ran already.
     for FROM in \
         "f401000030750000f4010000e02e0000" \
         "f401000050c30000f4010000e02e0000" \
+        "f401000050c30000f4010000204e0000" \
         "f4010000a0860100f4010000e02e0000"
     do
         if [[ "$HEX" == *"$FROM"* ]]; then
