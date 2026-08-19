@@ -23,6 +23,7 @@ source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
 source "$SRC_DIR/scripts/internal/packaging/super_images.sh" || exit 1
 source "$SRC_DIR/scripts/internal/packaging/image_inputs.sh" || exit 1
 source "$SRC_DIR/scripts/internal/packaging/samsung_signing.sh" || exit 1
+source "$SRC_DIR/scripts/internal/packaging/output_paths.sh" || exit 1
 source "$SRC_DIR/scripts/internal/packaging/odin.sh" || exit 1
 source "$SRC_DIR/scripts/internal/packaging/heimdall.sh" || exit 1
 source "$SRC_DIR/scripts/internal/packaging/package_build.sh" || exit 1

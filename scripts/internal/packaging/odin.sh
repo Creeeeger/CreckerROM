@@ -22,8 +22,8 @@ RUN_SAMSUNG_BOOTLOADER_SIGNING()
 BUILD_ODIN_BL_PACKAGE()
 {
     local BL_DIR="$TARGET_SAMSUNG_SIGNED_BOOTLOADER_DIR"
-    local BL_TAR_PATH="$OUT_DIR/BL_${PACKAGE_NAME}.tar"
-    local BL_TAR_MD5="$OUT_DIR/BL_${PACKAGE_NAME}.tar.md5"
+    local BL_TAR_PATH="$ODIN_PACKAGE_DIR/BL_${PACKAGE_NAME}.tar"
+    local BL_TAR_MD5="$ODIN_PACKAGE_DIR/BL_${PACKAGE_NAME}.tar.md5"
     local BL_CHECKSUM
     local -a BL_ARCHIVE_ENTRIES=()
 
@@ -49,7 +49,7 @@ BUILD_ODIN_BL_PACKAGE()
     tar -cf "$BL_TAR_PATH" -- "${BL_ARCHIVE_ENTRIES[@]}" || exit 1
     popd > /dev/null
 
-    pushd "$OUT_DIR" > /dev/null
+    pushd "$ODIN_PACKAGE_DIR" > /dev/null
     BL_CHECKSUM="$(md5sum -t "$(basename "$BL_TAR_PATH")" | awk '{print $1}')" || exit 1
     printf "%s  %s\n" "$BL_CHECKSUM" "$(basename "$BL_TAR_PATH")" >> "$(basename "$BL_TAR_PATH")"
     mv -f "$(basename "$BL_TAR_PATH")" "$(basename "$BL_TAR_MD5")"
@@ -60,8 +60,8 @@ BUILD_ODIN_PACKAGE_FROM_DIR()
 {
     local PACKAGE_PREFIX="$1"
     local PACKAGE_DIR="$2"
-    local TAR_PATH="$OUT_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar"
-    local TAR_MD5="$OUT_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar.md5"
+    local TAR_PATH="$ODIN_PACKAGE_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar"
+    local TAR_MD5="$ODIN_PACKAGE_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar.md5"
     local CHECKSUM
     local -a ARCHIVE_ENTRIES=()
 
@@ -84,7 +84,7 @@ BUILD_ODIN_PACKAGE_FROM_DIR()
     tar -cf "$TAR_PATH" -- "${ARCHIVE_ENTRIES[@]}" || exit 1
     popd > /dev/null
 
-    pushd "$OUT_DIR" > /dev/null
+    pushd "$ODIN_PACKAGE_DIR" > /dev/null
     CHECKSUM="$(md5sum -t "$(basename "$TAR_PATH")" | awk '{print $1}')" || exit 1
     printf "%s  %s\n" "$CHECKSUM" "$(basename "$TAR_PATH")" >> "$(basename "$TAR_PATH")"
     mv -f "$(basename "$TAR_PATH")" "$(basename "$TAR_MD5")"
@@ -258,5 +258,5 @@ BUILD_ODIN_CSC_PACKAGE()
     VERIFY_SAMSUNG_PIT_IN_DIR "$ODIN_EXTRA_CSC_DIR"
     BUILD_ODIN_PACKAGE_FROM_DIR "CSC" "$ODIN_EXTRA_CSC_DIR"
     VERIFY_SAMSUNG_PIT_ARCHIVE \
-        "$OUT_DIR/CSC_${PACKAGE_NAME}.tar.md5" "$ODIN_EXTRA_CSC_DIR"
+        "$ODIN_PACKAGE_DIR/CSC_${PACKAGE_NAME}.tar.md5" "$ODIN_EXTRA_CSC_DIR"
 }
