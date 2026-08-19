@@ -4,6 +4,9 @@
 # target_hint=EL3_MON_G985F_FROM_G986B_KVM
 # format: profile|offset|old_hex|new_hex|function|instruction
 # Rows marked kvm are selected only by the --kvm profile.
+
+# --- KVM / EL2 monitor entry ---
+# Enabled only by --kvm.
 kvm|0x00001E2C|21004039|21044039|setup_el2_state|ldrb w1,[x1,#0x1]
 kvm|0x00001E4C|810000F0|23A68052|setup_el2_state|mov w3,#0x531
 kvm|0x00001E50|220080D2|6300132A|setup_el2_state|orr w3,w3,w19

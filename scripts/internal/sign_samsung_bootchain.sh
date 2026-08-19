@@ -61,14 +61,6 @@ if [ ! -f "$TARGET_SAMSUNG_LK_PATCH_TABLE" ]; then
     exit 1
 fi
 if [ "$TARGET_SAMSUNG_ENABLE_KVM" = "true" ]; then
-    case "$TARGET_LK_PATCH_MODEL_ID" in
-        "g985f"|"g986b")
-            ;;
-        *)
-            LOGE "KVM boot patches support only G985F and G986B (got: ${TARGET_SAMSUNG_BL1_MODEL:-<empty>})"
-            exit 1
-            ;;
-    esac
     if [ -z "${TARGET_SAMSUNG_EL3_PATCH_TABLE:-}" ] || [ "$TARGET_SAMSUNG_EL3_PATCH_TABLE" = "none" ]; then
         TARGET_SAMSUNG_EL3_PATCH_TABLE="$SRC_DIR/security/samsung/patches/el3_mon_${TARGET_LK_PATCH_MODEL_ID}_kvm_patches.tsv"
     fi

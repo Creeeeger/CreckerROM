@@ -69,7 +69,7 @@ def main() -> None:
     parser.add_argument("--patch-table", type=Path,
                         help=f"LK TSV patch table. Default: {DEFAULT_PATCH_DIR}/lk_<bl1-model>_selected_patches.tsv")
     parser.add_argument("--kvm", action="store_true",
-                        help="Enable the G985F/G986B LK and EL3 monitor EL2 patch profile")
+                        help="Enable the model-specific LK and EL3 monitor EL2 patch profile")
     parser.add_argument("--el3-patch-table", type=Path,
                         help=f"EL3 KVM TSV. Default with --kvm: {DEFAULT_PATCH_DIR}/el3_mon_<bl1-model>_kvm_patches.tsv")
     parser.add_argument("--rollback-mode", action="store_true",
@@ -119,8 +119,6 @@ def main() -> None:
             parser.error("--patch-table, --bl1-model, or --model is required when --stock-dir does not include an SM-* model")
         args.patch_table = default_patch_table_for_model(patch_model)
     if args.kvm:
-        if patch_model_id not in {"g985f", "g986b"}:
-            parser.error("--kvm is supported only for G985F and G986B")
         if args.el3_patch_table is None:
             args.el3_patch_table = default_el3_patch_table_for_model(patch_model)
     elif args.el3_patch_table is not None:

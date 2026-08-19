@@ -63,7 +63,7 @@ _PRINT_USAGE()
     echo " --avb-low-security : Enable AVB low-security mode without partition image signing" >&2
     echo " --avb-model <model> : Set the BL1 model for AVB-enabled Exynos990 builds" >&2
     echo "                       Valid models: G780F G980F G981B G985F G986B G988B N980F N981B N985F N986B" >&2
-    echo " --kvm : Enable the G985F/G986B LK and EL3 monitor EL2 boot patches" >&2
+    echo " --kvm : Enable the model-specific LK and EL3 monitor EL2 boot patches" >&2
     echo " --rollback : Re-sign an old Odin firmware without running the custom ROM modification flow" >&2
     echo " --rollback-firmware <name> : Old Odin firmware directory name, for example SM-G985F_AUT" >&2
     echo "Available devices:" >&2
@@ -288,9 +288,8 @@ if [[ "$ROM_ENABLE_KVM" != "true" ]] && [[ "$ROM_ENABLE_KVM" != "false" ]]; then
     return 1
 fi
 
-if [[ "$ROM_ENABLE_KVM" == "true" ]] && \
-        [[ "$ROM_AVB_MODEL" != "G985F" ]] && [[ "$ROM_AVB_MODEL" != "G986B" ]]; then
-    echo "--kvm requires --avb-model G985F or --avb-model G986B" >&2
+if [[ "$ROM_ENABLE_KVM" == "true" ]] && [[ "$ROM_BUILD_MODE" == "rollback" ]]; then
+    echo "--kvm and --rollback cannot be used together" >&2
     _PRINT_USAGE
     return 1
 fi

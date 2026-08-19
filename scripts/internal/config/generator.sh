@@ -105,16 +105,15 @@ if [[ "$ROM_BUILD_KERNEL_ONLY" == "true" ]]; then
 fi
 
 ROM_ENABLE_KVM="${ROM_ENABLE_KVM:-false}"
-ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
 if [[ "$ROM_ENABLE_KVM" != "true" ]] && [[ "$ROM_ENABLE_KVM" != "false" ]]; then
     LOGE "ROM_ENABLE_KVM must be \"true\" or \"false\" (got: $ROM_ENABLE_KVM)"
     exit 1
 fi
-if [[ "$ROM_ENABLE_KVM" == "true" ]] && \
-        [[ "$ROM_AVB_MODEL" != "G985F" ]] && [[ "$ROM_AVB_MODEL" != "G986B" ]]; then
-    LOGE "ROM_ENABLE_KVM requires ROM_AVB_MODEL=G985F or G986B"
+if [[ "$ROM_ENABLE_KVM" == "true" ]] && [[ "$ROM_BUILD_MODE" == "rollback" ]]; then
+    LOGE "ROM_ENABLE_KVM and ROM_BUILD_MODE=rollback cannot be used together"
     exit 1
 fi
+ROM_AVB_MODEL="${ROM_AVB_MODEL^^}"
 if [[ "$ROM_ENABLE_KVM" == "true" ]]; then
     ROM_ENABLE_AVB="true"
 fi

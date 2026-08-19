@@ -1,9 +1,9 @@
 # Ghidra EL3 monitor patch file v1
 # source_program=el3_mon.img
-# baseline=G986BXXSNHYB1 decrypted EL3 monitor
-# target_hint=EL3_MON_G986B_KVM
+# baseline=stock G780F decrypted EL3 monitor
+# target_hint=EL3_MON_G780F_KVM
 # format: profile|offset|old_hex|new_hex|function|instruction
-# Rows marked kvm are selected only by the --kvm profile.
+# Rows marked kvm are selected only by the CLI/Ghidra --kvm profile.
 
 # --- KVM / EL2 monitor entry ---
 # Enabled only by --kvm.
