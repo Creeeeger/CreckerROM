@@ -112,11 +112,11 @@ and also creates an `<build-name>-heimdall` folder. AVB-enabled Exynos990
 builds additionally produce a `BL_` package containing the re-signed bootloader
 components.
 
-### G985F / G986B KVM mode
+### Exynos 990 KVM mode
 
-The Galaxy S20+ targets have an opt-in EL2 boot profile for KVM. Use the
-[`KVM_experiments` branch of the Exynos 990 kernel](https://github.com/Creeeeger/exynos990Kernel/tree/KVM_experiments)
-and add `--kvm` with the exact G985F or G986B AVB model:
+Every supported Galaxy S20, S20 FE, and Note20 Exynos 990 target has an
+opt-in, exact-model EL2 boot profile for KVM. Add `--kvm` with the physical
+phone's exact AVB model:
 
 ```sh
 source ./buildenv.sh --kvm --avb-model G985F y2s
@@ -124,8 +124,11 @@ m
 ```
 
 `--kvm` implies `--avb` and enables only the conditional LK H-Arx-removal,
-LK-to-EL3 SMC, and EL3-to-EL2 patch rows. The build rejects the flag for every
-other model. Pair the resulting boot chain and KVM kernel with
+LK-to-EL3 SMC, and EL3-to-EL2 patch rows. The kernel checkout fetches every
+remote branch and selects the first branch, sorted by ref name, whose name
+contains `kvm` case-insensitively. A non-KVM build selects the stable
+`OneUI7_8_stable` branch. KVM and rollback builds are mutually exclusive. Pair
+the resulting boot chain and kernel with
 [WindowsInQemu](https://github.com/Creeeeger/WindowsInQemu) to run Windows in
 QEMU on the phone.
 
@@ -146,7 +149,7 @@ QEMU on the phone.
 | `--avb`                            | Enables full custom AVB image signing, vbmeta generation, and the platform's bootloader-signing flow.                                                                                                      | Complete AVB builds intended for flashing.                                                                                         |
 | `--avb-low-security`               | Enables AVB but skips partition-image footer signing and omits partition descriptors from vbmeta. It implies `--avb`.                                                                                      | Development and recovery testing only; do not use it for a normal release.                                                         |
 | `--avb-model <model>`              | Selects the exact Exynos990 handset model and its BL1 signing metadata. `--avb-model=<model>` is also accepted.                                                                                            | Every AVB, low-security AVB, kernel-only, or rollback build for an Exynos990 target. Use the phone model, not the target codename. |
-| `--kvm`                            | Enables the conditional G985F/G986B LK and EL3 monitor EL2 boot patches and implies `--avb`.                                                                                                               | Only with `--avb-model G985F` or `G986B` and the Exynos 990 KVM kernel branch.                                                    |
+| `--kvm`                            | Enables the exact-model LK and EL3 monitor EL2 boot patches, selects the first remote branch containing `kvm`, and implies `--avb`.                                                                         | Supported for every listed Exynos990 model; cannot be combined with `--rollback`.                                                |
 | `--rollback`                       | Re-signs an old Exynos990 Odin firmware and replaces its recovery without running the custom-ROM modification flow. It implies AVB and Heimdall-only mode.                                                 | Creating a bootable rollback firmware set. Must be paired with `--rollback-firmware` and `--avb-model`.                            |
 | `--rollback-firmware <name>`       | Selects an old downloaded firmware directory under `out/odin`, for example `SM-G985F_AUT`. `--rollback-firmware=<name>` is also accepted.                                                                  | Only with `--rollback`.                                                                                                            |
 | `-h`, `--help`                     | Prints option help and the available target codenames.                                                                                                                                                     | Checking syntax or finding the correct target.                                                                                     |
@@ -179,7 +182,7 @@ source ./buildenv.sh --kernel-only --avb-model G985F y2s
 m
 ```
 
-Full G985F KVM build:
+Example G985F KVM build:
 
 ```sh
 source ./buildenv.sh --kvm --avb-model G985F y2s
