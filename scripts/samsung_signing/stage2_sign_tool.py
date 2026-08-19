@@ -74,16 +74,19 @@ def resolve_private_key_path(args, stage, data, targets):
 def create_output_buffer(input_data, size, append_footer):
     if size is not None and append_footer:
         raise ValueError("--size and --append-footer cannot be used together")
+    if size is not None and size < STAGE2_FOOTER_SIZE:
+        raise ValueError("Signed extent is too small for a Stage-2 footer")
 
     if append_footer:
         output_size = len(input_data) + STAGE2_FOOTER_SIZE
     elif size is not None:
-        output_size = size
+        # --size identifies the signed extent.  Preserve bytes after that
+        # extent when the backing partition image is larger (notably PIT,
+        # whose signed object ends at 0x1958 inside a 0x2000 UFS partition).
+        output_size = max(size, len(input_data))
     else:
         output_size = len(input_data)
 
-    if output_size < len(input_data):
-        raise ValueError("Output size cannot be smaller than input size")
     if output_size < STAGE2_FOOTER_SIZE:
         raise ValueError("Output size is too small for a Stage-2 footer")
 
@@ -189,7 +192,7 @@ def main():
     parser.add_argument("--stage", required=True,
                         help=("Stage name: epbl, bl2, lk, el3/el3_mon, tzsw/secureos, ldfw, "
                               "keystorage, harx, spayload, tzar, uh/plugin, modem/cp_boot/cp_main, boot, recovery, "
-                              "dtbo, sboot, misc, vbmeta/vbmeta_samsung"))
+                              "dtbo, sboot, misc, vbmeta/vbmeta_samsung, pit"))
     parser.add_argument("-i", "--input", required=True, help="Path to input image")
     parser.add_argument("-o", "--output", required=True, help="Path to signed output image")
     parser.add_argument("-k", "--key-file",
@@ -205,7 +208,8 @@ def main():
     parser.add_argument("--key-index", type=lambda x: int(x, 0),
                         help="Footer key-index/magic word. Defaults to existing footer or 0x01B94633")
     parser.add_argument("-s", "--size", type=lambda x: int(x, 0),
-                        help="Final signed size for normal end-footer images")
+                        help=("Signed extent size for normal end-footer images; input bytes after the "
+                              "extent are preserved"))
     parser.add_argument("--append-footer", action="store_true",
                         help="Append a new 0x210-byte Stage-2 footer to the input")
     parser.add_argument("--mode", choices=("auto", "end", "avb"), default="auto",

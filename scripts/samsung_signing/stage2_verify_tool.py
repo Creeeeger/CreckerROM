@@ -161,7 +161,7 @@ def main():
     parser.add_argument("--stage", required=True,
                         help=("Stage name: epbl, bl2, lk, el3/el3_mon, tzsw/secureos, ldfw, "
                               "keystorage, harx, spayload, tzar, uh/plugin, modem/cp_boot/cp_main, boot, recovery, "
-                              "dtbo, sboot, misc, vbmeta/vbmeta_samsung"))
+                              "dtbo, sboot, misc, vbmeta/vbmeta_samsung, pit"))
     parser.add_argument("-i", "--input", required=True, help="Path to signed image")
     parser.add_argument("-p", "--pub-key", help="Single public key blob to use for all key types")
     parser.add_argument("--tee-pub-key", default=DEFAULT_STAGE2_TEE_PUBKEY,

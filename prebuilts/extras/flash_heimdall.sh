@@ -9,6 +9,7 @@ if ! command -v heimdall > /dev/null 2>&1; then
 fi
 
 ARGS=()
+PIT_IMAGES=()
 
 ADD_IMAGE()
 {
@@ -18,6 +19,21 @@ ADD_IMAGE()
     [ -f "$IMAGE" ] || return 0
     ARGS+=("--$PARTITION" "$IMAGE")
 }
+
+shopt -s nullglob
+PIT_IMAGES=(*.pit)
+shopt -u nullglob
+if [ "${#PIT_IMAGES[@]}" -gt 1 ]; then
+    echo "Multiple PIT files found next to this script; refusing to guess." >&2
+    exit 1
+fi
+if [ "${#PIT_IMAGES[@]}" -eq 1 ]; then
+    # Heimdall's symbolic --PIT argument is reserved for repartitioning and
+    # rewrites the Samsung-signed PIT. Numeric partition 70 sends the exact
+    # signed bytes through LK's normal flash path. Released Heimdall 2.0.2
+    # cannot size-check numeric PIT targets, so bypass only that host check.
+    ARGS+=("--70" "${PIT_IMAGES[0]}" "--skip-size-check")
+fi
 
 ADD_IMAGE "BOOTLOADER" "sboot.bin"
 ADD_IMAGE "PARAM" "param.bin"

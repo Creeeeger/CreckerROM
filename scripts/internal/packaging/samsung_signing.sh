@@ -358,6 +358,24 @@ VERIFY_STAGE2_ODIN_COMPONENT()
         $VERIFY_ARGS || exit 1
 }
 
+VERIFY_SAMSUNG_PIT_IN_DIR()
+{
+    local IMAGE_DIR="$1"
+    local -a PIT_IMAGES=()
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    [ -d "$IMAGE_DIR" ] || return 0
+
+    mapfile -t PIT_IMAGES < <(find "$IMAGE_DIR" -maxdepth 1 -type f -iname "*.pit" | sort)
+    [ "${#PIT_IMAGES[@]}" -le 1 ] || {
+        LOGE "Multiple PIT images found in $IMAGE_DIR"
+        exit 1
+    }
+    [ "${#PIT_IMAGES[@]}" -eq 1 ] || return 0
+
+    VERIFY_STAGE2_ODIN_COMPONENT "${PIT_IMAGES[0]}" "pit" "end" "no"
+}
+
 VERIFY_SAMSUNG_STAGE2_IMAGES_IN_DIR()
 {
     local IMAGE_DIR="$1"
@@ -591,6 +609,157 @@ FIND_TARGET_ODIN_TAR()
     done
 
     [ -n "$TAR_FILE" ] && echo "$TAR_FILE"
+}
+
+FIND_MODEL_ODIN_TAR()
+{
+    local PREFIX="$1"
+    local MODEL="$2"
+    local MODEL_WITH_PREFIX="${MODEL^^}"
+    local MODEL_WITHOUT_PREFIX
+    local FW_ODIN_DIR
+    local TAR_FILE=""
+
+    [[ "$MODEL_WITH_PREFIX" == SM-* ]] || MODEL_WITH_PREFIX="SM-$MODEL_WITH_PREFIX"
+    MODEL_WITHOUT_PREFIX="${MODEL_WITH_PREFIX#SM-}"
+
+    while IFS= read -r FW_ODIN_DIR; do
+        [ -d "$FW_ODIN_DIR" ] || continue
+        TAR_FILE="$(find "$FW_ODIN_DIR" -maxdepth 1 -type f \( \
+            -name "${PREFIX}_${MODEL_WITH_PREFIX}*.md5" -o \
+            -name "${PREFIX}_${MODEL_WITHOUT_PREFIX}*.md5" -o \
+            -name "${PREFIX}_*.md5" -o \
+            -name "${PREFIX}_${MODEL_WITH_PREFIX}*.tar" -o \
+            -name "${PREFIX}_${MODEL_WITHOUT_PREFIX}*.tar" -o \
+            -name "${PREFIX}_*.tar" \) | sort -r | head -n 1)"
+        [ -z "$TAR_FILE" ] || break
+    done < <(find "$ODIN_DIR" -mindepth 1 -maxdepth 1 -type d \
+        -name "${MODEL_WITH_PREFIX}_*" | sort -r)
+
+    [ -n "$TAR_FILE" ] && echo "$TAR_FILE"
+}
+
+GET_SINGLE_PIT_MEMBER()
+{
+    local TAR_FILE="$1"
+    local -a PIT_MEMBERS=()
+
+    mapfile -t PIT_MEMBERS < <(
+        tar tf "$TAR_FILE" | sed 's#^\./##' | awk 'tolower($0) ~ /(^|\/)[^\/]+\.pit$/ { print }'
+    )
+    [ "${#PIT_MEMBERS[@]}" -eq 1 ] || {
+        LOGE "Expected exactly one PIT member in $(basename "$TAR_FILE"), found ${#PIT_MEMBERS[@]}"
+        return 1
+    }
+    printf '%s\n' "${PIT_MEMBERS[0]}"
+}
+
+EXTRACT_ODIN_TAR_MEMBER_TO_PATH()
+{
+    local TAR_FILE="$1"
+    local MEMBER="$2"
+    local OUTPUT_PATH="$3"
+    local OUTPUT_TMP="$OUTPUT_PATH.extract.tmp"
+
+    mkdir -p "$(dirname "$OUTPUT_PATH")"
+    rm -f "$OUTPUT_TMP"
+    tar -xOf "$TAR_FILE" "$MEMBER" > "$OUTPUT_TMP" || {
+        rm -f "$OUTPUT_TMP"
+        return 1
+    }
+    [ -s "$OUTPUT_TMP" ] || {
+        rm -f "$OUTPUT_TMP"
+        return 1
+    }
+    chmod u+w "$OUTPUT_TMP"
+    mv -f "$OUTPUT_TMP" "$OUTPUT_PATH"
+}
+
+PREPARE_SAMSUNG_PIT()
+{
+    local OUTPUT_DIR="$1"
+    local SELECTED_MODEL="${TARGET_SAMSUNG_BL1_MODEL:-$TARGET_FIRMWARE_MODEL}"
+    local PIT_TAR=""
+    local PIT_MEMBER=""
+    local PIT_FILENAME=""
+    local OUTPUT_PATH=""
+    local EXTRACTED_TMP=""
+    local PREPARED_TMP=""
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    [ "$TARGET_PLATFORM" = "exynos990" ] || return 0
+
+    SELECTED_MODEL="${SELECTED_MODEL#SM-}"
+    # Prefer an exact CSC for the selected hardware when it is already
+    # available. Paired 4G/5G builds otherwise use the configured artifact
+    # CSC table and prepare fresh model-bearing SignerInfo below.
+    PIT_TAR="$(FIND_MODEL_ODIN_TAR "CSC" "$SELECTED_MODEL" || true)"
+    if [ -z "$PIT_TAR" ]; then
+        PIT_TAR="$(FIND_TARGET_ODIN_TAR "CSC" || true)"
+    fi
+    [ -n "$PIT_TAR" ] && [ -f "$PIT_TAR" ] || {
+        LOGE "Unable to find a CSC Odin tar supplying the target PIT"
+        exit 1
+    }
+
+    PIT_MEMBER="$(GET_SINGLE_PIT_MEMBER "$PIT_TAR")" || exit 1
+    PIT_FILENAME="$(basename "$PIT_MEMBER")"
+    OUTPUT_PATH="$OUTPUT_DIR/$PIT_FILENAME"
+    EXTRACTED_TMP="$OUTPUT_PATH.stock.tmp"
+    PREPARED_TMP="$OUTPUT_PATH.prepared.tmp"
+    mkdir -p "$OUTPUT_DIR"
+    rm -f "$OUTPUT_PATH" "$EXTRACTED_TMP" "$PREPARED_TMP"
+
+    LOG "- Extracting target PIT $PIT_FILENAME from $(basename "$PIT_TAR")"
+    EXTRACT_ODIN_TAR_MEMBER_TO_PATH "$PIT_TAR" "$PIT_MEMBER" "$EXTRACTED_TMP" || exit 1
+    python3 "$SRC_DIR/scripts/samsung_signing/prepare_pit.py" \
+        -i "$EXTRACTED_TMP" \
+        -o "$PREPARED_TMP" \
+        --target-model "$SELECTED_MODEL" \
+        --rollback "$TARGET_SAMSUNG_SIGNING_ROLLBACK_INDEX" || exit 1
+    mv -f "$PREPARED_TMP" "$OUTPUT_PATH"
+    rm -f "$EXTRACTED_TMP"
+
+    SIGN_STAGE2_ODIN_COMPONENT "$OUTPUT_PATH" "pit" "true"
+    VERIFY_SAMSUNG_PIT_IN_DIR "$OUTPUT_DIR"
+}
+
+VERIFY_SAMSUNG_PIT_ARCHIVE()
+{
+    local ARCHIVE="$1"
+    local SOURCE_DIR="$2"
+    local PIT_MEMBER=""
+    local PIT_FILENAME=""
+    local VERIFY_ROOT="$OUT_DIR/target/$TARGET_CODENAME"
+    local VERIFY_DIR=""
+    local EXTRACTED=""
+    local -a PIT_MEMBERS=()
+
+    $TARGET_ENABLE_SAMSUNG_SIGNING || return 0
+    [ -f "$ARCHIVE" ] || return 0
+    mapfile -t PIT_MEMBERS < <(
+        tar tf "$ARCHIVE" | sed 's#^\./##' | awk 'tolower($0) ~ /(^|\/)[^\/]+\.pit$/ { print }'
+    )
+    [ "${#PIT_MEMBERS[@]}" -gt 0 ] || return 0
+
+    PIT_MEMBER="$(GET_SINGLE_PIT_MEMBER "$ARCHIVE")" || exit 1
+    PIT_FILENAME="$(basename "$PIT_MEMBER")"
+    [ -f "$SOURCE_DIR/$PIT_FILENAME" ] || {
+        LOGE "Final CSC archive PIT has no matching staging file: $PIT_FILENAME"
+        exit 1
+    }
+
+    mkdir -p "$VERIFY_ROOT"
+    VERIFY_DIR="$(mktemp -d "$VERIFY_ROOT/pit_archive_verify.XXXXXX")" || exit 1
+    EXTRACTED="$VERIFY_DIR/$PIT_FILENAME"
+    EXTRACT_ODIN_TAR_MEMBER_TO_PATH "$ARCHIVE" "$PIT_MEMBER" "$EXTRACTED" || exit 1
+    cmp -s "$SOURCE_DIR/$PIT_FILENAME" "$EXTRACTED" || {
+        LOGE "Final CSC archive PIT differs from its verified staging bytes"
+        exit 1
+    }
+    LOG "- Verifying final CSC archive PIT $PIT_FILENAME"
+    VERIFY_STAGE2_ODIN_COMPONENT "$EXTRACTED" "pit" "end" "no"
+    rm -rf "$VERIFY_DIR"
 }
 
 EXTRACT_ODIN_TAR_ENTRY_TO_PATH()

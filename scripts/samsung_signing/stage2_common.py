@@ -75,6 +75,10 @@ STAGE_TYPES = {
     "cp_main": 0x0E,
     "modem_boot": 0x0E,
     "modem_main": 0x0E,
+    # LK sends ordinary non-kernel images, including PIT, to EL3 as stage
+    # 0x0e ("Unknown Binary" in Samsung's logs).  PIT still selects the TEE
+    # key through its footer, unlike CP/modem images.
+    "pit": 0x0E,
     "boot": 0x10,
     "recovery": 0x11,
     "dtbo": 0x12,
@@ -110,6 +114,7 @@ STAGE_DEFAULT_KEY_TYPES = {
     "cp_main": 2,
     "modem_boot": 2,
     "modem_main": 2,
+    "pit": 0,
     "boot": 0,
     "recovery": 0,
     "dtbo": 0,

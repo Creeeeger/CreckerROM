@@ -32,7 +32,8 @@ COPY_HEIMDALL_IMAGES_FROM_DIR()
 
         LOG "- Copying Heimdall image $FILE_NAME"
         cp -fa "$ENTRY" "$HEIMDALL_DIR/$FILE_NAME"
-    done < <(find "$SOURCE_DIR" -maxdepth 1 -type f \( -name "*.img" -o -name "*.bin" \) | sort)
+    done < <(find "$SOURCE_DIR" -maxdepth 1 -type f \( \
+        -name "*.img" -o -name "*.bin" -o -iname "*.pit" \) | sort)
 }
 
 BUILD_HEIMDALL_PACKAGE()
@@ -78,6 +79,7 @@ BUILD_HEIMDALL_PACKAGE()
     FINALIZE_SAMSUNG_DOWNLOAD_IMAGES_IN_DIR "$HEIMDALL_DIR"
     VERIFY_SAMSUNG_STAGE2_IMAGES_IN_DIR "$HEIMDALL_DIR"
     VERIFY_SAMSUNG_BOOTLOADER_STAGE2_IMAGES_IN_DIR "$HEIMDALL_DIR"
+    VERIFY_SAMSUNG_PIT_IN_DIR "$HEIMDALL_DIR"
 
     cp -fa "$SRC_DIR/prebuilts/extras/flash_heimdall.sh" "$HEIMDALL_DIR/flash_all.sh"
     chmod 0755 "$HEIMDALL_DIR/flash_all.sh"
