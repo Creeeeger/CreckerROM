@@ -4,4 +4,6 @@
 # format: enabled|offset|old_hex|new_hex|function|instruction
 # Disabled example from the repository sample tzar.img.
 # Replace or delete this row, then set enabled to 1 for each real patch.
+
+# --- Disabled sample row ---
 0|0x00000000|7F|7E|sample_only|replace this disabled example row

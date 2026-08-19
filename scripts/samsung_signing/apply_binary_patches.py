@@ -29,7 +29,6 @@ def load_patch_rows(
         path: Path,
         *,
         kvm: bool = False,
-        rollback_mode: bool = False,
 ) -> tuple[list[PatchRow], int]:
     rows: list[PatchRow] = []
     disabled = 0
@@ -48,7 +47,6 @@ def load_patch_rows(
             enabled = (
                 profile == "1"
                 or (profile == "kvm" and kvm)
-                or (profile == "rollback" and rollback_mode)
             )
             if not enabled:
                 disabled += 1
@@ -129,7 +127,6 @@ def patch_file(
         dry_run: bool = False,
         target_label: str = "binary",
         kvm: bool = False,
-        rollback_mode: bool = False,
 ) -> tuple[int, int, int]:
     if not input_path.is_file():
         raise FileNotFoundError(input_path)
@@ -139,7 +136,6 @@ def patch_file(
     rows, disabled = load_patch_rows(
         patch_table,
         kvm=kvm,
-        rollback_mode=rollback_mode,
     )
     data = bytearray(input_path.read_bytes())
     applied, already = apply_patches(
@@ -174,11 +170,6 @@ def main(*, target_label: str = "binary", description: str | None = None) -> Non
         action="store_true",
         help="Enable rows whose profile column is 'kvm'",
     )
-    parser.add_argument(
-        "--rollback-mode",
-        action="store_true",
-        help="Enable rows whose profile column is 'rollback'",
-    )
     args = parser.parse_args()
 
     patch_file(
@@ -189,7 +180,6 @@ def main(*, target_label: str = "binary", description: str | None = None) -> Non
         dry_run=args.dry_run,
         target_label=target_label,
         kvm=args.kvm,
-        rollback_mode=args.rollback_mode,
     )
 
 

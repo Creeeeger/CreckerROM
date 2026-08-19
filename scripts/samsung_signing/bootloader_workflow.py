@@ -90,8 +90,6 @@ def patch_lk(args: argparse.Namespace, lk_path: Path) -> None:
     ]
     if args.kvm:
         command.append("--kvm")
-    if args.rollback_mode:
-        command.append("--rollback-mode")
 
     run_step(
         command,

@@ -72,8 +72,6 @@ def main() -> None:
                         help="Enable the model-specific LK and EL3 monitor EL2 patch profile")
     parser.add_argument("--el3-patch-table", type=Path,
                         help=f"EL3 KVM TSV. Default with --kvm: {DEFAULT_PATCH_DIR}/el3_mon_<bl1-model>_kvm_patches.tsv")
-    parser.add_argument("--rollback-mode", action="store_true",
-                        help="Enable LK rows reserved for the rollback firmware workflow")
     parser.add_argument("--avbtool", type=Path, default=DEFAULT_AVBTOOL,
                         help=f"Official avbtool.py path. Default: {DEFAULT_AVBTOOL}")
     parser.add_argument("--avb-key", type=Path, default=DEFAULT_AVB_KEY,
@@ -156,7 +154,6 @@ def main() -> None:
                 f"patch_table={args.patch_table}",
                 f"kvm={str(args.kvm).lower()}",
                 f"el3_patch_table={args.el3_patch_table or 'none'}",
-                f"rollback_mode={str(args.rollback_mode).lower()}",
                 f"tzar_patch_file={args.tzar_patch_file or 'none'}",
                 f"tzar_patch_table={args.tzar_patch_table or 'none'}",
                 f"avb_key={args.avb_key}",

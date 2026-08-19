@@ -4,32 +4,34 @@
 # target_hint=LK_G988B
 # format: profile|offset|old_hex|new_hex|function|instruction
 # Use profile 1 for normal rows, or 0 to disable a row.
-# Rows marked rollback are selected only by the --rollback-mode profile.
+# Rows marked kvm are selected only by the CLI/Ghidra --kvm profile.
+
+# --- Custom secure-boot key and fusing ---
 1|0x00014938|2100|C102|cm_otp_write_rom_sec_boot_key|mov x1,#0x16
 1|0x00014AD0|0120|8122|cm_otp_check_rom_sec_boot_key|mov x1,#0x114
 1|0x00014BE4|4100|E102|cm_otp_write_use_rom_sec_boot_key|mov x1,#0x17
 1|0x00014C90|2120|A122|cm_otp_read_use_rom_sec_boot_key|mov x1,#0x115
-rollback|0x00015C34|820200F9|9F0200F9|cm_otp_read_test|str xzr,[x20]
+1|0x002051A8|869702A3918D0E2DF679515D6F2F97B742D6CF1386B9015A22B1754357692DC6|EFD3426BE2EB922AF17A5E7A61FC2BF50624ED4E4D9DD20B9B71546A2BCB9AC9||
+
+# --- Warranty OTP read masking ---
+# Forces the warranty OTP read result and output value to zero.
 1|0x00015D80|F30300AA|130080D2|cm_otp_read_warranty|mov x19,#0x0
 1|0x00015D94|820200F9E10302AA|9F0200F9010080D2|cm_otp_read_warranty|str xzr,[x20]; mov x1,#0x0
-rollback|0x0003997C|A0230791|E00313AA|load_and_verify_vbmeta|mov x0,x19
+
+# --- Warranty-reason bookkeeping suppression ---
+# Prevents DDI from retaining the recorded warranty-void reason.
 1|0x00082F78|221C03B9|3F1C03B9|set_warranty_void_bit_reason|str wzr,[x1,#0x31c]
-rollback|0x000853EC|600440F9|000080D2|initialize_efuse_data|mov x0,#0x0
+
+# --- Warranty mismatch normalization during eFuse initialization ---
+# Stores zero when the normal and secure-monitor warranty reads disagree.
 1|0x00085444|210C40F9|010080D2|initialize_efuse_data|mov x1,#0x0
-rollback|0x00085DD0|600800B4|1F2003D5|CheckKernelRP|nop
-rollback|0x00085DE4|A00300B4|1D000014|CheckKernelRP|b commercial_bit_not_set
-1|0x000860DC|00|20|emc_get_fuse_status|mov w0,#0x1
-1|0x000860E0|820000B5203840F9|1F2003D51F2003D5|emc_get_fuse_status|nop
-1|0x000860E9|001FEBE0079F1A|2003D51F2003D5|emc_get_fuse_status|
+
+# --- Post-boot warranty-bit reason reset ---
 1|0x00086BC8|E0069837|37000014|post_check_kernel_integrity|b 0xe8086ca4
 1|0x00086CA0|60F99F36|1F2003D5|post_check_kernel_integrity|nop
 1|0x00086CA8|48120094|1F2003D5|post_check_kernel_integrity|nop
 1|0x00086CAC|00F9FF34|1F2003D5|post_check_kernel_integrity|nop
 1|0x00086CB0|00E08152|E0FF9F52|post_check_kernel_integrity|mov w0,#0xffff
-1|0x00087620|FD7BB0A9E30400D0|000080D2C0035FD6|check_signature|mov x0,#0x0
-1|0x00087728|FD7BBBA9FD|000080D2C0|check_ext4_signature|mov x0,#0x0
-1|0x0008772E|0091|5FD6|check_ext4_signature|
-1|0x002051A8|869702A3918D0E2DF679515D6F2F97B742D6CF1386B9015A22B1754357692DC6|EFD3426BE2EB922AF17A5E7A61FC2BF50624ED4E4D9DD20B9B71546A2BCB9AC9||
 
 # --- KVM / EL2 boot path ---
 # Enabled only by --kvm.
