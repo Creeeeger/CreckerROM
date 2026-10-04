@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Dəyişiklikləri tətbiq etmək üçün yenidən başlatma tələb olunur.</string>
+  <string name="unica_dialog_reboot_negative">İndi yox</string>
+  <string name="unica_dialog_reboot_positive">Yenidən başlat</string>
+  <string name="unica_dialog_reboot_title">Yenidən başlatma tələb olunur</string>
+  <string name="unica_gphotos_title">Google Photos-da limitsiz yaddaş</string>
+  <string name="unica_ss_detection_title">Ekran görüntüsü aşkarlanmasını deaktiv et</string>
+  <string name="unica_vulkan_summary">Bu stabil deyil və problemlərə səbəb ola bilər!</string>
+  <string name="unica_vulkan_title">Vulkan renderini aktiv et</string>
+</resources>

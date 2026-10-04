@@ -1,0 +1,7 @@
+# Original Vulkan control by Salvo Giangreco / UN1CA.
+# An unset preference retains the platform's existing renderer choice.
+on zygote-start && property:persist.sys.unica.vulkan=true
+    setprop debug.hwui.renderer skiavk
+
+on zygote-start && property:persist.sys.unica.vulkan=false
+    setprop debug.hwui.renderer skiagl

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">बदलाव लागू करने के लिए रीस्टार्ट करना ज़रूरी है।</string>
+  <string name="unica_dialog_reboot_negative">अभी नहीं</string>
+  <string name="unica_dialog_reboot_positive">रीस्टार्ट</string>
+  <string name="unica_dialog_reboot_title">रीस्टार्ट करना पड़ेगा</string>
+  <string name="unica_gphotos_title">Google फ़ोटो पर अनलिमिटेड स्टोरेज</string>
+  <string name="unica_ss_detection_title">स्क्रीन कैप्चर पहचान अक्षम करें</string>
+  <string name="unica_vulkan_summary">यह अस्थिर है और इससे समस्याएं उत्पन्न हो सकती हैं!</string>
+  <string name="unica_vulkan_title">वल्कन रेंडरर सक्षम करें</string>
+</resources>

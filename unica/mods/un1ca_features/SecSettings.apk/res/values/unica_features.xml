@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">To apply the changes, a restart is required.</string>
+  <string name="unica_dialog_reboot_negative">Not now</string>
+  <string name="unica_dialog_reboot_positive">Restart</string>
+  <string name="unica_dialog_reboot_title">Restart required</string>
+  <string name="unica_gphotos_title">Unlimited storage on Google Photos</string>
+  <string name="unica_ss_detection_title">Disable screen capture detection</string>
+  <string name="unica_vulkan_summary">Use Vulkan for Android interface rendering. Restart to apply changes.</string>
+  <string name="unica_vulkan_title">Enable Vulkan renderer</string>
+  <string name="unica_features_title">UN1CA features</string>
+  <string name="unica_features_summary">Screen capture detection, Vulkan and Google Photos</string>
+  <string name="unica_features_credits_title">Thanks to Salvo Giangreco</string>
+  <string name="unica_features_credits">These features are adapted from UN1CA by salvogiangri. A big thank you to Salvo and the UN1CA contributors!</string>
+  <string name="unica_gphotos_summary">Use the Pixel XL backup profile in Google Photos. Availability depends on Google. Changing this option restarts Photos.</string>
+  <string name="unica_capture_summary">Prevent apps from receiving Android screenshot and screen recording callbacks.</string>
+</resources>

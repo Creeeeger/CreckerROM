@@ -35,7 +35,7 @@
 - Extra CSC features (Call recording, Network speed in status bar, 5GHz Hotspot)
 - Countless other small optimizations
 
-## CreckerROM-exclusive features and fixes
+## CreckerROM features and fixes
 
 - Full custom AVB and Samsung signing for Exynos990, covering AP images, `vbmeta_samsung`, sparse `super`, the boot
   chain and rebuilt platform applications so locked-bootloader builds use one consistent signing identity
@@ -52,6 +52,9 @@
   by Wallet-related components
 - Built-in Play Integrity Fix with profile updates directly from Settings; no external PIF module is required
   (integrated with thanks to [salvogiangri](https://github.com/salvogiangri))
+- Screenshot/screen recording detection control, a Vulkan renderer switch, and optional Google Photos Pixel XL
+  spoofing under **Settings → UN1CA features**, adapted from UN1CA with a big thanks to
+  [Salvo Giangreco (salvogiangri)](https://github.com/salvogiangri).
 - Three debloat levels while preserving the applications and services required for messaging, Samsung accounts, firmware
   updates, Motion Photos, SIM unlocking and storage sharing
 - S26 Ultra wallpaper resources integrated into the ROM
@@ -62,7 +65,6 @@
 
 - Samsung Log video recording at 4K 60 FPS and 8K 24 FPS is broken
 - The camera feed flickers at high zoom levels (>40x) while recording video
-- Live/Motion Photos can be captured, but their animated portion cannot be viewed in Samsung Gallery
 - Passkey creation in Samsung Pass is broken because the FKeyMaster trusted application has not been ported yet; other
   passkey providers continue to work
 - Factory reset from Android Settings does not work. Boot into TWRP through KernelSU or the hardware key combination and
@@ -283,7 +285,8 @@ A big thanks goes to the following for their invaluable contributions in no part
 BE WRITTEN)
 
 - **[salvogiangri](https://github.com/salvogiangri)** for the UN1CA build system, OneUI patches, and general help and
-  support while developing
+  support while developing. A big thank you to Salvo for the screen capture detection controls, Vulkan renderer
+  switch, and Google Photos spoofing implementations adapted from [UN1CA](https://github.com/salvogiangri/UN1CA)
 - **[Ocin4Ever](https://github.com/Ocin4Ever)** for a lot of help especially on smali, advice and emotional support :D
 - **[Igor](https://github.com/BotchedRPR)** for getting me into porting, teaching me the basics, and emotional support
   down the road

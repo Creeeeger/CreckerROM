@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Për të aplikuar ndryshimet, kërkohet një rinisje.</string>
+  <string name="unica_dialog_reboot_negative">Jo tani</string>
+  <string name="unica_dialog_reboot_positive">Rinisje</string>
+  <string name="unica_dialog_reboot_title">Kërkohet rinisje</string>
+  <string name="unica_gphotos_title">Hapësirë ruajtjeje e pakufizuar në Google Photos</string>
+  <string name="unica_ss_detection_title">Çaktivizo zbulimin e kapjes së ekranit</string>
+  <string name="unica_vulkan_summary">Kjo është e paqëndrueshme dhe mund të shkaktojë probleme!</string>
+  <string name="unica_vulkan_title">Aktivizo renderer-in Vulkan</string>
+</resources>

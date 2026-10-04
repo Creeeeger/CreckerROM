@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">बदल लागू करण्यासाठी, रीस्टार्ट करणे आवश्यक आहे.</string>
+  <string name="unica_gphotos_title">Google Photos वर अमर्यादित स्टोरेज</string>
+</resources>

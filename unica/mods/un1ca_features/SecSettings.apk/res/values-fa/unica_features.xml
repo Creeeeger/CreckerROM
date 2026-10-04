@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">برای اعمال تغییرات، راه‌اندازی مجدد لازم است.</string>
+  <string name="unica_dialog_reboot_negative">الان نه</string>
+  <string name="unica_dialog_reboot_positive">راه‌اندازی مجدد</string>
+  <string name="unica_dialog_reboot_title">راه‌اندازی مجدد لازم است</string>
+  <string name="unica_gphotos_title">فضای ذخیره‌سازی نامحدود در Google Photos</string>
+  <string name="unica_ss_detection_title">غیرفعال کردن تشخیص ضبط صفحه</string>
+  <string name="unica_vulkan_summary">این گزینه پایدار نیست و ممکن است باعث مشکل شود!</string>
+  <string name="unica_vulkan_title">فعال کردن پردازش Vulkan</string>
+</resources>

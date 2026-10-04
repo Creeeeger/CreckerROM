@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">لتطبيق التغييرات، يلزم إعادة تشغيل الهاتف.</string>
+  <string name="unica_dialog_reboot_negative">ليس الآن</string>
+  <string name="unica_dialog_reboot_positive">إعادة تشغيل</string>
+  <string name="unica_dialog_reboot_title">مطلوب إعادة تشغيل الهاتف</string>
+  <string name="unica_gphotos_title">مساحة تخزين غير محدودة على صور Google</string>
+  <string name="unica_ss_detection_title">تعطيل اكتشاف أخذ لقطات الشاشة</string>
+  <string name="unica_vulkan_summary">هذا غير مستقر وقد يسبب مشاكل!</string>
+  <string name="unica_vulkan_title">تمكين مُصيِّر Vulkan</string>
+</resources>

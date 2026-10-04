@@ -1,0 +1,254 @@
+From: Salvo Giangreco <giangrecosalvo9@gmail.com>
+Subject: [PATCH] Add optional Google Photos Pixel XL spoof
+
+Adapted from UN1CA sixteen ed567b1bf3df61230548a94d8e8c90390fc789a8
+for One UI 7. Original work by Salvo Giangreco.
+
+diff --git a/smali_classes6/io/mesalabs/unica/GooglePhotosHooks.smali b/smali_classes6/io/mesalabs/unica/GooglePhotosHooks.smali
+new file mode 100644
+--- /dev/null
++++ b/smali_classes6/io/mesalabs/unica/GooglePhotosHooks.smali
+@@ -0,0 +1,198 @@
++# Adapted from Salvo Giangreco's UN1CA SamsungPropsHooks and Photos feature hook.
++# SPDX-License-Identifier: GPL-3.0-or-later
++.class public final Lio/mesalabs/unica/GooglePhotosHooks;
++.super Ljava/lang/Object;
++.source "GooglePhotosHooks.java"
++
++.method public static blacklist init(Landroid/content/Context;)V
++    .locals 3
++
++    if-eqz p0, :unica_done
++
++    invoke-virtual {p0}, Landroid/content/Context;->getPackageName()Ljava/lang/String;
++
++    move-result-object v0
++
++    const-string v1, "com.google.android.apps.photos"
++
++    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-eqz v0, :unica_done
++
++    const-string v0, "persist.sys.unica.gphotos"
++
++    const/4 v1, 0x0
++
++    invoke-static {v0, v1}, Landroid/os/SemSystemProperties;->getBoolean(Ljava/lang/String;Z)Z
++
++    move-result v0
++
++    if-eqz v0, :unica_done
++
++    const-string v0, "BRAND"
++
++    const-string v1, "google"
++
++    invoke-static {v0, v1}, Lio/mesalabs/unica/GooglePhotosHooks;->setBuildField(Ljava/lang/String;Ljava/lang/Object;)V
++
++    const-string v0, "MANUFACTURER"
++
++    const-string v1, "Google"
++
++    invoke-static {v0, v1}, Lio/mesalabs/unica/GooglePhotosHooks;->setBuildField(Ljava/lang/String;Ljava/lang/Object;)V
++
++    const-string v0, "DEVICE"
++
++    const-string v1, "marlin"
++
++    invoke-static {v0, v1}, Lio/mesalabs/unica/GooglePhotosHooks;->setBuildField(Ljava/lang/String;Ljava/lang/Object;)V
++
++    const-string v0, "PRODUCT"
++
++    const-string v1, "marlin"
++
++    invoke-static {v0, v1}, Lio/mesalabs/unica/GooglePhotosHooks;->setBuildField(Ljava/lang/String;Ljava/lang/Object;)V
++
++    const-string v0, "MODEL"
++
++    const-string v1, "Pixel XL"
++
++    invoke-static {v0, v1}, Lio/mesalabs/unica/GooglePhotosHooks;->setBuildField(Ljava/lang/String;Ljava/lang/Object;)V
++
++    const-string v0, "FINGERPRINT"
++
++    const-string v1, "google/marlin/marlin:10/QP1A.191005.007.A3/5972272:user/release-keys"
++
++    invoke-static {v0, v1}, Lio/mesalabs/unica/GooglePhotosHooks;->setBuildField(Ljava/lang/String;Ljava/lang/Object;)V
++
++    :unica_done
++    return-void
++.end method
++
++.method public static blacklist hasFeature(Ljava/lang/String;)Ljava/lang/Boolean;
++    .locals 3
++
++    const-string v0, "persist.sys.unica.gphotos"
++
++    const/4 v1, 0x0
++
++    invoke-static {v0, v1}, Landroid/os/SemSystemProperties;->getBoolean(Ljava/lang/String;Z)Z
++
++    move-result v0
++
++    if-eqz v0, :unica_stock
++
++    invoke-static {}, Landroid/app/ActivityThread;->currentPackageName()Ljava/lang/String;
++
++    move-result-object v0
++
++    const-string v1, "com.google.android.apps.photos"
++
++    invoke-virtual {v1, v0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-eqz v0, :unica_stock
++
++    const-string v0, "com.google.android.feature.GOOGLE_BUILD"
++
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-nez v0, :unica_pixel
++
++    const-string v0, "com.google.android.feature.GOOGLE_EXPERIENCE"
++
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-nez v0, :unica_pixel
++
++    const-string v0, "com.google.android.apps.photos.NEXUS_PRELOAD"
++
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-nez v0, :unica_pixel
++
++    const-string v0, "com.google.android.apps.photos.nexus_preload"
++
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-nez v0, :unica_pixel
++
++    const-string v0, "com.google.android.feature.PIXEL_EXPERIENCE"
++
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v0
++
++    if-nez v0, :unica_pixel
++
++    :unica_stock
++    const/4 v0, 0x0
++
++    return-object v0
++
++    :unica_pixel
++    sget-object v0, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;
++
++    return-object v0
++.end method
++
++.method private static blacklist setBuildField(Ljava/lang/String;Ljava/lang/Object;)V
++    .locals 2
++
++    :try_start_0
++    const-class v0, Landroid/os/Build;
++
++    invoke-virtual {v0, p0}, Ljava/lang/Class;->getDeclaredField(Ljava/lang/String;)Ljava/lang/reflect/Field;
++
++    move-result-object v0
++
++    const/4 v1, 0x1
++
++    invoke-virtual {v0, v1}, Ljava/lang/reflect/Field;->setAccessible(Z)V
++
++    const/4 v1, 0x0
++
++    invoke-virtual {v0, v1, p1}, Ljava/lang/reflect/Field;->set(Ljava/lang/Object;Ljava/lang/Object;)V
++
++    const/4 p1, 0x0
++
++    invoke-virtual {v0, p1}, Ljava/lang/reflect/Field;->setAccessible(Z)V
++    :try_end_0
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
++
++    return-void
++
++    :catch_0
++    move-exception p1
++
++    new-instance v0, Ljava/lang/StringBuilder;
++
++    const-string v1, "Failed to spoof Build."
++
++    invoke-direct {v0, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object p0
++
++    invoke-virtual {p0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object p0
++
++    const-string v0, "GooglePhotosHooks"
++
++    invoke-static {v0, p0, p1}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    return-void
++.end method
+diff --git a/smali/android/app/Instrumentation.smali b/smali/android/app/Instrumentation.smali
+--- a/smali/android/app/Instrumentation.smali
++++ b/smali/android/app/Instrumentation.smali
+@@ -781,6 +781,8 @@
+     invoke-virtual {v0, p1}, Landroid/app/Application;->attach(Landroid/content/Context;)V
+ 
+     invoke-static {p1}, Lio/mesalabs/unica/PlayIntegrityHooks;->setProps(Landroid/content/Context;)V
++
++    invoke-static {p1}, Lio/mesalabs/unica/GooglePhotosHooks;->init(Landroid/content/Context;)V
+ 
+     return-object v0
+ .end method
+@@ -4788,6 +4790,8 @@
+ 
+     invoke-static {p3}, Lio/mesalabs/unica/PlayIntegrityHooks;->setProps(Landroid/content/Context;)V
+ 
++    invoke-static {p3}, Lio/mesalabs/unica/GooglePhotosHooks;->init(Landroid/content/Context;)V
++
+     return-object v0
+ .end method
+ 
+diff --git a/smali/android/app/ApplicationPackageManager.smali b/smali/android/app/ApplicationPackageManager.smali
+--- a/smali/android/app/ApplicationPackageManager.smali
++++ b/smali/android/app/ApplicationPackageManager.smali
+@@ -10933,6 +10933,20 @@
+ 
+ .method public whitelist hasSystemFeature(Ljava/lang/String;I)Z
+     .locals 2
++
++    invoke-static {p1}, Lio/mesalabs/unica/GooglePhotosHooks;->hasFeature(Ljava/lang/String;)Ljava/lang/Boolean;
++
++    move-result-object v0
++
++    if-eqz v0, :unica_stock_feature
++
++    invoke-virtual {v0}, Ljava/lang/Boolean;->booleanValue()Z
++
++    move-result v0
++
++    return v0
++
++    :unica_stock_feature
+ 
+     invoke-static {p1}, Lcom/samsung/android/core/pm/mm/MaintenanceModeUtils;->isMaintenanceModeFeature(Ljava/lang/String;)Z
+ 

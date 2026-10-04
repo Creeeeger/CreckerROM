@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Для применения изменений необходима перезагрузка.</string>
+  <string name="unica_dialog_reboot_negative">Не сейчас</string>
+  <string name="unica_dialog_reboot_positive">Перезагрузить</string>
+  <string name="unica_dialog_reboot_title">Требуется перезагрузка</string>
+  <string name="unica_gphotos_title">Неограниченное хранилище в Google Фото</string>
+  <string name="unica_ss_detection_title">Отключить обнаружение захвата экрана</string>
+  <string name="unica_vulkan_summary">Это нестабильно и может вызвать проблемы!</string>
+  <string name="unica_vulkan_title">Включить рендерер Vulkan</string>
+</resources>

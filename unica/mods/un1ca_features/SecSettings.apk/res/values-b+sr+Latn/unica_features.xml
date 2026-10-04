@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Da biste primenili promene, potrebno je ponovno pokretanje.</string>
+  <string name="unica_dialog_reboot_negative">Ne sada</string>
+  <string name="unica_dialog_reboot_positive">Ponovo pokreni</string>
+  <string name="unica_dialog_reboot_title">Ponovno pokretanje potrebno</string>
+  <string name="unica_gphotos_title">Beskonačan prostor na Google Photos</string>
+  <string name="unica_ss_detection_title">Onemogući otkrivanje snimanja ekrana</string>
+  <string name="unica_vulkan_summary">Ovo je nestabilno i može da izazove probleme!</string>
+  <string name="unica_vulkan_title">Omogući Vulkan renderer</string>
+</resources>

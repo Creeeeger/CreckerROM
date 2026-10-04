@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Để áp dụng các thay đổi, cần phải khởi động lại.</string>
+  <string name="unica_dialog_reboot_negative">Không phải bây giờ</string>
+  <string name="unica_dialog_reboot_positive">Khởi động lại</string>
+  <string name="unica_dialog_reboot_title">Cần phải khởi động lại</string>
+  <string name="unica_gphotos_title">Không giới hạn lưu trữ trên Google Photos</string>
+  <string name="unica_ss_detection_title">Vô hiệu hóa phát hiện chụp màn hình</string>
+  <string name="unica_vulkan_summary">Không ổn định và có thể gây ra vấn đề!</string>
+  <string name="unica_vulkan_title">Bật trình kết xuất Vulkan</string>
+</resources>

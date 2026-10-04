@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Değişikliklerin uygulanabilmesi için cihazın yeniden başlatılması gerekiyor.</string>
+  <string name="unica_dialog_reboot_negative">Şimdi değil</string>
+  <string name="unica_dialog_reboot_positive">Yeniden başlat</string>
+  <string name="unica_dialog_reboot_title">Yeniden başlatma gerekli</string>
+  <string name="unica_gphotos_title">"Google Fotoğraflar'da sınırsız depolama"</string>
+  <string name="unica_ss_detection_title">Ekran yakalama tespitini devre dışı bırak</string>
+  <string name="unica_vulkan_summary">Stabil değildir ve sorunlara sebep olabilir!</string>
+  <string name="unica_vulkan_title">Vulkan işleyicisini etkinleştir</string>
+</resources>

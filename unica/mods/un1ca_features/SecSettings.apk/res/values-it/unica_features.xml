@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Per applicare le impostazioni, riavvia il dispositivo.</string>
+  <string name="unica_dialog_reboot_negative">Più tardi</string>
+  <string name="unica_dialog_reboot_positive">Riavvia</string>
+  <string name="unica_dialog_reboot_title">Riavvio richiesto</string>
+  <string name="unica_gphotos_title">Archiviazione illimitata su Google Foto</string>
+  <string name="unica_ss_detection_title">Disattiva rilevamento cattura schermo</string>
+  <string name="unica_vulkan_summary">Potrebbe causare problemi!</string>
+  <string name="unica_vulkan_title">Abilita renderer Vulkan</string>
+</resources>

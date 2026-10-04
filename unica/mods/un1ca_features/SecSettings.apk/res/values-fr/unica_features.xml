@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">"Pour appliquer les modifications, un redémarrage de l'appareil est requis."</string>
+  <string name="unica_dialog_reboot_negative">Pas maintenant</string>
+  <string name="unica_dialog_reboot_positive">Redémarrer</string>
+  <string name="unica_dialog_reboot_title">Redémarrage requis</string>
+  <string name="unica_gphotos_title">Stockage illimité sur Google Photos</string>
+  <string name="unica_ss_detection_title">"Désactiver la détection de capture d'écran"</string>
+  <string name="unica_vulkan_summary">Ceci est instable et pourrait causer des problèmes !</string>
+  <string name="unica_vulkan_title">Activer le moteur de rendu Vulkan</string>
+</resources>

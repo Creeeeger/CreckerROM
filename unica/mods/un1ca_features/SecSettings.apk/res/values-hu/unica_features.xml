@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">A módosítások alkalmazásához újraindítás szükséges.</string>
+  <string name="unica_dialog_reboot_negative">Nem most</string>
+  <string name="unica_dialog_reboot_positive">Újraindítás</string>
+  <string name="unica_dialog_reboot_title">Újraindítás szükséges</string>
+  <string name="unica_gphotos_title">Végtelen tárhely a Google Fotókban</string>
+  <string name="unica_ss_detection_title">Képernyőfelvétel észlelésének letiltása</string>
+  <string name="unica_vulkan_summary">Ez instabil és problémákat okozhat!</string>
+  <string name="unica_vulkan_title">Vulkan renderer engedélyezése</string>
+</resources>

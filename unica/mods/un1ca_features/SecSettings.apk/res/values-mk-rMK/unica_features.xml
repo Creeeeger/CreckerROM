@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">За да се применат промените, потребно е рестартирање.</string>
+  <string name="unica_dialog_reboot_negative">Не сега</string>
+  <string name="unica_dialog_reboot_positive">Рестартирај</string>
+  <string name="unica_dialog_reboot_title">Потребно е рестартирање</string>
+  <string name="unica_gphotos_title">Неограничено складирање во Google Photos</string>
+  <string name="unica_ss_detection_title">Оневозможи детекција на снимање на екранот</string>
+  <string name="unica_vulkan_summary">Ова е нестабилно и може да предизвика проблеми!</string>
+  <string name="unica_vulkan_title">Овозможи Vulkan рендер</string>
+</resources>

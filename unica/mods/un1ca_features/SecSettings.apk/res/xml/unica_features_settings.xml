@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen android:title="@string/unica_features_title"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:settings="http://schemas.android.com/apk/res-auto">
+    <SecSwitchPreference android:title="@string/unica_ss_detection_title" android:key="unica_ss_detection" android:summary="@string/unica_capture_summary" settings:controller="io.mesalabs.unica.settings.wm.CaptureDetectionPreferenceController" />
+    <SecSwitchPreference android:title="@string/unica_vulkan_title" android:key="unica_vulkan" android:summary="@string/unica_vulkan_summary" settings:controller="io.mesalabs.unica.settings.ui.VulkanPreferenceController" />
+    <SecSwitchPreference android:title="@string/unica_gphotos_title" android:key="unica_gphotos" android:summary="@string/unica_gphotos_summary" settings:controller="io.mesalabs.unica.settings.extra.GooglePhotosPreferenceController" />
+    <com.samsung.android.settings.widget.SecInsetCategoryPreference />
+    <SecPreference android:title="@string/unica_features_credits_title" android:key="unica_features_credits" android:summary="@string/unica_features_credits" android:selectable="false" />
+</PreferenceScreen>

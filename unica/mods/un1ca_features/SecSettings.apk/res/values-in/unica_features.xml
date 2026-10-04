@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Untuk menerapkan perubahan, diperlukan memulai ulang.</string>
+  <string name="unica_dialog_reboot_negative">Tidak sekarang</string>
+  <string name="unica_dialog_reboot_positive">Mulai ulang</string>
+  <string name="unica_dialog_reboot_title">Mulai ulang diperlukan</string>
+  <string name="unica_gphotos_title">Penyimpanan tak terbatas di Google Foto</string>
+  <string name="unica_ss_detection_title">Matikan deteksi tangkapan layar</string>
+  <string name="unica_vulkan_summary">Ini tidak stabil dan mungkin menyebabkan masalah!</string>
+  <string name="unica_vulkan_title">Aktifkan perender Vulkan</string>
+</resources>

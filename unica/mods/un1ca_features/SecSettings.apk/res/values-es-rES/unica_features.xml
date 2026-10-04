@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Es necesario reiniciar tu dispositivo para que se apliquen los cambios.</string>
+  <string name="unica_dialog_reboot_negative">Ahora no</string>
+  <string name="unica_dialog_reboot_positive">Reiniciar</string>
+  <string name="unica_dialog_reboot_title">Se requiere reiniciar</string>
+  <string name="unica_gphotos_title">Almacenamiento ilimitado en Google Fotos</string>
+  <string name="unica_ss_detection_title">Desactivar detección de capturas y grabaciones de pantalla</string>
+  <string name="unica_vulkan_summary">¡Esto es inestable y puede causar problemas!</string>
+  <string name="unica_vulkan_title">Activar renderizador Vulkan</string>
+</resources>

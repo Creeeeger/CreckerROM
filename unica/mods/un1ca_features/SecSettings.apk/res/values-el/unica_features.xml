@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">Για να εφαρμοστούν οι αλλαγές, απαιτείται επανεκκίνηση.</string>
+  <string name="unica_dialog_reboot_negative">Όχι τώρα</string>
+  <string name="unica_dialog_reboot_positive">Επανεκκίνηση</string>
+  <string name="unica_dialog_reboot_title">Απαιτείται επανεκκίνηση</string>
+  <string name="unica_gphotos_title">Απεριόριστος αποθηκευτικός χώρος στο Google Photos</string>
+  <string name="unica_ss_detection_title">Απενεργοποίηση ανίχνευσης στιγμιότυπου οθόνης</string>
+  <string name="unica_vulkan_summary">Αυτή η επιλογή είναι ασταθής και μπορεί να προκαλέσει προβλήματα!</string>
+  <string name="unica_vulkan_title">Ενεργοποίηση Vulkan renderer</string>
+</resources>

@@ -1,0 +1,30 @@
+From: Salvo Giangreco <giangrecosalvo9@gmail.com>
+Subject: [PATCH] Register UN1CA features fragment
+
+Adapted from UN1CA sixteen ed567b1bf3df61230548a94d8e8c90390fc789a8
+for One UI 7. Original work by Salvo Giangreco.
+
+diff --git a/smali_classes2/com/android/settings/core/gateway/SettingsGateway.smali b/smali_classes2/com/android/settings/core/gateway/SettingsGateway.smali
+--- a/smali_classes2/com/android/settings/core/gateway/SettingsGateway.smali
++++ b/smali_classes2/com/android/settings/core/gateway/SettingsGateway.smali
+@@ -2081,6 +2081,20 @@
+ 
+     aput-object v205, v15, v0
+ 
++    array-length v0, v15
++
++    add-int/lit8 v1, v0, 0x1
++
++    invoke-static {v15, v1}, Ljava/util/Arrays;->copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;
++
++    move-result-object v15
++
++    check-cast v15, [Ljava/lang/String;
++
++    const-string v1, "io.mesalabs.unica.settings.UnicaFeaturesFragment"
++
++    aput-object v1, v15, v0
++
+     sput-object v15, Lcom/android/settings/core/gateway/SettingsGateway;->ENTRY_FRAGMENTS:[Ljava/lang/String;
+ 
+     const-class v0, Lcom/android/settings/Settings$ConnectedDeviceDashboardActivity;

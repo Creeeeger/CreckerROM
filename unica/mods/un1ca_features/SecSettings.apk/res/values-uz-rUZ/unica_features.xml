@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="unica_dialog_reboot_msg">"O'zgarishlarni qabul qilish uchun qayta ishga tushirish talab qilinadi."</string>
+  <string name="unica_dialog_reboot_negative">Hozir emas</string>
+  <string name="unica_dialog_reboot_positive">Qayta yuklash</string>
+  <string name="unica_dialog_reboot_title">Qayta yuklash talab qilinadi</string>
+  <string name="unica_gphotos_title">Google Photos da cheklanmagan joy</string>
+  <string name="unica_ss_detection_title">"Ekran yozuvini aniqlashni o'chirish"</string>
+  <string name="unica_vulkan_summary">Bu stabil emas va buzilishlarga olib kelishi mumkin!</string>
+  <string name="unica_vulkan_title">Vulkan renderini yoqish</string>
+</resources>
