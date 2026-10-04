@@ -1,0 +1,36 @@
+From 42a1e98b1912e991fbbd0f54d0447acff41ad997 Mon Sep 17 00:00:00 2001
+From: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+Date: Sun, 4 Oct 2026 11:42:17 +0200
+Subject: [PATCH] Allow factory reset without a persistent data block
+
+The misc customization disables FRP by clearing ro.frp.pst. Samsung Settings
+silently returns from the final reset button handler when that property is
+empty, so it never reaches the normal reset flow.
+---
+ .../com/android/settings/MainClearConfirm.smali | 17 -----------------
+ 1 file changed, 17 deletions(-)
+
+diff --git a/smali_classes2/com/android/settings/MainClearConfirm.smali b/smali_classes2/com/android/settings/MainClearConfirm.smali
+index a873ee0..6bdbb5b 100644
+--- a/smali_classes2/com/android/settings/MainClearConfirm.smali
++++ b/smali_classes2/com/android/settings/MainClearConfirm.smali
+@@ -1414,19 +1414,2 @@
+     :cond_0
+-    const-string v0, "ro.frp.pst"
+-
+-    invoke-static {v0}, Landroid/os/SystemProperties;->get(Ljava/lang/String;)Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    const-string v1, ""
+-
+-    invoke-virtual {v0, v1}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_1
+-
+-    return-void
+-
+-    :cond_1
+     const-string v0, "true"

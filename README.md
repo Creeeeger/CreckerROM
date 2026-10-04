@@ -67,8 +67,6 @@
 - The camera feed flickers at high zoom levels (>40x) while recording video
 - Passkey creation in Samsung Pass is broken because the FKeyMaster trusted application has not been ported yet; other
   passkey providers continue to work
-- Factory reset from Android Settings does not work. Boot into TWRP through KernelSU or the hardware key combination and
-  wipe the device from recovery instead
 
 # Building
 
