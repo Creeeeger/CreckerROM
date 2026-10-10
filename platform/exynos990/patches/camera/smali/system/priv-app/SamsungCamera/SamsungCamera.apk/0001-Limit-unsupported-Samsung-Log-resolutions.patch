@@ -1,0 +1,254 @@
+From: CreckerROM <creckerrom@localhost>
+Subject: [PATCH] Restrict Samsung Log to Exynos990 recording capabilities
+
+Disable Log indicators for UHD60 (including cinema ratios) and 8K24 in
+Video and Pro Video. Retain ordinary recording at those resolutions and
+Log at lower rates. Guard the recording path against saved Log settings.
+Apply only through the Exynos990 camera module.
+
+---
+--- a/smali_classes4/com/sec/android/app/camera/util/CameraResolution.smali
++++ b/smali_classes4/com/sec/android/app/camera/util/CameraResolution.smali
+@@ -7006,6 +7006,54 @@
+     return p0
+ .end method
+
++.method public static isLogVideoResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
++    .locals 2
++
++    # Exynos990 cannot record Samsung Log at UHD60 or 8K24.
++    invoke-virtual {p0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getWidth()I
++
++    move-result v0
++
++    const/16 v1, 0xf00
++
++    if-ne v0, v1, :cond_check_8k
++
++    invoke-virtual {p0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getMaxFps()I
++
++    move-result v0
++
++    const/16 v1, 0x3c
++
++    if-eq v0, v1, :cond_unsupported
++
++    :cond_check_8k
++    invoke-virtual {p0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getWidth()I
++
++    move-result v0
++
++    const/16 v1, 0x1e00
++
++    if-ne v0, v1, :cond_supported
++
++    invoke-virtual {p0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getMaxFps()I
++
++    move-result v0
++
++    const/16 v1, 0x18
++
++    if-eq v0, v1, :cond_unsupported
++
++    :cond_supported
++    const/4 v0, 0x1
++
++    return v0
++
++    :cond_unsupported
++    const/4 v0, 0x0
++
++    return v0
++.end method
++
+ .method public static isUhd120FpsCamcorderResolution(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
+     .locals 1
+
+--- a/smali_classes4/com/sec/android/app/camera/setting/repository/DimUpdaterMap.smali
++++ b/smali_classes4/com/sec/android/app/camera/setting/repository/DimUpdaterMap.smali
+@@ -2886,6 +2886,24 @@
+         }
+     .end annotation
+
++    move/from16 v0, p3
++
++    if-nez v0, :cond_log_resolution_done
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, p1
++
++    move/from16 v2, p2
++
++    sget-object v3, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->LOG_PRO_VIDEO_INDICATOR:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    move-object/from16 v4, p4
++
++    invoke-direct/range {v0 .. v4}, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->updateLogVideoResolutionDim(Ljava/util/ArrayList;ILcom/sec/android/app/camera/interfaces/CameraSettings$Key;Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)V
++
++    :cond_log_resolution_done
++
+     invoke-direct {p0}, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->getCustomSettingOverriddenValue()I
+
+     move-result v0
+@@ -3293,6 +3311,24 @@
+         }
+     .end annotation
+
++    move/from16 v0, p3
++
++    if-nez v0, :cond_log_resolution_done
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, p1
++
++    move/from16 v2, p2
++
++    sget-object v3, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->LOG_VIDEO_INDICATOR:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    move-object/from16 v4, p4
++
++    invoke-direct/range {v0 .. v4}, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->updateLogVideoResolutionDim(Ljava/util/ArrayList;ILcom/sec/android/app/camera/interfaces/CameraSettings$Key;Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)V
++
++    :cond_log_resolution_done
++
+     move-object/from16 v0, p0
+
+     move/from16 v1, p3
+@@ -5946,6 +5982,26 @@
+         }
+     .end annotation
+
++    move/from16 v0, p3
++
++    const/4 v1, 0x1
++
++    if-ne v0, v1, :cond_log_resolution_done
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, p1
++
++    move/from16 v2, p2
++
++    sget-object v3, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->LOG_PRO_VIDEO_INDICATOR:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    move-object/from16 v4, p4
++
++    invoke-direct/range {v0 .. v4}, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->updateLogVideoResolutionDim(Ljava/util/ArrayList;ILcom/sec/android/app/camera/interfaces/CameraSettings$Key;Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)V
++
++    :cond_log_resolution_done
++
+     invoke-direct {p0}, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->getCustomSettingOverriddenValue()I
+
+     move-result v0
+@@ -6227,6 +6283,26 @@
+         }
+     .end annotation
+
++    move/from16 v0, p3
++
++    const/4 v1, 0x1
++
++    if-ne v0, v1, :cond_log_resolution_done
++
++    move-object/from16 v0, p0
++
++    move-object/from16 v1, p1
++
++    move/from16 v2, p2
++
++    sget-object v3, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->LOG_VIDEO_INDICATOR:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    move-object/from16 v4, p4
++
++    invoke-direct/range {v0 .. v4}, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->updateLogVideoResolutionDim(Ljava/util/ArrayList;ILcom/sec/android/app/camera/interfaces/CameraSettings$Key;Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)V
++
++    :cond_log_resolution_done
++
+     move-object/from16 v0, p0
+
+     const/4 v1, 0x1
+@@ -8178,6 +8254,52 @@
+     return-void
+ .end method
+
++.method private updateLogVideoResolutionDim(Ljava/util/ArrayList;ILcom/sec/android/app/camera/interfaces/CameraSettings$Key;Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)V
++    .locals 6
++
++    invoke-direct {p0}, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->getCustomSettingOverriddenValue()I
++
++    move-result v0
++
++    sget-object v1, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->LOG_PRO_VIDEO_INDICATOR:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    const/4 v2, 0x1
++
++    if-ne p3, v1, :cond_check_mode
++
++    const/16 v2, 0x24
++
++    :cond_check_mode
++    if-ne v0, v2, :cond_done
++
++    invoke-static {p2}, Lcom/sec/android/app/camera/interfaces/Resolution;->getResolution(I)Lcom/sec/android/app/camera/interfaces/Resolution;
++
++    move-result-object v0
++
++    invoke-static {v0}, Lcom/sec/android/app/camera/util/CameraResolution;->isLogVideoResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_done
++
++    iget-object v0, p0, Lcom/sec/android/app/camera/setting/repository/DimUpdaterMap;->mDimSetter:Lcom/sec/android/app/camera/setting/repository/DimSetter;
++
++    move-object v1, p3
++
++    const/4 v2, 0x0
++
++    const/4 v3, 0x0
++
++    move-object v4, p1
++
++    move-object v5, p4
++
++    invoke-interface/range {v0 .. v5}, Lcom/sec/android/app/camera/setting/repository/DimSetter;->setDim(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;ZILjava/util/ArrayList;Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)V
++
++    :cond_done
++    return-void
++.end method
++
+ .method private updateLogVideoModeDim(Ljava/util/ArrayList;IILcom/sec/android/app/camera/interfaces/CameraSettings$Key;)V
+     .locals 6
+     .annotation system Ldalvik/annotation/Signature;
+--- a/smali_classes3/com/sec/android/app/camera/engine/recording/RecordingManagerImpl.smali
++++ b/smali_classes3/com/sec/android/app/camera/engine/recording/RecordingManagerImpl.smali
+@@ -4729,6 +4729,26 @@
+ .method public isLogVideoAvailable()Z
+     .locals 2
+
++    iget-object v0, p0, Lcom/sec/android/app/camera/engine/recording/RecordingManagerImpl;->mCameraSettings:Lcom/sec/android/app/camera/interfaces/CameraSettings;
++
++    invoke-interface {v0}, Lcom/sec/android/app/camera/interfaces/CameraSettings;->getCameraId()Lcom/sec/android/app/camera/interfaces/CameraId;
++
++    move-result-object v1
++
++    invoke-interface {v0, v1}, Lcom/sec/android/app/camera/interfaces/CameraSettings;->getCamcorderResolution(Lcom/sec/android/app/camera/interfaces/CameraId;)I
++
++    move-result v0
++
++    invoke-static {v0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getResolution(I)Lcom/sec/android/app/camera/interfaces/Resolution;
++
++    move-result-object v0
++
++    invoke-static {v0}, Lcom/sec/android/app/camera/util/CameraResolution;->isLogVideoResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_0
++
+     iget-object v0, p0, Lcom/sec/android/app/camera/engine/recording/RecordingManagerImpl;->mCameraContext:Lcom/sec/android/app/camera/interfaces/CameraContext;
+
+     invoke-interface {v0}, Lcom/sec/android/app/camera/interfaces/CameraContext;->getShootingModeFeature()Lcom/sec/android/app/camera/interfaces/ShootingModeFeature;
