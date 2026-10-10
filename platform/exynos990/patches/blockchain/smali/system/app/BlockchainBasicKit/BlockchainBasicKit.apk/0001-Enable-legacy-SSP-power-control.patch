@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+Date: Sat, 10 Oct 2026 14:00:00 +0200
+Subject: [PATCH] Enable legacy SSP power control on Exynos990
+
+Exynos990 has SSP but does not expose the newer secure-NVM or securehw
+properties used by Keystore's power gate. Honor each command's existing
+power-control opt-in so BlockchainTZService brackets it with SSP init/exit.
+
+Do not spoof securehw.status=Ready: the same property selects KV2 credential
+storage, which skips persisting the PIN random required by legacy BCcore.
+Keep chipset detection and the legacy credential manager unchanged. This
+patch is applied only by the Exynos990 platform module.
+
+Signed-off-by: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+---
+diff --git a/smali_classes2/com/samsung/android/tzsvc/bts/api/TACommandRequest.smali b/smali_classes2/com/samsung/android/tzsvc/bts/api/TACommandRequest.smali
+--- a/smali_classes2/com/samsung/android/tzsvc/bts/api/TACommandRequest.smali
++++ b/smali_classes2/com/samsung/android/tzsvc/bts/api/TACommandRequest.smali
+@@ -131,30 +131,8 @@
+     .locals 1
+
+     iget-boolean v0, p0, Lcom/samsung/android/tzsvc/bts/api/TACommandRequest;->usePowerControl:Z
+
+-    if-eqz v0, :cond_1
+-
+-    invoke-static {}, Lcom/samsung/android/tzsvc/bts/utils/ChipsetInfo;->a()Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
+-
+-    invoke-static {}, Lcom/samsung/android/tzsvc/bts/utils/ChipsetInfo;->c()Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_1
+-
+-    :cond_0
+-    const/4 v0, 0x1
+-
+-    return v0
+-
+-    :cond_1
+-    const/4 v0, 0x0
+-
+     return v0
+ .end method
+
+ .method public usePowerControl()V
