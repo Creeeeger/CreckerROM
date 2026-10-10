@@ -45,7 +45,7 @@
 - Correct Exynos990 HIDL DRK path, restoring proper IMEI and device-identity reporting
 - Working Samsung Cloud E2EE, Pass, Pay, Wallet, other Samsung services, Knox Guard and literally everything else broken
   before
-- Crecker Kernel integration with preloaded KernelSU Next 3.2.0
+- Crecker Kernel integration with preloaded KernelSU Next 3.4.1
 - 100x photo and video zoom on supported Exynos990 devices
 - S24 ICCC vendor stack with repaired fabric-crypto and FKeyM secure-world integration
 - Preserved PROCA, Secure ADB, the OEM unlock toggle, target-aware StrongBox handling and the stock Knox services needed
