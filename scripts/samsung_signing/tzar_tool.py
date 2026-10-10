@@ -55,6 +55,7 @@ from tzar_archive import (
     startup_hash_table,
     write_manifest,
 )
+from teegris_ta_signing import ROOT_PATCH_TABLE, install_root_certificate, load_root_certificate
 
 def extract_command(args):
     out_dir = Path(args.output)
@@ -278,6 +279,13 @@ def patch_member_command(args):
             args.patch_table,
             target_label=f"TZAR member {args.member}",
         )
+        if args.member == '/sbin/root_task' and args.patch_table.resolve() == ROOT_PATCH_TABLE.resolve():
+            # The same persistent public CA authenticates the adapted SEC3 TA.
+            # Refuse stale bypassed or otherwise unrecognized root_task images.
+            root = load_root_certificate(args.keys_dir)
+            authenticated = install_root_certificate(member_path.read_bytes(), root)
+            member_path.write_bytes(authenticated)
+            print('Installed UUID-scoped FKeyMaster ROM trust anchor; Samsung authentication retained')
 
         pack_args = argparse.Namespace(**vars(args))
         pack_args.input = extract_dir

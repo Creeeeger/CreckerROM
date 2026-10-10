@@ -11,8 +11,8 @@ from pathlib import Path
 from apply_binary_patches import patch_file
 from teegris_elf import elf_metadata, read_records, sha256, ta_payload, repack_ta, properties, write_file
 from parse_tas import parse_elf
+from teegris_ta_signing import DEFAULT_KEYS_DIR, FKEYMASTER_UUID, SOURCE_TA_SHA256, resign_fkeymaster
 
-SOURCE_TA_SHA256 = '3568db8c24ae4e75ff1a1f98837964612db590293ada19cccfc969e8ac722fa9'
 SOURCE_ELF_SHA256 = '2899ffc6fbfcf41cb7f3b6809694e1d6f78708048c23905fa0d4c2c7c8852552'
 STOCK_LIBRARY_SHA256 = {
     'libtzsl.so': '533c53c2a63ef43f14987625b83fe5ffd79afc7f658786893f80bacdb637686f',
@@ -236,8 +236,36 @@ def adapt(container):
         patch_file(path, PATCH_TABLE, target_label='FKeyMaster stock stdio calls')
         patch_file(path, MEMREF_PATCH_TABLE, target_label='FKeyMaster stock memref widths')
         data = bytearray(path.read_bytes())
-    if len(data) != len(original) or properties(data) != properties(original):
-        raise ValueError('TA size or properties changed')
+    # Normalize the SDK 5 property record in the signed image itself. SDK 4
+    # lacks the zero word at 0x44; all UUID/authority/rollback fields survive.
+    # No root_task property-reader hook or verifier-body code cave is needed.
+    source_properties = properties(original)
+    if (source_properties is None or len(source_properties) != 116
+            or source_properties[:16] != FKEYMASTER_UUID or source_properties[0x44:0x48] != bytes(4)):
+        raise ValueError('Unexpected donor property layout')
+    stock_properties = source_properties[:0x44] + source_properties[0x48:]
+    prop = sections['TA_property']
+    data[prop['offset']:prop['offset'] + 116] = stock_properties + bytes(4)
+    shoff = struct.unpack_from('<Q', data, 40)[0]
+    shsize, shcount = struct.unpack_from('<HH', data, 58)
+    changed_sections = 0
+    for index in range(shcount):
+        offset = shoff + index * shsize
+        if struct.unpack_from('<Q', data, offset + 24)[0] == prop['offset']:
+            if struct.unpack_from('<Q', data, offset + 32)[0] != 116:
+                raise ValueError('Unexpected property section header')
+            struct.pack_into('<Q', data, offset + 32, 112)
+            changed_sections += 1
+    changed_symbols = 0
+    for offset in range(dynsym['offset'], dynsym['offset'] + dynsym['size'], 24):
+        name = struct.unpack_from('<I', data, offset)[0]
+        if name and string(name) == '__stop_TA_property':
+            if struct.unpack_from('<Q', data, offset + 8)[0] != prop['addr'] + 116:
+                raise ValueError('Unexpected property stop symbol')
+            struct.pack_into('<Q', data, offset + 8, prop['addr'] + 112)
+            changed_symbols += 1
+    if changed_sections != 1 or changed_symbols != 1 or properties(data) != stock_properties or len(data) != len(original):
+        raise ValueError('Stock property normalization failed')
     decoded = elf_metadata(data)
     if decoded['needed'] != [n for n in elf_metadata(original)['needed'] if n not in ALIASES]:
         raise ValueError('Stock dependency adaptation failed')
@@ -288,12 +316,14 @@ def main():
     parser.add_argument('--input', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--stock-tzar', type=Path, required=True)
+    parser.add_argument('--keys-dir', type=Path, default=DEFAULT_KEYS_DIR)
     args = parser.parse_args()
     original = args.input.read_bytes()
     result = adapt(original)
     libraries = verify_stock_bindings(result, args.stock_tzar)
+    result = resign_fkeymaster(result, args.keys_dir)
     write_file(args.output, result)
-    print(f'Prepared stock-ABI FKeyMaster ({len(result)} bytes); {len(libraries)} existing secure libraries, no added TZAR records')
+    print(f'Signed stock-ABI FKeyMaster ({len(result)} bytes); {len(libraries)} existing secure libraries, no added TZAR records')
 
 
 if __name__ == '__main__':

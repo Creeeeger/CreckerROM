@@ -18,7 +18,7 @@ python3 "$SRC_DIR/scripts/samsung_signing/adapt_skpm_hidl_transport.py" \
     --stock-interface "$WORK_DIR/system/system/lib64/vendor.samsung.hardware.security.skpm@1.0.so" || exit 1
 
 # Translate the donor TA ABI against the exact stock secure libraries.
-# The root_task property adapter is applied by the Samsung bootchain workflow.
+# Normalize properties and sign SEC3 with the persistent ROM TA identity.
 ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "tee/00000000-0000-0000-0000-4662436b6d52" 0 2000 644 "u:object_r:tee_file:s0"
 PASSKEY_STOCK_MODEL="${TARGET_FIRMWARE%%/*}"
 PASSKEY_STOCK_CSC="${TARGET_FIRMWARE#*/}"
@@ -26,5 +26,6 @@ PASSKEY_STOCK_CSC="${PASSKEY_STOCK_CSC%%/*}"
 python3 "$SRC_DIR/scripts/samsung_signing/adapt_fkeymaster_stock_abi.py" \
     --input "$WORK_DIR/vendor/tee/00000000-0000-0000-0000-4662436b6d52" \
     --output "$WORK_DIR/vendor/tee/00000000-0000-0000-0000-4662436b6d52" \
-    --stock-tzar "$FW_DIR/${PASSKEY_STOCK_MODEL}_${PASSKEY_STOCK_CSC}/bootloader/tzar.img" || exit 1
+    --stock-tzar "$FW_DIR/${PASSKEY_STOCK_MODEL}_${PASSKEY_STOCK_CSC}/bootloader/tzar.img" \
+    --keys-dir "${TARGET_SAMSUNG_SIGNING_KEY_DIR:-$SRC_DIR/security/samsung/exynos9830_crecker}" || exit 1
 unset PASSKEY_STOCK_MODEL PASSKEY_STOCK_CSC

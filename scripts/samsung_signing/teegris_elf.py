@@ -108,8 +108,8 @@ def repack_ta(container, elf):
     old = ta_payload(container)
     if container[:4] != b'SEC3' or container[8:8 + len(old)] != old:
         raise ValueError('Expected the pinned plaintext SEC3 FKeyMaster container')
-    # Retain container framing and certificates. The modified payload requires
-    # the ROM's existing root_task authentication bypass.
+    # Intermediate payload edit; callers must authenticate the result before
+    # installing it. adapt_fkeymaster_stock_abi signs the final SEC3 package.
     return container[:4] + struct.pack('>I', len(elf)) + elf + container[8 + len(old):]
 
 

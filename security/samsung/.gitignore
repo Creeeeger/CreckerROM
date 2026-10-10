@@ -1,0 +1,10 @@
+# Private build identities stay local; the default set is a shared dev key.
+*/ta_signing/
+*/.ta-signing.lock
+*/.ta-signing-*/
+!exynos9830_crecker/ta_signing/
+exynos9830_crecker/ta_signing/*
+!exynos9830_crecker/ta_signing/root-private.pem
+!exynos9830_crecker/ta_signing/root.der
+!exynos9830_crecker/ta_signing/fkeymaster-private.pem
+!exynos9830_crecker/ta_signing/fkeymaster.der
