@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Author: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+# S721BXXS7BYH1 FKeyMaster ELF SHA256:
+# 2899ffc6fbfcf41cb7f3b6809694e1d6f78708048c23905fa0d4c2c7c8852552
+# The only fwrite callers print a fixed, NUL-terminated, percent-free allocation
+# error then abort. Adapt them to fprintf(stderr, literal); abort is preserved.
+# format: enabled|offset|old_hex|new_hex|function|instruction
+1|0x303ec|605ee910|615ee910|allocation failure|ADR message into fprintf format argument x1
+1|0x303f0|21038052|1f2003d5|allocation failure|preserve fprintf format argument
+1|0x303fc|030140f9|000140f9|allocation failure|load stderr into fprintf stream argument x0
+1|0x30488|8059e910|8159e910|aligned allocation failure|ADR message into fprintf format argument x1
+1|0x3048c|21038052|1f2003d5|aligned allocation failure|preserve fprintf format argument
+1|0x30498|030140f9|000140f9|aligned allocation failure|load stderr into fprintf stream argument x0

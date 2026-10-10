@@ -5,5 +5,18 @@
 # Offsets are ELF file offsets, not Ghidra addresses.
 # Target: G986BXXSNHYB1 /sbin/root_task (Build ID 4c29e2e21d1d3cff1e718a1f04627dc14f021c61).
 
-# --- Temporary TA authentication bypass ---
-1|0x0000DBDC|FD7BB8A9FD030091|00008052C0035FD6|ta_pkg_verify|TEMPORARY: mov w0 #0; ret - skip all TA package authentication
+# --- TA authentication bypass ---
+1|0x0000DBDC|FD7BB8A9FD030091|00008052C0035FD6|ta_pkg_verify|mov w0 #0; ret - skip all TA package authentication
+
+# --- FKeyMaster property-layout adapter ---
+# Source: tzar_root_task_fkeymaster_properties.S and its .ld linker script.
+# The adapter uses the verifier body made unreachable by the row above.
+# Keep these two rows and the authentication bypass enabled/disabled together.
+# ELF64 only: 112-byte records retain the original path. Only FKeyMaster's UUID,
+# a 116-byte record, and a zero added word at 0x44 enter the conversion path.
+# Samsung's S721B reader inserts that zero word when upgrading 112-byte records;
+# this adapter performs the inverse: copy [0,0x44), then [0x48,0x74) to 0x44.
+# Copies exactly 112 bytes after checking all 116 source bytes and overflow.
+# Source ELF and downstream UUID/authority/rollback checks remain intact.
+1|0x000088B4|C1C6FF54|E1990254|find_prop_in_mapped_ta_image|branch ELF64 non-112-byte properties to guarded FKeyMaster adapter
+1|0x0000DBF0|F40300AAA0EA47F9F76303A9010040F9A13F00F9010080D2940200B533FF9F12230000B063200A91E47D805263A00191220000B042880C91010000D021B02991200000B000CC0E91BADAFF97B5EA47F9E003132AA23F40F9A10240F9410001CAE11800B4F7DAFF97|5FD001F1C12CFD5425D001B1822CFD54FF0005EB0967FD54282440A9082CFDB50A0200583F010AEBA12BFD54284440B9682BFD35A05740F9A13300F9A74300F9820880D2BFDAFF97A13340F90010019121200191820580D2BADAFF9721EBFF1700004662436B6D52|find_prop_in_mapped_ta_image|guarded FKeyMaster 116-to-112-byte property conversion in bypassed verifier body

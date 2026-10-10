@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Author: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+# Target: S721BXXS7BYH1 FKeyMaster ELF64
+# Original ELF SHA256: 2899ffc6fbfcf41cb7f3b6809694e1d6f78708048c23905fa0d4c2c7c8852552
+# TEEGRIS_4 constructs memrefs with uint32_t lengths at offsets 8/24;
+# the upper four bytes are padding, not part of the length. TEEGRIS_5
+# reads size_t lengths. Zero-extend the authoritative old lengths at the
+# two shared-memory checks and command dispatch. Keep both checks active.
+# The PLT add x16 is unused after the required DT_BIND_NOW adaptation;
+# PLT resolver padding is unreachable and holds the command-width shim.
+# enabled|file_offset|original_bytes|replacement_bytes|symbol|description
+1|0x30eb8|10c23e91|e203022a|TEES_IsREESharedMemory PLT|zero-extend old uint32_t memory length before the real stock check
+1|0x30a04|1f2003d51f2003d51f2003d5|e103012ae303032a7375ff17|command width adapter|zero-extend input/output lengths and tail-call original dispatch at VMA 0xefd8
+1|0xa6a4|4d0e0094|d8980094|TA_InvokeCommandEntryPoint|call width adapter at VMA 0x31a04

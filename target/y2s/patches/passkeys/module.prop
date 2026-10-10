@@ -1,0 +1,4 @@
+id=passkeys
+name=Samsung Pass passkey compatibility
+author=Creeeeger
+description=Ports FKeyMaster and AuthFramework to the stock TEEGRIS 4 and SKPM HIDL interfaces.

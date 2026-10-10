@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+Date: Sat, 10 Oct 2026 08:15:00 +0200
+Subject: [PATCH] Use legacy SKPM provisioning for the internal authenticator
+
+The stock SKPM service supports the V1 FIDO key, but the donor requests V2.
+Select V1 for TzAuthenticator and use the existing none-attestation conversion
+for its credential responses: the V1 certificate does not satisfy the packed
+WebAuthn certificate profile. Keep the credential key, authenticator data and
+user verification intact. External authenticators retain the RP preference.
+
+Signed-off-by: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+---
+diff --git a/smali/com/samsung/android/authfw/fido2/ext/authenticator/packed/TzAuthenticator$getAttestationKeyPair$1.smali b/smali/com/samsung/android/authfw/fido2/ext/authenticator/packed/TzAuthenticator$getAttestationKeyPair$1.smali
+--- a/smali/com/samsung/android/authfw/fido2/ext/authenticator/packed/TzAuthenticator$getAttestationKeyPair$1.smali
++++ b/smali/com/samsung/android/authfw/fido2/ext/authenticator/packed/TzAuthenticator$getAttestationKeyPair$1.smali
+@@ -165,7 +165,7 @@
+
+     new-instance v1, Lcom/samsung/android/authfw/crosscuttingconcern/interfaces/kpm/FidoKeyInfo;
+
+-    sget-object v3, Lcom/samsung/android/authfw/crosscuttingconcern/interfaces/kpm/FidoKeyInfo$Version;->V2:Lcom/samsung/android/authfw/crosscuttingconcern/interfaces/kpm/FidoKeyInfo$Version;
++    sget-object v3, Lcom/samsung/android/authfw/crosscuttingconcern/interfaces/kpm/FidoKeyInfo$Version;->V1:Lcom/samsung/android/authfw/crosscuttingconcern/interfaces/kpm/FidoKeyInfo$Version;
+
+     sget-object v4, Lcom/samsung/android/authfw/crosscuttingconcern/interfaces/kpm/FidoKeyInfo$UserVerifyType;->Fingerprint:Lcom/samsung/android/authfw/crosscuttingconcern/interfaces/kpm/FidoKeyInfo$UserVerifyType;
+
+diff --git a/smali/com/samsung/android/authfw/fido2/domain/interactor/CreateCredential.smali b/smali/com/samsung/android/authfw/fido2/domain/interactor/CreateCredential.smali
+--- a/smali/com/samsung/android/authfw/fido2/domain/interactor/CreateCredential.smali
++++ b/smali/com/samsung/android/authfw/fido2/domain/interactor/CreateCredential.smali
+@@ -641,6 +641,15 @@
+
+     move-result-object v2
+
++    move-object/from16 v3, p3
++
++    instance-of v3, v3, Lcom/samsung/android/authfw/fido2/ext/authenticator/packed/TzAuthenticator;
++
++    if-eqz v3, :cond_passkey_attestation
++
++    const-string v2, "none"
++
++    :cond_passkey_attestation
+     move-object/from16 v3, p2
+
+     invoke-direct {v0, v2, v3}, Lcom/samsung/android/authfw/fido2/domain/interactor/CreateCredential;->buildAuthenticatorMakeCredentialResponseObject(Ljava/lang/String;[B)Lcom/samsung/android/authfw/fido2/domain/authenticator/message/AuthenticatorMakeCredentialResponse;
