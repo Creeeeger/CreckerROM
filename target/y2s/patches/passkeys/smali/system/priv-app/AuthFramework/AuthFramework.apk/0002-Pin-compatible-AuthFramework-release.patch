@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+Date: Sat, 10 Oct 2026 12:00:00 +0200
+Subject: [PATCH] Pin the compatible AuthFramework release
+
+Galaxy Store updates replace the system APK and remove the stock SKPM
+compatibility changes. Reserve the highest signed version code for the ROM
+build so ordinary store updates cannot replace it. Keep the Samsung release
+name and the internal BuildConfig version used by Samsung services intact.
+Future AuthFramework upgrades are delivered with their compatibility patches
+in ROM updates, using the same reserved version code.
+
+Signed-off-by: Creeeeger <104427569+Creeeeger@users.noreply.github.com>
+---
+diff --git a/apktool.yml b/apktool.yml
+--- a/apktool.yml
++++ b/apktool.yml
+@@ -10,7 +10,7 @@
+ packageInfo:
+   forcedPackageId: 127
+ versionInfo:
+-  versionCode: 521003000
++  versionCode: 2147483647
+   versionName: 5.2.10.3
+ doNotCompress:
+ - arsc

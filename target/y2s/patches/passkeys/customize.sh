@@ -4,6 +4,9 @@
 
 SKIPUNZIP=1
 
+# Use the current AuthFramework release, including on devices with a store update.
+ADD_TO_WORK_DIR "r12sxxx" "system" "system/priv-app/AuthFramework/AuthFramework.apk" 0 0 644 "u:object_r:system_file:s0"
+
 # Keep the donor provisioning API while using the target's SKPM HIDL service.
 ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" "system/lib64/libsec_skpmTlc.so" 0 0 644 "u:object_r:system_lib_file:s0"
 ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/lib64/libsec_skpmHal.so" 0 0 644 "u:object_r:system_lib_file:s0"
