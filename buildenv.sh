@@ -59,6 +59,7 @@ _PRINT_USAGE()
     echo " --ultra-debloat : Alias for --debloat ultra" >&2
     echo " --heimdall-only : Build only the Heimdall image folder" >&2
     echo " --kernel-only : Build and sign only kernel test images for Heimdall" >&2
+    echo " --stock : Use stock recovery from the target AP firmware instead of TWRP" >&2
     echo " --avb : Enable AVB signing, image signing and vbmeta creation" >&2
     echo " --avb-low-security : Enable AVB low-security mode without partition image signing" >&2
     echo " --avb-model <model> : Set the BL1 model for AVB-enabled Exynos990 builds" >&2
@@ -168,6 +169,7 @@ export ROM_ENABLE_ENCRYPTION="${ROM_ENABLE_ENCRYPTION:-false}"
 export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
 export ROM_BUILD_HEIMDALL_ONLY="false"
 export ROM_BUILD_KERNEL_ONLY="false"
+export ROM_RECOVERY_TYPE="twrp"
 export ROM_ENABLE_AVB="false"
 export ROM_AVB_LOW_SECURITY="false"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
@@ -219,6 +221,8 @@ while [[ "$1" == "-"* ]]; do
         export ROM_BUILD_HEIMDALL_ONLY="true"
     elif [[ "$1" == "--kernel-only" ]]; then
         export ROM_BUILD_KERNEL_ONLY="true"
+    elif [[ "$1" == "--stock" ]]; then
+        export ROM_RECOVERY_TYPE="stock"
     elif [[ "$1" == "--avb" ]]; then
         export ROM_ENABLE_AVB="true"
     elif [[ "$1" == "--avb-low-security" ]]; then
@@ -452,6 +456,7 @@ env -i \
     ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL" \
     ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY" \
     ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY" \
+    ROM_RECOVERY_TYPE="$ROM_RECOVERY_TYPE" \
     ROM_ENABLE_AVB="$ROM_ENABLE_AVB" \
     ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY" \
     ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" \

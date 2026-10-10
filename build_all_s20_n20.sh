@@ -1,9 +1,35 @@
 #!/usr/bin/env bash
+# Copyright (C) 2026 Creeeeger
 
 set -Ee -o pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+
+PRINT_USAGE()
+{
+    echo "Usage: $0 [--stock]" >&2
+    echo " --stock : Use stock recovery from each target AP firmware (default: TWRP)" >&2
+}
+
+RECOVERY_OPTIONS=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --stock)
+            RECOVERY_OPTIONS=(--stock)
+            ;;
+        -h|--help)
+            PRINT_USAGE
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            PRINT_USAGE
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 BUILDS=(
     "G780F r8s"
@@ -29,6 +55,7 @@ for BUILD in "${BUILDS[@]}"; do
             --no-debloat \
             --avb \
             --avb-model "$MODEL" \
+            "${RECOVERY_OPTIONS[@]}" \
             "$TARGET"
 
         export TARGET_BUILD_HEIMDALL_PACKAGE=false

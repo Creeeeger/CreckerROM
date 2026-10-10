@@ -134,15 +134,20 @@ SET_PARTITION_SIZE "recovery" "$SOURCE_DIR/recovery.stock.img"
 SET_PARTITION_SIZE "prism" "$IMAGE_DIR/prism.img"
 SET_PARTITION_SIZE "optics" "$IMAGE_DIR/optics.img"
 
-LOG_STEP_IN "- Replacing stock recovery with TWRP"
-RECOVERY_ENTRY="$(unzip -Z1 "$TARGET_RECOVERY_IMAGE_PATH" | awk '/\.img$/ { print; exit }')"
-[ -n "$RECOVERY_ENTRY" ] || {
-    LOGE "No recovery image found in $TARGET_RECOVERY_IMAGE_PATH"
-    exit 1
-}
-unzip -p "$TARGET_RECOVERY_IMAGE_PATH" "$RECOVERY_ENTRY" > "$IMAGE_DIR/recovery.img"
+if [ "${TARGET_RECOVERY_TYPE:-twrp}" = "stock" ]; then
+    LOG_STEP_IN "- Keeping stock recovery from the old AP firmware"
+    cp -fa "$SOURCE_DIR/recovery.stock.img" "$IMAGE_DIR/recovery.img" || exit 1
+else
+    LOG_STEP_IN "- Replacing stock recovery with TWRP"
+    RECOVERY_ENTRY="$(unzip -Z1 "$TARGET_RECOVERY_IMAGE_PATH" | awk '/\.img$/ { print; exit }')"
+    [ -n "$RECOVERY_ENTRY" ] || {
+        LOGE "No recovery image found in $TARGET_RECOVERY_IMAGE_PATH"
+        exit 1
+    }
+    unzip -p "$TARGET_RECOVERY_IMAGE_PATH" "$RECOVERY_ENTRY" > "$IMAGE_DIR/recovery.img" || exit 1
+fi
 if [ "$(GET_IMAGE_SIZE "$IMAGE_DIR/recovery.img")" -gt "$TARGET_RECOVERY_PARTITION_SIZE" ]; then
-    LOGE "TWRP is larger than the stock recovery partition"
+    LOGE "Selected recovery is larger than the stock recovery partition"
     exit 1
 fi
 LOG_STEP_OUT

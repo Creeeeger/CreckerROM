@@ -80,19 +80,44 @@ RESOLVE_TARGET_RECOVERY_IMAGE_PATH()
 COPY_TARGET_RECOVERY_IMAGE_TO_TMP()
 {
     local RECOVERY_IMAGE=""
+    local AP_TAR=""
 
-    RECOVERY_IMAGE="$(RESOLVE_TARGET_RECOVERY_IMAGE_PATH || true)"
-    [ -n "$RECOVERY_IMAGE" ] || return 0
+    case "${TARGET_RECOVERY_TYPE:-twrp}" in
+        stock)
+            AP_TAR="$(FIND_TARGET_ODIN_TAR AP || true)"
+            [ -n "$AP_TAR" ] && [ -f "$AP_TAR" ] || {
+                LOGE "Stock recovery requires the target AP firmware archive under $ODIN_DIR/$TARGET_FIRMWARE_PATH"
+                exit 1
+            }
+            LOG "- Extracting stock recovery.img from $(basename "$AP_TAR")"
+            EXTRACT_ODIN_TAR_ENTRY_TO_PATH "$AP_TAR" recovery.img "$WORK_DIR/kernel/recovery.img" || {
+                LOGE "Could not extract stock recovery.img from $(basename "$AP_TAR")"
+                exit 1
+            }
+            ;;
+        twrp)
+            RECOVERY_IMAGE="$(RESOLVE_TARGET_RECOVERY_IMAGE_PATH || true)"
+            [ -n "$RECOVERY_IMAGE" ] || return 0
 
-    mkdir -p "$WORK_DIR/kernel"
-    if [[ "$RECOVERY_IMAGE" == *.zip ]]; then
-        LOG "- Extracting target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
-        unzip -p "$RECOVERY_IMAGE" "*.img" > "$WORK_DIR/kernel/recovery.img" || exit 1
-    else
-        LOG "- Copying target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
-        cp -fa "$RECOVERY_IMAGE" "$WORK_DIR/kernel/recovery.img"
-    fi
-    cp -fa "$WORK_DIR/kernel/recovery.img" "$TMP_DIR/recovery.img"
+            mkdir -p "$WORK_DIR/kernel"
+            if [[ "$RECOVERY_IMAGE" == *.zip ]]; then
+                LOG "- Extracting target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
+                unzip -p "$RECOVERY_IMAGE" "*.img" > "$WORK_DIR/kernel/recovery.img" || exit 1
+            else
+                LOG "- Copying target recovery.img from ${RECOVERY_IMAGE//$SRC_DIR\//}"
+                cp -fa "$RECOVERY_IMAGE" "$WORK_DIR/kernel/recovery.img" || exit 1
+            fi
+            ;;
+        *)
+            LOGE "TARGET_RECOVERY_TYPE must be twrp or stock (got: $TARGET_RECOVERY_TYPE)"
+            exit 1
+            ;;
+    esac
+    [ -s "$WORK_DIR/kernel/recovery.img" ] || {
+        LOGE "Selected recovery image is empty"
+        exit 1
+    }
+    cp -fa "$WORK_DIR/kernel/recovery.img" "$TMP_DIR/recovery.img" || exit 1
 }
 
 COPY_KERNEL_TEST_IMAGES_TO_TMP()
