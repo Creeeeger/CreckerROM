@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-only
 # SPDX-FileCopyrightText: 2026 Creeeeger <104427569+Creeeeger@users.noreply.github.com>
-"""Adapt the pinned FKeyMaster ELF to the existing G986B secure libraries."""
+"""Adapt the pinned FKeyMaster ELF to the verified Exynos990 secure libraries."""
 
 import argparse
 import struct
@@ -20,6 +20,18 @@ STOCK_LIBRARY_SHA256 = {
     'libpthread.so': 'f67d49e556fadd175d79b66353164e0f935144a3df03ecf033f860c1fb86eae0',
     'libc++.so': 'bfad51324bee8e20cda8564918d3ef710d3c65d670a1724e3ba12af537ae2575',
     'libscrypto.so': 'a4308b5553ad9b45d68ca73f6c99a758c3911acfb248f90cb9a6e0479667eb04',
+}
+# The S20/S20+/S20 Ultra and Note20/Note20 Ultra master firmwares share
+# root_task and their secure libraries. G780F uses the same executable layout
+# with a different build ID/root-key digest and three different library builds.
+STOCK_LIBRARY_PROFILES = {
+    '65313d0e7ab3edb93ad4e17efff52fa8ccf2afc3c36c1aa2fa3bff2370c6aa85': STOCK_LIBRARY_SHA256,
+    '0409fdb7e9d5bb7ce5300ed057bf75a49bba139e56610246ca9ef981caa0c673': {
+        **STOCK_LIBRARY_SHA256,
+        'libtzsl.so': '7d3d44227a71663db8439d09419aeb5d6ac98e8891c014391181a9db37151938',
+        'libteesl.so': 'fa0e068b8b3547849360bcf908b0e64c675966a57728af39e78d9f00a3bdd976',
+        'libpthread.so': '55c38e900cfc010211ddb5b3fbf35d5aa8cab866c29ca1bba3bb4857022dac30',
+    },
 }
 ALIASES = {'libgpapi.so': 'libteesl.so', 'libtee_ext.so': 'libteesl.so'}
 PATCH_TABLE = Path(__file__).resolve().parents[2] / 'security/samsung/patches/fkeymaster_stock_stdio.tsv'
@@ -239,6 +251,10 @@ def adapt(container):
 def verify_stock_bindings(container, stock_tzar):
     metadata = elf_metadata(ta_payload(container))
     stock = {r['path']: r['payload'] for r in read_records(stock_tzar)}
+    fingerprint = sha256(stock.get('/sbin/root_task', b''))
+    expected_libraries = STOCK_LIBRARY_PROFILES.get(fingerprint)
+    if expected_libraries is None:
+        raise ValueError('Unsupported stock root_task fingerprint: ' + fingerprint)
     pending = list(metadata['needed'])
     selected = {}
     while pending:
@@ -248,7 +264,7 @@ def verify_stock_bindings(container, stock_tzar):
         path = '/lib64/' + name
         if path not in stock:
             raise ValueError('Missing stock secure library: ' + name)
-        if name not in STOCK_LIBRARY_SHA256 or sha256(stock[path]) != STOCK_LIBRARY_SHA256[name]:
+        if name not in expected_libraries or sha256(stock[path]) != expected_libraries[name]:
             raise ValueError('Unsupported stock secure library fingerprint: ' + name)
         selected[name] = elf_metadata(stock[path])
         pending.extend(selected[name]['needed'])

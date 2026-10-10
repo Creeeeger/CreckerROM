@@ -3,7 +3,6 @@
 # TZAR /sbin/root_task patch file v1
 # format: enabled|offset|old_hex|new_hex|function|instruction
 # Offsets are ELF file offsets, not Ghidra addresses.
-# Target: G986BXXSNHYB1 /sbin/root_task (Build ID 4c29e2e21d1d3cff1e718a1f04627dc14f021c61).
 
 # --- TA authentication bypass ---
 1|0x0000DBDC|FD7BB8A9FD030091|00008052C0035FD6|ta_pkg_verify|mov w0 #0; ret - skip all TA package authentication

@@ -65,7 +65,7 @@
 
 - Samsung Log video recording at 4K 60 FPS and 8K 24 FPS is broken
 - The camera feed flickers at high zoom levels (>40x) while recording video
-- Samsung Pass passkey creation is supported on S20+ (y2s); other targets still require a FKeyMaster port
+- Samsung Pass passkey compatibility is included for all Exynos990 targets; on-device registration has been verified on S20+ (y2s)
 
 # Building
 

@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /* SPDX-FileCopyrightText: 2026 Creeeeger <104427569+Creeeeger@users.noreply.github.com> */
 /*
- * G986BXXSNHYB1 root_task compatibility adapter: ELF64 FKeyMaster properties.
+ * Exynos990 root_task compatibility adapter: ELF64 FKeyMaster properties.
+ * Shared RX layout: G780F, G981B, G986B, G988B, N981B and N986B master firmware.
  * Linked VMAs equal ELF file offsets in this binary's RX segment.
  *
  * The hook replaces b.ne at 0x88b4; the 112-byte path stays unchanged.
