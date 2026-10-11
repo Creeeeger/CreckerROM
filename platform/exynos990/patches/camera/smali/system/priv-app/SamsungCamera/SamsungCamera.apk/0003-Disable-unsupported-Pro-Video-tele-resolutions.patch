@@ -1,0 +1,386 @@
+From: CreckerROM <creckerrom@localhost>
+Subject: [PATCH] Hide unsupported 24 FPS Pro Video modes on tele
+
+Exynos990 tele sessions fail at 8K, UHD and FHD 24 FPS in Pro Video.
+Filter those modes from the rear Pro Video resolution picker while a
+tele lens is selected, including cinema ratios, and reject stale clicks.
+Use the per-ratio default resolution for saved unsupported tele settings
+before configuring the camera session. Before a tele lens switch, reset
+the stored unsupported resolutions through the normal settings path so
+the engine receives the resolution change before the lens change. Keep
+the other lenses and ordinary Video resolution lists unchanged.
+
+---
+--- a/smali_classes4/com/sec/android/app/camera/util/CameraResolution.smali
++++ b/smali_classes4/com/sec/android/app/camera/util/CameraResolution.smali
+@@ -4121,10 +4121,58 @@
+
+     goto :goto_0
+
+     :cond_1
+     return v1
++.end method
++
++.method public static isProVideoTeleResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;I)Z
++    .locals 2
++
++    # Exynos990 tele streams cannot run the Pro Video 24 FPS modes.
++    const/4 v0, 0x2
++
++    if-eq p1, v0, :check_tele_fps
++
++    const/4 v0, 0x3
++
++    if-ne p1, v0, :tele_resolution_supported
++
++    :check_tele_fps
++    invoke-virtual {p0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getMaxFps()I
++
++    move-result v0
++
++    const/16 v1, 0x18
++
++    if-ne v0, v1, :tele_resolution_supported
++
++    invoke-virtual {p0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getWidth()I
++
++    move-result v0
++
++    const/16 v1, 0x780
++
++    if-eq v0, v1, :tele_resolution_unsupported
++
++    const/16 v1, 0xf00
++
++    if-eq v0, v1, :tele_resolution_unsupported
++
++    const/16 v1, 0x1e00
++
++    if-eq v0, v1, :tele_resolution_unsupported
++
++    :tele_resolution_supported
++    const/4 v0, 0x1
++
++    return v0
++
++    :tele_resolution_unsupported
++    const/4 v0, 0x0
++
++    return v0
+ .end method
+
+ .method public static isBackCamcorderProResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
+     .locals 5
+
+--- a/smali_classes3/com/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter.smali
++++ b/smali_classes3/com/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter.smali
+@@ -396,11 +396,11 @@
+
+     return-object v0
+ .end method
+
+ .method private getVideoResolutionItems()[Lcom/sec/android/app/camera/interfaces/Resolution;
+-    .locals 3
++    .locals 6
+
+     iget-object v0, p0, Lcom/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter;->mVideoResolutionListMap:Ljava/util/EnumMap;
+
+     iget-object v1, p0, Lcom/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter;->mSettingKey:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
+
+@@ -437,10 +437,47 @@
+     invoke-interface {v0, v1}, Lcom/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter$ResolutionListGetter;->get(Lcom/sec/android/app/camera/interfaces/AspectRatio;)[Lcom/sec/android/app/camera/interfaces/Resolution;
+
+     move-result-object v0
+
+     if-eqz v0, :cond_0
++
++    new-instance v1, Ljava/util/ArrayList;
++
++    invoke-direct {v1}, Ljava/util/ArrayList;-><init>()V
++
++    array-length v2, v0
++
++    const/4 v3, 0x0
++
++    :filter_tele_resolution
++    if-ge v3, v2, :tele_resolution_list_ready
++
++    aget-object v4, v0, v3
++
++    invoke-direct {p0, v4}, Lcom/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter;->isCurrentLensResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
++
++    move-result v5
++
++    if-eqz v5, :next_tele_resolution
++
++    invoke-virtual {v1, v4}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++
++    :next_tele_resolution
++    add-int/lit8 v3, v3, 0x1
++
++    goto :filter_tele_resolution
++
++    :tele_resolution_list_ready
++    const/4 v2, 0x0
++
++    new-array v2, v2, [Lcom/sec/android/app/camera/interfaces/Resolution;
++
++    invoke-virtual {v1, v2}, Ljava/util/ArrayList;->toArray([Ljava/lang/Object;)[Ljava/lang/Object;
++
++    move-result-object v0
++
++    check-cast v0, [Lcom/sec/android/app/camera/interfaces/Resolution;
+
+     return-object v0
+
+     :cond_0
+     new-instance v0, Ljava/lang/IllegalArgumentException;
+@@ -831,10 +868,47 @@
+     invoke-virtual {p0, v0, v1}, Ljava/util/EnumMap;->put(Ljava/lang/Enum;Ljava/lang/Object;)Ljava/lang/Object;
+
+     return-void
+ .end method
+
++.method private isCurrentLensResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
++    .locals 2
++
++    iget-object v0, p0, Lcom/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter;->mSettingKey:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    sget-object v1, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMCORDER_PRO_RESOLUTION:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    if-eq v0, v1, :check_pro_tele_resolution
++
++    sget-object v1, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMCORDER_PRO_CINEMA_RESOLUTION:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    if-eq v0, v1, :check_pro_tele_resolution
++
++    sget-object v1, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMCORDER_PRO_WIDE_RESOLUTION:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    if-eq v0, v1, :check_pro_tele_resolution
++
++    const/4 v0, 0x1
++
++    return v0
++
++    :check_pro_tele_resolution
++    iget-object v0, p0, Lcom/sec/android/app/camera/layer/menu/abstraction/AbstractMenuPresenter;->mCameraSettings:Lcom/sec/android/app/camera/interfaces/CameraSettings;
++
++    sget-object v1, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMERA_PRO_LENS_TYPE:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    invoke-interface {v0, v1}, Lcom/sec/android/app/camera/interfaces/CameraSettings;->get(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
++
++    move-result v0
++
++    invoke-static {p1, v0}, Lcom/sec/android/app/camera/util/CameraResolution;->isProVideoTeleResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;I)Z
++
++    move-result v0
++
++    return v0
++.end method
++
+ .method private isNeedDisableBlur(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
+     .locals 1
+
+     iget-object v0, p0, Lcom/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter;->mEngine:Lcom/sec/android/app/camera/engine/interfaces/Engine;
+
+@@ -1284,10 +1358,22 @@
+     return p0
+ .end method
+
+ .method private isResolutionChangeAvailable(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
+     .locals 2
++
++    invoke-direct {p0, p1}, Lcom/sec/android/app/camera/layer/menu/chooser/VideoResolutionChooserMenuPresenter;->isCurrentLensResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;)Z
++
++    move-result v0
++
++    if-nez v0, :current_lens_resolution_supported
++
++    const/4 v0, 0x0
++
++    return v0
++
++    :current_lens_resolution_supported
+
+     iget-object v0, p0, Lcom/sec/android/app/camera/layer/menu/abstraction/AbstractMenuPresenter;->mCameraContext:Lcom/sec/android/app/camera/interfaces/CameraContext;
+
+     invoke-interface {v0}, Lcom/sec/android/app/camera/interfaces/CameraContext;->getCameraSettings()Lcom/sec/android/app/camera/interfaces/CameraSettings;
+
+--- a/smali_classes3/com/sec/android/app/camera/setting/repository/ValueGetterMap.smali
++++ b/smali_classes3/com/sec/android/app/camera/setting/repository/ValueGetterMap.smali
+@@ -1340,10 +1340,38 @@
+     move-result p0
+
+     return p0
+ .end method
+
++.method private getTeleSafeProVideoResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)I
++    .locals 2
++
++    sget-object v0, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMERA_PRO_LENS_TYPE:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    invoke-direct {p0, v0}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
++
++    move-result v0
++
++    invoke-static {p2}, Lcom/sec/android/app/camera/interfaces/Resolution;->getResolution(I)Lcom/sec/android/app/camera/interfaces/Resolution;
++
++    move-result-object v1
++
++    invoke-static {v1, v0}, Lcom/sec/android/app/camera/util/CameraResolution;->isProVideoTeleResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;I)Z
++
++    move-result v0
++
++    if-nez v0, :pro_video_resolution_ready
++
++    # Sanitize saved 24 FPS values before the tele session is configured.
++    invoke-direct {p0, p1}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getDefaultValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
++
++    move-result p2
++
++    :pro_video_resolution_ready
++    return p2
++.end method
++
+ .method private getBackProVideoCinemaResolution()I
+     .locals 2
+
+     sget-object v0, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMCORDER_PRO_CINEMA_RESOLUTION:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
+
+@@ -1374,10 +1402,14 @@
+     return p0
+
+     :cond_0
+     invoke-direct {p0, v0}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
+
++    move-result v1
++
++    invoke-direct {p0, v0, v1}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getTeleSafeProVideoResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)I
++
+     move-result p0
+
+     return p0
+ .end method
+
+@@ -1427,10 +1459,14 @@
+     return p0
+
+     :cond_0
+     invoke-direct {p0, v0}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
+
++    move-result v1
++
++    invoke-direct {p0, v0, v1}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getTeleSafeProVideoResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)I
++
+     move-result p0
+
+     return p0
+ .end method
+
+@@ -1465,10 +1501,14 @@
+
+     return p0
+
+     :cond_0
+     invoke-direct {p0, v0}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
++
++    move-result v1
++
++    invoke-direct {p0, v0, v1}, Lcom/sec/android/app/camera/setting/repository/ValueGetterMap;->getTeleSafeProVideoResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)I
+
+     move-result p0
+
+     return p0
+ .end method
+--- a/smali_classes3/com/sec/android/app/camera/setting/repository/CameraSettingsImpl.smali
++++ b/smali_classes3/com/sec/android/app/camera/setting/repository/CameraSettingsImpl.smali
+@@ -588,10 +588,76 @@
+     move-result v0
+
+     invoke-static {p0, v1, v0}, Lcom/sec/android/app/camera/util/SharedPreferencesHelper;->savePreferences(Landroid/content/Context;Ljava/lang/String;I)V
+
+     :cond_2
++    return-void
++.end method
++
++.method private prepareProVideoTeleLensSwitch(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
++    .locals 2
++
++    sget-object v0, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMERA_PRO_LENS_TYPE:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    if-ne p1, v0, :tele_lens_setting_ready
++
++    iget v0, p0, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->mShootingMode:I
++
++    const/16 v1, 0x24
++
++    if-ne v0, v1, :tele_lens_setting_ready
++
++    const/4 v0, 0x2
++
++    if-eq p2, v0, :sanitize_tele_lens_settings
++
++    const/4 v0, 0x3
++
++    if-ne p2, v0, :tele_lens_setting_ready
++
++    :sanitize_tele_lens_settings
++    # Update the actual settings and notify the engine before selecting tele.
++    sget-object v0, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMCORDER_PRO_RESOLUTION:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    invoke-direct {p0, v0, p2}, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->resetUnsupportedProVideoTeleResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
++
++    sget-object v0, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMCORDER_PRO_CINEMA_RESOLUTION:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    invoke-direct {p0, v0, p2}, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->resetUnsupportedProVideoTeleResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
++
++    sget-object v0, Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;->BACK_CAMCORDER_PRO_WIDE_RESOLUTION:Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;
++
++    invoke-direct {p0, v0, p2}, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->resetUnsupportedProVideoTeleResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
++
++    :tele_lens_setting_ready
++    return-void
++.end method
++
++.method private resetUnsupportedProVideoTeleResolution(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
++    .locals 2
++
++    invoke-virtual {p0, p1}, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->getValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
++
++    move-result v0
++
++    invoke-static {v0}, Lcom/sec/android/app/camera/interfaces/Resolution;->getResolution(I)Lcom/sec/android/app/camera/interfaces/Resolution;
++
++    move-result-object v0
++
++    invoke-static {v0, p2}, Lcom/sec/android/app/camera/util/CameraResolution;->isProVideoTeleResolutionSupported(Lcom/sec/android/app/camera/interfaces/Resolution;I)Z
++
++    move-result v0
++
++    if-nez v0, :tele_resolution_setting_ready
++
++    invoke-virtual {p0, p1}, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->getDefaultValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;)I
++
++    move-result v1
++
++    invoke-virtual {p0, p1, v1}, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->set(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
++
++    :tele_resolution_setting_ready
+     return-void
+ .end method
+
+ .method private initializeResetKeyListOnChangeShootingMode()V
+     .locals 2
+@@ -3992,10 +4058,12 @@
+ .end method
+
+ .method public setValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
+     .locals 0
+
++    invoke-direct {p0, p1, p2}, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->prepareProVideoTeleLensSwitch(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
++
+     iget-object p0, p0, Lcom/sec/android/app/camera/setting/repository/CameraSettingsImpl;->mCurrentCameraSettings:Lcom/sec/android/app/camera/setting/repository/AbstractCameraSettings;
+
+     invoke-virtual {p0, p1, p2}, Lcom/sec/android/app/camera/setting/repository/AbstractCameraSettings;->setValue(Lcom/sec/android/app/camera/interfaces/CameraSettings$Key;I)V
+
+     return-void
