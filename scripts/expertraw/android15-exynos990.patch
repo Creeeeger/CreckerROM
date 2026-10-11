@@ -31,12 +31,17 @@ Subject: [PATCH] Port Expert RAW 6 to Android 15 and Exynos990 camera streams
  
      move-result v8
  
-@@ -6301,6 +6307,8 @@
+@@ -6295,12 +6301,6 @@
  
-     move-result-object v1
- 
+-    iget-object v1, p0, Ly4/c;->d:Lcom/samsung/android/feature/SemFloatingFeature;
+-
+-    const-string v3, "SEC_FLOATING_FEATURE_CAMERA_CONFIG_GALAXYRAW_PLATFORM_VERSION"
+-
+-    invoke-virtual {v1, v3}, Lcom/samsung/android/feature/SemFloatingFeature;->getString(Ljava/lang/String;)Ljava/lang/String;
+-
+-    move-result-object v1
 +    const-string v1, "15.03.01"
-+
+ 
      sget-object v3, Ly4/j;->w0:Ly4/j;
  
      invoke-virtual {v0, v3, v1}, Ljava/util/EnumMap;->put(Ljava/lang/Enum;Ljava/lang/Object;)Ljava/lang/Object;
