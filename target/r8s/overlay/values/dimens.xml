@@ -12,8 +12,10 @@
     <dimen name="cover_clear_view_rounded_corner">52.0dip</dimen>
     <dimen name="cover_clear_view_top">14.0dip</dimen>
     <dimen name="physical_power_button_center_screen_location_y">990.0px</dimen>
-    <dimen name="rounded_corner_radius_bottom">52.0dip</dimen>
-    <dimen name="rounded_corner_radius_top">52.0dip</dimen>
+    <!-- Keep the stock S20 FE product override and framework corner dimensions. -->
+    <dimen name="rounded_corner_radius">112.0px</dimen>
+    <dimen name="rounded_corner_radius_bottom">32.0dip</dimen>
+    <dimen name="rounded_corner_radius_top">32.0dip</dimen>
     <dimen name="status_bar_camera_side_padding">1.8800000mm</dimen>
     <dimen name="status_bar_camera_top_margin">2.1296000mm</dimen>
     <dimen name="status_bar_height_portrait">5.5197531mm</dimen>
