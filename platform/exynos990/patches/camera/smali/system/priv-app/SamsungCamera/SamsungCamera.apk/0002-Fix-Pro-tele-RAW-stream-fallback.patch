@@ -1,0 +1,146 @@
+From: CreckerROM <creckerrom@localhost>
+Subject: [PATCH] Fall back to legacy Samsung RAW sizes for Pro tele
+
+Exynos990 tele cameras expose RAW_SENSOR in the private Samsung picture
+stream table, but omit it from the standard Camera2 stream map. The Pro
+photo fallback indexes the empty standard RAW size list and shuts down
+before creating its capture session.
+
+Use the largest private RAW output size when the standard list is empty.
+Skip RAW stream setup if neither table provides an output size. Retain
+the standard RAW path for cameras that already support it.
+
+---
+--- a/smali_classes3/com/samsung/android/camera/core2/maker/PhotoMakerBase.smali
++++ b/smali_classes3/com/samsung/android/camera/core2/maker/PhotoMakerBase.smali
+@@ -3239,6 +3239,110 @@
+     return-void
+ .end method
+
++.method private static getLegacyRawPictureSize(Lcom/samsung/android/camera/core2/CamCapability;)Landroid/util/Size;
++    .locals 7
++
++    # Legacy Exynos HALs expose tele RAW only in Samsung's private stream table.
++    iget-object v0, p0, Lcom/samsung/android/camera/core2/CamCapability;->n:Lcom/samsung/android/camera/core2/local/capability/Capability;
++
++    iget-object v0, v0, Lcom/samsung/android/camera/core2/local/capability/Capability;->a:Landroid/hardware/camera2/CameraCharacteristics;
++
++    sget-object v1, Lcom/samsung/android/camera/core2/local/vendorkey/SemCameraCharacteristics;->j0:Landroid/hardware/camera2/CameraCharacteristics$Key;
++
++    invoke-static {v0, v1}, Lcom/samsung/android/camera/core2/local/vendorkey/SemCameraCharacteristics;->a(Landroid/hardware/camera2/CameraCharacteristics;Landroid/hardware/camera2/CameraCharacteristics$Key;)Ljava/lang/Object;
++
++    move-result-object v0
++
++    check-cast v0, [I
++
++    if-eqz v0, :legacy_raw_missing
++
++    array-length v2, v0
++
++    rem-int/lit8 v1, v2, 0x4
++
++    if-nez v1, :legacy_raw_missing
++
++    new-instance v3, Ljava/util/ArrayList;
++
++    invoke-direct {v3}, Ljava/util/ArrayList;-><init>()V
++
++    # Entries contain format, width, height, input/output direction.
++    :legacy_raw_next
++    if-ge v1, v2, :legacy_raw_done
++
++    aget v4, v0, v1
++
++    const/16 v5, 0x20
++
++    if-ne v4, v5, :legacy_raw_skip
++
++    add-int/lit8 v4, v1, 0x3
++
++    aget v4, v0, v4
++
++    if-nez v4, :legacy_raw_skip
++
++    add-int/lit8 v4, v1, 0x1
++
++    aget v4, v0, v4
++
++    add-int/lit8 v5, v1, 0x2
++
++    aget v5, v0, v5
++
++    if-lez v4, :legacy_raw_skip
++
++    if-lez v5, :legacy_raw_skip
++
++    new-instance v6, Landroid/util/Size;
++
++    invoke-direct {v6, v4, v5}, Landroid/util/Size;-><init>(II)V
++
++    invoke-virtual {v3, v6}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++
++    :legacy_raw_skip
++    add-int/lit8 v1, v1, 0x4
++
++    goto :legacy_raw_next
++
++    :legacy_raw_done
++    invoke-virtual {v3}, Ljava/util/ArrayList;->isEmpty()Z
++
++    move-result v0
++
++    if-nez v0, :legacy_raw_missing
++
++    const/4 v1, 0x0
++
++    invoke-static {v3, v1}, Lcom/samsung/android/camera/core2/util/ArrayUtils;->sortSizeList(Ljava/util/List;I)Ljava/util/List;
++
++    move-result-object v0
++
++    invoke-interface {v0, v1}, Ljava/util/List;->get(I)Ljava/lang/Object;
++
++    move-result-object v0
++
++    check-cast v0, Landroid/util/Size;
++
++    sget-object v1, Lcom/samsung/android/camera/core2/local/capability/Capability;->p:Lcom/samsung/android/camera/core2/util/CLog$Tag;
++
++    const-string v2, "Using legacy RAW picture stream size %s"
++
++    filled-new-array {v0}, [Ljava/lang/Object;
++
++    move-result-object v3
++
++    invoke-static {v1, v2, v3}, Lcom/samsung/android/camera/core2/util/CLog;->i(Lcom/samsung/android/camera/core2/util/CLog$Tag;Ljava/lang/String;[Ljava/lang/Object;)V
++
++    return-object v0
++
++    :legacy_raw_missing
++    const/4 v0, 0x0
++
++    return-object v0
++.end method
++
+ .method public prepareRawPicStreamConfig(Lcom/samsung/android/camera/core2/CamCapability;Lcom/samsung/android/camera/core2/container/DeviceConfiguration;)V
+     .locals 8
+
+@@ -3310,6 +3414,19 @@
+     :cond_1
+     iget-object p2, p2, Lcom/samsung/android/camera/core2/local/capability/Capability;->c:Ljava/util/List;
+
++    invoke-interface {p2}, Ljava/util/List;->isEmpty()Z
++
++    move-result v0
++
++    if-eqz v0, :standard_raw_found
++
++    invoke-static {p1}, Lcom/samsung/android/camera/core2/maker/PhotoMakerBase;->getLegacyRawPictureSize(Lcom/samsung/android/camera/core2/CamCapability;)Landroid/util/Size;
++
++    move-result-object p2
++
++    goto :goto_0
++
++    :standard_raw_found
+     invoke-interface {p2, v1}, Ljava/util/List;->get(I)Ljava/lang/Object;
+
+     move-result-object p2
