@@ -60,6 +60,7 @@ ENSURE_SHARED_PLATFORM_SIGNING_CERTS()
     local SOURCE_PUBKEY
     local X509_PUBKEY=""
     local PK8_PUBKEY=""
+    local RESTORED_KEY_PATH
 
     SOURCE_KEY_PATH="$(GET_SHARED_PRIVATE_SIGNING_KEY_PATH)"
     X509_PATH="$(GET_PLATFORM_CERT_X509_PATH)"
@@ -69,9 +70,21 @@ ENSURE_SHARED_PLATFORM_SIGNING_CERTS()
     mkdir -p "$(dirname "$SOURCE_KEY_PATH")" "$(dirname "$X509_PATH")" "$(dirname "$PK8_PATH")"
 
     if [ ! -s "$SOURCE_KEY_PATH" ]; then
-        LOG "- Generating shared custom signing key: ${SOURCE_KEY_PATH//$SRC_DIR\//}"
-        openssl genpkey -algorithm RSA \
-            -pkeyopt rsa_keygen_bits:4096 -out "$SOURCE_KEY_PATH" || return 1
+        if [ -s "$PK8_PATH" ]; then
+            # Restore the same identity when CI/backups supply only the PK8.
+            LOG "- Restoring shared signing PEM from platform pk8"
+            RESTORED_KEY_PATH="$(mktemp "$SOURCE_KEY_PATH.tmp.XXXXXX")" || return 1
+            if ! openssl pkcs8 -inform DER -in "$PK8_PATH" -nocrypt -out "$RESTORED_KEY_PATH"; then
+                rm -f "$RESTORED_KEY_PATH"
+                LOGE "Unable to restore shared signing key from $PK8_PATH"
+                return 1
+            fi
+            mv -f "$RESTORED_KEY_PATH" "$SOURCE_KEY_PATH" || return 1
+        else
+            LOG "- Generating shared custom signing key: ${SOURCE_KEY_PATH//$SRC_DIR\//}"
+            openssl genpkey -algorithm RSA \
+                -pkeyopt rsa_keygen_bits:4096 -out "$SOURCE_KEY_PATH" || return 1
+        fi
         chmod 600 "$SOURCE_KEY_PATH" || return 1
     fi
 

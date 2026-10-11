@@ -10,6 +10,7 @@ from pathlib import Path
 
 from avb_cli import avb_environment, read_footer_metadata
 from path_validation import require_file
+from key_bundle import validate_key_bundle
 from stage2_common import (
     default_key_type,
     normalize_stage,
@@ -36,16 +37,7 @@ def append_manifest(manifest: Path, key: str, value: str) -> None:
 
 
 def key_paths(keys_dir: Path) -> dict[str, Path]:
-    return {
-        "bl1_private": require_file(keys_dir / "crecker_private.pem"),
-        "bl1_hmac": require_file(keys_dir / "crecker.hmac"),
-        "stage2_tee_private": require_file(keys_dir / "crecker_stage2_tee_private.pem"),
-        "stage2_tee_pub": require_file(keys_dir / "crecker_stage2_tee_pubkey.bin"),
-        "stage2_ree_private": require_file(keys_dir / "crecker_stage2_ree_private.pem"),
-        "stage2_ree_pub": require_file(keys_dir / "crecker_stage2_ree_pubkey.bin"),
-        "stage3_private": require_file(keys_dir / "crecker_stage3_private.pem"),
-        "stage3_pub": require_file(keys_dir / "crecker_stage3_pubkey.bin"),
-    }
+    return validate_key_bundle(keys_dir)
 
 
 def private_key_for_type(paths: dict[str, Path], key_type: int) -> Path:

@@ -6,7 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from apply_binary_patches import PatchRow, load_patch_rows, patch_file
+from apply_binary_patches import PatchRow, load_patch_rows, patch_file, write_effective_lk_patch_set
 from bootloader_signing import (
     append_manifest,
     key_paths,
@@ -84,13 +84,16 @@ def patch_lk(args: argparse.Namespace, lk_path: Path) -> None:
     if not args.patch_table.is_file():
         raise FileNotFoundError(args.patch_table)
 
+    paths = key_paths(args.keys_dir)
+    effective_table = args.work_dir / "lk_effective_patches.tsv"
+    write_effective_lk_patch_set(args.patch_table, effective_table, paths["efuse"].read_bytes())
     command = [
         sys.executable,
         str(TOOLS_DIR / "apply_lk_patches.py"),
         "--input",
         str(lk_path),
         "--patch-table",
-        str(args.patch_table),
+        str(effective_table),
     ]
     if args.kvm:
         command.append("--kvm")

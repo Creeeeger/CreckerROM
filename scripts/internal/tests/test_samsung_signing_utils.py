@@ -97,7 +97,7 @@ class BinaryIoTests(unittest.TestCase):
 
 
 class BinaryPatchProfileTests(unittest.TestCase):
-    def test_kvm_and_rollback_profiles_are_independent(self) -> None:
+    def test_kvm_profile_is_opt_in_and_unknown_profiles_stay_disabled(self) -> None:
         binary_patches = load_module(
             "apply_binary_patches_test",
             "apply_binary_patches.py",
@@ -114,37 +114,23 @@ rollback|0x02|00|01|rollback|rollback
             path.write_text(table, encoding="utf-8")
             normal, _ = binary_patches.load_patch_rows(path)
             kvm, _ = binary_patches.load_patch_rows(path, kvm=True)
-            rollback, _ = binary_patches.load_patch_rows(
-                path,
-                rollback_mode=True,
-            )
-            combined, _ = binary_patches.load_patch_rows(
-                path,
-                kvm=True,
-                rollback_mode=True,
-            )
 
         self.assertEqual([row.function for row in normal], ["always"])
         self.assertEqual([row.function for row in kvm], ["always", "kvm"])
-        self.assertEqual(
-            [row.function for row in rollback],
-            ["always", "rollback"],
-        )
-        self.assertEqual(
-            [row.function for row in combined],
-            ["always", "kvm", "rollback"],
-        )
 
-    def test_exact_model_lk_tables_have_five_rollback_only_rows(self) -> None:
+    def test_exact_model_lk_tables_have_one_custom_fuse_row(self) -> None:
         patch_dir = ROOT_DIR / "security" / "samsung" / "patches"
         for path in sorted(patch_dir.glob("lk_*_selected_patches.tsv")):
             with self.subTest(table=path.name):
                 rows = [
-                    line
+                    line.split("|")
                     for line in path.read_text(encoding="utf-8").splitlines()
-                    if line.startswith("rollback|")
+                    if line.startswith("1|")
                 ]
-                self.assertEqual(len(rows), 5)
+                fuse_rows = [row for row in rows if len(bytes.fromhex(row[2])) == 32
+                             and len(bytes.fromhex(row[3])) == 32
+                             and not any(field.strip() for field in row[4:])]
+                self.assertEqual(len(fuse_rows), 1)
 
 
 class BootloaderModuleWiringTests(unittest.TestCase):

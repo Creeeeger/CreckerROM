@@ -3,6 +3,7 @@
 
 import argparse
 import csv
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,6 +16,36 @@ class PatchRow:
     new_bytes: bytes
     function: str
     instruction: str
+
+
+def write_effective_lk_patch_set(source_path: Path, output_path: Path, custom_key: bytes) -> None:
+    """Port the CVE harness's fuse substitution without changing source tables."""
+    if len(custom_key) != 32:
+        raise ValueError("Custom-key eFuse context must be exactly 32 bytes")
+    lines = [f"# generated_from={source_path.name}",
+             f"# custom_key_sha256={hashlib.sha256(custom_key).hexdigest()}"]
+    custom_key_rows = 0
+    for line_no, line in enumerate(source_path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip() or line.lstrip().startswith("#"):
+            lines.append(line)
+            continue
+        fields = line.split("|")
+        if len(fields) < 4:
+            raise ValueError(f"line {line_no}: expected at least 4 pipe-separated columns")
+        old = parse_hex_blob(fields[2], "old", line_no)
+        new = parse_hex_blob(fields[3], "new", line_no)
+        function = fields[4].strip() if len(fields) > 4 else ""
+        instruction = fields[5].strip() if len(fields) > 5 else ""
+        if not function and not instruction and len(old) == len(new) == 32:
+            if fields[0].strip() != "1":
+                raise ValueError("Custom-key fuse row must be enabled")
+            fields[3] = custom_key.hex().upper()
+            custom_key_rows += 1
+        lines.append("|".join(fields))
+    if custom_key_rows != 1:
+        raise ValueError(f"Expected one 32-byte custom-key row in {source_path}, found {custom_key_rows}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def parse_hex_blob(value: str, label: str, line_no: int) -> bytes:

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 import argparse
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -146,6 +147,8 @@ def main() -> None:
                 "device_soc=exynos9830",
                 f"rollback_revision={args.rollback}",
                 f"keys_dir={args.keys_dir}",
+                f"custom_key_sha256={hashlib.sha256(paths['efuse'].read_bytes()).hexdigest()}",
+                f"effective_lk_patch_table={args.work_dir / 'lk_effective_patches.tsv'}",
                 f"firmware_model={firmware_model or 'unknown'}",
                 f"lk_patch_model={patch_model_id or 'explicit'}",
                 f"bl1_model={args.bl1_model or 'unspecified'}",

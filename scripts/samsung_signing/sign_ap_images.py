@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from key_bundle import validate_key_bundle
 from path_validation import require_file
 from stage2_common import (
     STAGE2_FOOTER_SIZE,
@@ -51,10 +52,11 @@ def run_step(cmd: list[str], label: str) -> None:
 
 
 def key_paths(keys_dir: Path) -> dict[int, Path]:
+    paths = validate_key_bundle(keys_dir)
     return {
-        0: require_file(keys_dir / "crecker_stage2_tee_private.pem"),
-        1: require_file(keys_dir / "crecker_stage2_ree_private.pem"),
-        2: require_file(keys_dir / "crecker_stage3_private.pem"),
+        0: paths["stage2_tee_private"],
+        1: paths["stage2_ree_private"],
+        2: paths["stage3_private"],
     }
 
 

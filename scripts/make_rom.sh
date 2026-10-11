@@ -22,6 +22,11 @@ set -e
 source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
 source "$SRC_DIR/scripts/utils/module_utils.sh" || exit 1
 
+if [ ! -f "$OUT_DIR/config.sh" ]; then
+    LOGE "Missing generated target config. Run source ./buildenv.sh [options] <target> again."
+    exit 1
+fi
+
 FORCE=false
 BUILD_ROM=false
 export TARGET_ENABLE_KSU="${TARGET_ENABLE_KSU:-true}"
