@@ -21,15 +21,6 @@
 # - DO NOT add the partition name at the start of any entry (eg. "/system/dpolicy_system")
 # - DO NOT add a slash at the start of any entry (eg. "/dpolicy_system")
 
-# Samsung Defex policy
-SYSTEM_DEBLOAT+="
-dpolicy_system
-"
-
-VENDOR_DEBLOAT+="
-etc/dpolicy
-"
-
 # Recovery restoration script
 VENDOR_DEBLOAT+="
 recovery-from-boot.p
