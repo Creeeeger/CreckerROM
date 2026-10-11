@@ -49,9 +49,10 @@ GET_WORK_DIR_HASH()
 {
     local TREE_HASH
     local OPTS_HASH
-    local HASH_DIRS=("$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" "$SRC_DIR/scripts/expertraw")
-    if [ -d "$SRC_DIR/platform/$TARGET_PLATFORM/patches/expertraw" ]; then
-        HASH_DIRS+=("$SRC_DIR/platform/$TARGET_PLATFORM/patches/expertraw")
+    local HASH_DIRS=("$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" "$SRC_DIR/scripts/expertraw"
+        "$SRC_DIR/scripts/utils/kernel_utils.sh")
+    if [ -d "$SRC_DIR/platform/$TARGET_PLATFORM/patches" ]; then
+        HASH_DIRS+=("$SRC_DIR/platform/$TARGET_PLATFORM/patches")
     fi
     TREE_HASH="$(
         find "${HASH_DIRS[@]}" \
@@ -65,6 +66,9 @@ GET_WORK_DIR_HASH()
             "FORCE_EXT4_IMAGES=${FORCE_EXT4_IMAGES:-false}" \
             "TARGET_ENABLE_ENCRYPTION=${TARGET_ENABLE_ENCRYPTION:-false}" \
             "TARGET_ENABLE_KSU=${TARGET_ENABLE_KSU:-true}" \
+            "ROM_VERSION=${ROM_VERSION:-}" \
+            "ROM_KERNEL_LOCALVERSION=${ROM_KERNEL_LOCALVERSION:-}" \
+            "ROM_DISPLAY_NAME=${ROM_DISPLAY_NAME:-}" \
             "ROM_DEBLOAT_LEVEL=${ROM_DEBLOAT_LEVEL:-default}" | \
             sha1sum | cut -d " " -f 1
     )"

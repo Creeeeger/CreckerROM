@@ -41,6 +41,23 @@ etc/init/vendor_flash_recovery.rc
 SYSTEM_DEBLOAT+="
 "
 
+# Facebook/Meta App Manager, App Installer, Services and preloaded app
+SYSTEM_DEBLOAT+="
+system/app/FBAppManager_NS
+system/etc/default-permissions/default-permissions-meta.xml
+system/etc/permissions/privapp-permissions-meta.xml
+system/etc/sysconfig/meta-hiddenapi-package-allowlist.xml
+system/preload/Facebook_stub_preload
+system/priv-app/FBInstaller_NS
+system/priv-app/FBServices
+"
+
+# Microsoft OneDrive
+SYSTEM_DEBLOAT+="
+system/etc/permissions/privapp-permissions-com.microsoft.skydrive.xml
+system/priv-app/OneDrive_Samsung_v3
+"
+
 # eSIM
 if $SOURCE_IS_ESIM_SUPPORTED; then
     if ! $TARGET_IS_ESIM_SUPPORTED; then

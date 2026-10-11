@@ -60,7 +60,6 @@ system/app/CarrierDefaultApp
 system/app/ccinfo
 system/app/ChromeCustomizations
 system/app/Fast
-system/app/FBAppManager_NS
 system/app/KidsHome_Installer
 system/app/MAPSAgent
 system/app/MDMApp
@@ -95,7 +94,6 @@ system/etc/permissions/com.samsung.feature.ipsgeofence.xml
 system/etc/permissions/com.samsung.feature.samsungpositioning.xml
 system/etc/permissions/org.carconnectivity.android.digitalkey.rangingintent.xml
 system/etc/permissions/org.carconnectivity.android.digitalkey.secureelement.xml
-system/etc/permissions/privapp-permissions-com.microsoft.skydrive.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.app.updatecenter.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.authfw.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.carkey.xml
@@ -112,17 +110,14 @@ system/etc/permissions/privapp-permissions-com.sec.imslogger.xml
 system/etc/permissions/privapp-permissions-com.sec.spp.push.xml
 system/etc/permissions/privapp-permissions-com.skms.android.agent.xml
 system/etc/permissions/privapp-permissions-com.wssyncmldm.xml
-system/etc/permissions/privapp-permissions-meta.xml
 system/etc/PF_TA
 system/etc/sysconfig/digitalkey.xml
-system/etc/sysconfig/meta-hiddenapi-package-allowlist.xml
 system/etc/sysconfig/preinstalled-packages-com.samsung.android.dkey.xml
 system/etc/sysconfig/preinstalled-packages-com.samsung.android.spayfw.xml
 system/etc/sysconfig/samsungauthframework.xml
 system/etc/sysconfig/samsungpassapp.xml
 system/etc/sysconfig/samsungpushservice.xml
 system/hidden/SmartTutor
-system/preload/Facebook_stub_preload
 system/priv-app/AppUpdateCenter
 system/priv-app/AREmoji
 system/priv-app/AREmojiEditor
@@ -132,13 +127,10 @@ system/priv-app/CpAgent
 system/priv-app/DiagMonAgent94
 system/priv-app/DigitalKey
 system/priv-app/EnhancedAttestationAgent
-system/priv-app/FBInstaller_NS
-system/priv-app/FBServices
 system/priv-app/ImsLogger
 system/priv-app/IpsGeofence
 system/priv-app/OdaService
 system/priv-app/OMCAgent5
-system/priv-app/OneDrive_Samsung_v3
 system/priv-app/PaymentFramework
 system/priv-app/SamsungCarKeyFw
 system/priv-app/SamsungPass
@@ -147,7 +139,6 @@ system/priv-app/SKMSAgent
 system/priv-app/SOAgent75
 system/priv-app/SPPPushClient
 system/priv-app/StickerFaceARAvatar
-system/priv-app/YourPhone_P1_5
 "
 
 PRISM_DEBLOAT+="

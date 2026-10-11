@@ -2,7 +2,7 @@ MODEL=$(echo -n "$TARGET_FIRMWARE" | cut -d "/" -f 1)
 REGION=$(echo -n "$TARGET_FIRMWARE" | cut -d "/" -f 2)
 
 # Set build ID
-ROM_DISPLAY_NAME="${ROM_DISPLAY_NAME:-CROM-S24FE-Official-${ROM_VERSION}}"
+_CHECK_NON_EMPTY_PARAM "ROM_DISPLAY_NAME" "$ROM_DISPLAY_NAME" || return 1
 SET_PROP "system" "ro.build.display.id" "$ROM_DISPLAY_NAME"
 
 SET_PROP "system" "ro.extremerom.official" "true"
