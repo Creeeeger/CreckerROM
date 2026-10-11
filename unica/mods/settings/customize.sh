@@ -12,7 +12,7 @@ for f in $FTP; do
 done
 LOG_STEP_OUT
 
-LOG_STEP_IN "- Adding Play Integrity settings"
+LOG_STEP_IN "- Adding Play Integrity and Force 120 Hz settings"
 
 # Add new resources/smali files and merge the two XML snippets into the
 # decoded One UI 7 SecSettings package. XML snippets use their first line as

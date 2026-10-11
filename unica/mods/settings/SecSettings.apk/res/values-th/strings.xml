@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">บังคับใช้ 120 Hz</string>
+    <string name="crecker_force_120hz_summary">คงอัตรารีเฟรชหน้าจอไว้ที่ 120 Hz ใช้แบตเตอรี่มากขึ้น ข้อจำกัดของโหมดประหยัดพลังงานและอุณหภูมิยังคงมีผล</string>
+    <string name="crecker_force_120hz_resolution_summary">ไม่สามารถใช้ 120 Hz กับความละเอียดหน้าจอปัจจุบันได้</string>
     <string name="unica_pif_custom_title">นำเข้าคุณสมบัติ PIF ที่กำหนดเองจากไฟล์</string>
     <string name="unica_pif_summary">ปลอมแปลงข้อมูลอุปกรณ์เพื่อผ่านการรับรองของ Google Play</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

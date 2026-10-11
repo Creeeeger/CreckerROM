@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Επιβολή 120 Hz</string>
+    <string name="crecker_force_120hz_summary">Διατήρηση της οθόνης στα 120 Hz. Αυξάνει την κατανάλωση μπαταρίας. Οι περιορισμοί εξοικονόμησης ενέργειας και θερμοκρασίας εξακολουθούν να ισχύουν.</string>
+    <string name="crecker_force_120hz_resolution_summary">Τα 120 Hz δεν είναι διαθέσιμα στην τρέχουσα ανάλυση οθόνης.</string>
     <string name="unica_pif_custom_title">Εισαγωγή προσαρμοσμένων PIF props από αρχείο</string>
     <string name="unica_pif_summary">Πλαστογράφηση της συσκευής για επιτυχή έλεγχο Google Play Integrity.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

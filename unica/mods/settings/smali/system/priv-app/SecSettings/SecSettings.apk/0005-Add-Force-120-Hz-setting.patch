@@ -1,0 +1,126 @@
+From: CreckerROM
+Subject: [PATCH] Add Force 120 Hz to Motion smoothness
+
+diff --git a/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment.smali b/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment.smali
+--- a/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment.smali
++++ b/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment.smali
+@@ -7,6 +7,8 @@
+
+
+ # instance fields
++.field public mForce120HzController:Lio/mesalabs/unica/settings/display/Force120HzPreferenceController;
++
+ .field public mApplyButton:Lcom/samsung/android/settings/widget/SecButtonPreference;
+
+ .field public mConfig:Landroid/content/res/Configuration;
+@@ -781,6 +783,12 @@
+
+     iput-object v1, v0, Lcom/samsung/android/settings/widget/SecButtonPreference;->mOnClickListener:Landroid/view/View$OnClickListener;
+
++    new-instance v0, Lio/mesalabs/unica/settings/display/Force120HzPreferenceController;
++
++    invoke-direct {v0, p0}, Lio/mesalabs/unica/settings/display/Force120HzPreferenceController;-><init>(Lcom/samsung/android/settings/display/HighRefreshRateFragment;)V
++
++    iput-object v0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mForce120HzController:Lio/mesalabs/unica/settings/display/Force120HzPreferenceController;
++
+     invoke-virtual {p0}, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->refreshUI$3()V
+
+     return-void
+@@ -1030,6 +1038,16 @@
+
+     move-result-object v0
+
++    const-string v2, "crecker_force_120hz"
++
++    invoke-static {v2}, Landroid/provider/Settings$Secure;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
++
++    move-result-object v3
++
++    iget-object v5, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mContentObserver:Lcom/samsung/android/settings/display/HighRefreshRateFragment$1;
++
++    invoke-virtual {v0, v3, v4, v5}, Landroid/content/ContentResolver;->registerContentObserver(Landroid/net/Uri;ZLandroid/database/ContentObserver;)V
++
+     const-string/jumbo v2, "pms_settings_refresh_rate_enabled"
+
+     invoke-static {v2}, Landroid/provider/Settings$Global;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
+@@ -1435,11 +1453,11 @@
+
+     invoke-virtual {v0, v2}, Landroidx/preference/Preference;->setEnabled(Z)V
+
+-    iget-object p0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mlayoutSecHrr:Landroid/view/View;
++    iget-object v1, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mlayoutSecHrr:Landroid/view/View;
+
+     const/16 v0, 0x8
+
+-    invoke-virtual {p0, v0}, Landroid/view/View;->setVisibility(I)V
++    invoke-virtual {v1, v0}, Landroid/view/View;->setVisibility(I)V
+
+     goto :goto_5
+
+@@ -1456,9 +1474,9 @@
+
+     invoke-virtual {v1, v2}, Landroidx/preference/Preference;->setSummary(Ljava/lang/CharSequence;)V
+
+-    iget-object p0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mPowerfulMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
+-
+-    invoke-virtual {p0, v0}, Landroidx/preference/Preference;->setEnabled(Z)V
++    iget-object v1, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mPowerfulMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++
++    invoke-virtual {v1, v0}, Landroidx/preference/Preference;->setEnabled(Z)V
+
+     goto :goto_5
+
+@@ -1497,9 +1515,9 @@
+
+     invoke-virtual {v1, v0}, Landroidx/preference/Preference;->setEnabled(Z)V
+
+-    iget-object p0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mlayoutSecHrr:Landroid/view/View;
+-
+-    invoke-virtual {p0, v0}, Landroid/view/View;->setVisibility(I)V
++    iget-object v1, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mlayoutSecHrr:Landroid/view/View;
++
++    invoke-virtual {v1, v0}, Landroid/view/View;->setVisibility(I)V
+
+     goto :goto_5
+
+@@ -1516,10 +1534,17 @@
+
+     invoke-virtual {v1, v2}, Landroidx/preference/Preference;->setSummary(Ljava/lang/CharSequence;)V
+
+-    iget-object p0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mPowerfulMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
+-
+-    invoke-virtual {p0, v0}, Landroidx/preference/Preference;->setEnabled(Z)V
++    iget-object v1, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mPowerfulMode:Lcom/samsung/android/settings/widget/SecRadioButtonPreference;
++
++    invoke-virtual {v1, v0}, Landroidx/preference/Preference;->setEnabled(Z)V
+
+     :goto_5
++    iget-object v0, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mForce120HzController:Lio/mesalabs/unica/settings/display/Force120HzPreferenceController;
++
++    if-eqz v0, :force120_done
++
++    invoke-virtual {v0}, Lio/mesalabs/unica/settings/display/Force120HzPreferenceController;->updateState()V
++
++    :force120_done
+     return-void
+ .end method
+diff --git a/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment$1.smali b/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment$1.smali
+--- a/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment$1.smali
++++ b/smali_classes4/com/samsung/android/settings/display/HighRefreshRateFragment$1.smali
+@@ -90,6 +90,16 @@
+     :cond_1
+     iget-object p1, p0, Lcom/samsung/android/settings/display/HighRefreshRateFragment$1;->this$0:Lcom/samsung/android/settings/display/HighRefreshRateFragment;
+
++    iget-object p2, p1, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mContext:Landroid/content/Context;
++
++    invoke-static {p2}, Lio/mesalabs/unica/settings/display/Force120HzPreferenceController;->isEnabled(Landroid/content/Context;)Z
++
++    move-result p2
++
++    # Keep the high-speed preference for resuming after power saving ends.
++    # The display service still honors its higher-priority low-power votes.
++    if-nez p2, :cond_2
++
+     iget p2, p1, Lcom/samsung/android/settings/display/HighRefreshRateFragment;->mMode:I
+
+     if-eqz p2, :cond_2

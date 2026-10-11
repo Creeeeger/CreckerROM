@@ -1,0 +1,128 @@
+From: CreckerROM
+Subject: [PATCH] Honor Force 120 Hz in display mode votes
+
+diff --git a/smali/com/android/server/display/mode/DisplayModeDirector$SettingsObserver.smali b/smali/com/android/server/display/mode/DisplayModeDirector$SettingsObserver.smali
+--- a/smali/com/android/server/display/mode/DisplayModeDirector$SettingsObserver.smali
++++ b/smali/com/android/server/display/mode/DisplayModeDirector$SettingsObserver.smali
+@@ -8,6 +8,8 @@
+
+
+ # instance fields
++.field public final mForce120HzSetting:Landroid/net/Uri;
++
+ .field public final mContext:Landroid/content/Context;
+
+ .field public mDefaultPeakRefreshRate:F
+@@ -55,6 +57,14 @@
+
+     iput-object p1, p0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mPeakRefreshRateSetting:Landroid/net/Uri;
+
++    const-string p1, "crecker_force_120hz"
++
++    invoke-static {p1}, Landroid/provider/Settings$Secure;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
++
++    move-result-object p1
++
++    iput-object p1, p0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mForce120HzSetting:Landroid/net/Uri;
++
+     const-string/jumbo p1, "min_refresh_rate"
+
+     invoke-static {p1}, Landroid/provider/Settings$System;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
+@@ -154,6 +164,14 @@
+     monitor-enter p1
+
+     :try_start_0
++    iget-object p3, p0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mForce120HzSetting:Landroid/net/Uri;
++
++    invoke-virtual {p3, p2}, Landroid/net/Uri;->equals(Ljava/lang/Object;)Z
++
++    move-result p3
++
++    if-nez p3, :cond_3
++
+     iget-object p3, p0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mPeakRefreshRateSetting:Landroid/net/Uri;
+
+     invoke-virtual {p3, p2}, Landroid/net/Uri;->equals(Ljava/lang/Object;)Z
+@@ -862,9 +880,48 @@
+ .end method
+
+ .method public final updateRefreshRateSettingLocked(FFFI)V
+-    .locals 6
+-
++    .locals 7
++
++    const/4 v6, 0x0
++
++    # The force vote belongs only to the built-in display. Preserve all
++    # existing user settings and let higher-priority system limits win.
++    if-nez p4, :force120_default
++
++    iget-object v0, p0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    const-string v1, "crecker_force_120hz"
++
++    const/4 v2, 0x0
++
++    const/4 v3, -0x2
++
++    invoke-static {v0, v1, v2, v3}, Landroid/provider/Settings$Secure;->getIntForUser(Landroid/content/ContentResolver;Ljava/lang/String;II)I
++
++    move-result v0
++
++    if-eqz v0, :force120_default
++
++    const/4 v6, 0x1
++
++    const/high16 p1, 0x42f00000    # 120.0f
++
++    move p2, p1
++
++    const/4 p3, 0x0
++
++    const/4 v0, 0x1
++
++    goto :force120_physical
++
++    :force120_default
+     iget-boolean v0, p0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mPeakRefreshRatePhysicalLimitEnabled:Z
++
++    :force120_physical
+
+     const/4 v1, 0x0
+
+@@ -885,6 +942,17 @@
+
+     move-result v0
+
++    if-eqz v6, :force120_peak_only
++
++    # A fixed physical range outranks app mode requests. A render-only
++    # minimum (the developer option) can be discarded for a 60 Hz app.
++    invoke-static {p1, p2}, Lcom/android/server/display/mode/Vote;->forPhysicalRefreshRates(FF)Lcom/android/server/display/mode/CombinedVote;
++
++    move-result-object v0
++
++    goto :goto_0
++
++    :force120_peak_only
+     invoke-static {v2, v0}, Lcom/android/server/display/mode/Vote;->forPhysicalRefreshRates(FF)Lcom/android/server/display/mode/CombinedVote;
+
+     move-result-object v0
+diff --git a/smali/com/android/server/display/mode/DisplayModeDirector.smali b/smali/com/android/server/display/mode/DisplayModeDirector.smali
+--- a/smali/com/android/server/display/mode/DisplayModeDirector.smali
++++ b/smali/com/android/server/display/mode/DisplayModeDirector.smali
+@@ -2486,6 +2486,10 @@
+
+     invoke-virtual {v1, v2, v6, v0, v6}, Landroid/content/ContentResolver;->registerContentObserver(Landroid/net/Uri;ZLandroid/database/ContentObserver;I)V
+
++    iget-object v2, v0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mForce120HzSetting:Landroid/net/Uri;
++
++    invoke-virtual {v1, v2, v6, v0, v6}, Landroid/content/ContentResolver;->registerContentObserver(Landroid/net/Uri;ZLandroid/database/ContentObserver;I)V
++
+     iget-object v2, v0, Lcom/android/server/display/mode/DisplayModeDirector$SettingsObserver;->mLowPowerModeSetting:Landroid/net/Uri;
+
+     invoke-virtual {v1, v2, v6, v0, v6}, Landroid/content/ContentResolver;->registerContentObserver(Landroid/net/Uri;ZLandroid/database/ContentObserver;I)V

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Wymuś 120 Hz</string>
+    <string name="crecker_force_120hz_summary">Utrzymuj ekran przy 120 Hz. Zwiększa zużycie baterii. Ograniczenia oszczędzania energii i temperatury nadal obowiązują.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz jest niedostępne przy obecnej rozdzielczości ekranu.</string>
     <string name="unica_pif_custom_title">Importuj własną konfigurację PIF z pliku</string>
     <string name="unica_pif_summary">Spoofuj urządzenie, aby przechodziło atest Google Play.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

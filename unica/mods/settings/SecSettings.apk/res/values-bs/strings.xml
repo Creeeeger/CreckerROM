@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Forsiraj 120 Hz</string>
+    <string name="crecker_force_120hz_summary">Zadrži ekran na 120 Hz. Povećava potrošnju baterije. Ograničenja uštede energije i temperature i dalje važe.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz nije dostupno pri trenutnoj rezoluciji ekrana.</string>
     <string name="unica_pif_custom_title">Uvezi prilagođena PIF svojstva iz datoteke</string>
     <string name="unica_pif_summary">Lažirajte svoj uređaj kako bi prošli atest Google Play-a.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Buộc dùng 120 Hz</string>
+    <string name="crecker_force_120hz_summary">Giữ màn hình ở 120 Hz. Tăng mức tiêu thụ pin. Các giới hạn tiết kiệm pin và nhiệt độ vẫn được áp dụng.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz không khả dụng ở độ phân giải màn hình hiện tại.</string>
     <string name="unica_pif_custom_title">Nhập thông tin PIF tùy chỉnh từ tệp</string>
     <string name="unica_pif_summary">Giả mạo thiết bị để vượt qua chứng thực Google Play.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

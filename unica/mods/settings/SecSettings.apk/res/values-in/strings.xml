@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Paksa 120 Hz</string>
+    <string name="crecker_force_120hz_summary">Pertahankan layar pada 120 Hz. Meningkatkan penggunaan baterai. Batas hemat daya dan suhu tetap berlaku.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz tidak tersedia pada resolusi layar saat ini.</string>
     <string name="unica_pif_custom_title">Impor properti PIF khusus dari berkas</string>
     <string name="unica_pif_summary">Memalsukan perangkat Anda untuk lolos atestasi Google Play.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

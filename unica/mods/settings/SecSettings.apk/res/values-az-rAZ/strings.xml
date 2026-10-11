@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">120 Hz-i məcbur et</string>
+    <string name="crecker_force_120hz_summary">Ekranı 120 Hz-də saxla. Batareya sərfiyyatını artırır. Enerjiyə qənaət və temperatur məhdudiyyətləri qüvvədə qalır.</string>
+    <string name="crecker_force_120hz_resolution_summary">Cari ekran təsvir ölçüsündə 120 Hz mövcud deyil.</string>
     <string name="unica_pif_custom_title">Fayldan xüsusi PIF xassələrini idxal et</string>
     <string name="unica_pif_summary">Cihazını Google Play attestiyasından keçmək üçün saxtalaşdır.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

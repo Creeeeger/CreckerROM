@@ -1,0 +1,2 @@
+/<com.samsung.android.settings.widget.SecButtonPreference/i
+    <androidx.preference.SecSwitchPreference android:key="crecker_force_120hz" android:title="@string/crecker_force_120hz_title" android:summary="@string/crecker_force_120hz_summary" android:persistent="false" />

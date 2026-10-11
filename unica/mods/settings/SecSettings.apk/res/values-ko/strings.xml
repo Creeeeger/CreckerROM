@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="crecker_force_120hz_title">120 Hz 강제 적용</string>
+    <string name="crecker_force_120hz_summary">화면을 120 Hz로 유지합니다. 배터리 사용량이 늘어납니다. 절전 모드와 온도 제한은 계속 적용됩니다.</string>
+    <string name="crecker_force_120hz_resolution_summary">현재 화면 해상도에서는 120 Hz를 사용할 수 없습니다.</string>
+</resources>

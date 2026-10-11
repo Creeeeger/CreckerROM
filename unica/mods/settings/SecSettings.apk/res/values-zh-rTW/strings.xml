@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">強制 120 Hz</string>
+    <string name="crecker_force_120hz_summary">將螢幕保持在 120 Hz。會增加耗電量。省電模式和溫度限制仍然有效。</string>
+    <string name="crecker_force_120hz_resolution_summary">目前螢幕解析度不支援 120 Hz。</string>
     <string name="unica_pif_custom_title">從檔案匯入自訂 PIF 屬性</string>
     <string name="unica_pif_summary">透過偽造裝置資訊以通過 Google Play 認證。</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

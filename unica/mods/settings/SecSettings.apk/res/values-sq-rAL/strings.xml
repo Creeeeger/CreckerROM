@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Detyro 120 Hz</string>
+    <string name="crecker_force_120hz_summary">Mbaje ekranin në 120 Hz. Rrit konsumin e baterisë. Kufizimet e kursimit të energjisë dhe temperaturës vazhdojnë të zbatohen.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz nuk ofrohet me rezolucionin aktual të ekranit.</string>
     <string name="unica_pif_custom_title">Importo vetitë PIF të personalizuara nga skedari</string>
     <string name="unica_pif_summary">Falsifiko pajisjen tënde për të kaluar verifikimin e Google Play.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

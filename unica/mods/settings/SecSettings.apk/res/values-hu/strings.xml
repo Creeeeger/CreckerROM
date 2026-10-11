@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">120 Hz kényszerítése</string>
+    <string name="crecker_force_120hz_summary">A kijelző folyamatosan 120 Hz-en működik. Növeli az akkumulátor fogyasztását. Az energiatakarékossági és hőmérsékleti korlátozások továbbra is érvényesek.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz nem érhető el a jelenlegi képernyőfelbontáson.</string>
     <string name="unica_pif_custom_title">Egyedi PIF props importálása fájlból</string>
     <string name="unica_pif_summary">Az eszköz hamisítása a Google Play hitelesítés eléréséhez.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

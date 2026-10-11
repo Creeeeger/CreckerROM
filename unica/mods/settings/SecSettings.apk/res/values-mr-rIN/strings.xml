@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">120 Hz सक्तीने वापरा</string>
+    <string name="crecker_force_120hz_summary">डिस्प्ले 120 Hz वर कायम ठेवा. यामुळे बॅटरीचा वापर वाढतो. ऊर्जा बचत आणि तापमानाच्या मर्यादा लागू राहतील.</string>
+    <string name="crecker_force_120hz_resolution_summary">स्क्रीनच्या सध्याच्या रिझोल्यूशनवर 120 Hz उपलब्ध नाही.</string>
     <string name="unica_pif_custom_title">फाइलमधून सानुकूल PIF गुणधर्म आयात करा</string>
     <string name="unica_pif_summary">Google Play प्रमाणीकरण उत्तीर्ण होण्यासाठी तुमच्या डिव्हाइसची माहिती बदलून दाखवा.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

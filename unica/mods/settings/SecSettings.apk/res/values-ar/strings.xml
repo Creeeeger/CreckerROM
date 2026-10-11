@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">فرض 120 هرتز</string>
+    <string name="crecker_force_120hz_summary">إبقاء الشاشة على 120 هرتز. يزيد استهلاك البطارية. تظل قيود توفير الطاقة ودرجة الحرارة سارية.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 هرتز غير متاحة بدقة الشاشة الحالية.</string>
     <string name="unica_pif_custom_title">استيراد خصائص PIF من مِلَف مخصص</string>
     <string name="unica_pif_summary">تزييف جهازك لتجاوز مصادقة Google Play.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

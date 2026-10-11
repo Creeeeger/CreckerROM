@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">120 Hz erzwingen</string>
+    <string name="crecker_force_120hz_summary">Display dauerhaft mit 120 Hz betreiben. Erhöht den Akkuverbrauch. Energiesparmodus und Temperaturgrenzen gelten weiterhin.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz sind bei der aktuellen Bildschirmauflösung nicht verfügbar.</string>
     <string name="unica_pif_custom_title">Importiere PIF Props von Datei</string>
     <string name="unica_pif_summary">Spoof dein Gerät um Google Play Attestation zu bestehen.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>

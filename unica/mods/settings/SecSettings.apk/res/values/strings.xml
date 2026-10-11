@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Force 120 Hz</string>
+    <string name="crecker_force_120hz_summary">Keep the display at 120 Hz. Uses more battery. Power saving and temperature limits still apply.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Hz is unavailable at the current screen resolution.</string>
     <string name="keywords_unica_pif_settings">Play Integrity Fix, PIF, attestation, spoof</string>
     <string name="menu_key_unica_pif_settings">top_level_unica_pif</string>
     <string name="unica_pif_custom_title">Import custom PIF props from file</string>

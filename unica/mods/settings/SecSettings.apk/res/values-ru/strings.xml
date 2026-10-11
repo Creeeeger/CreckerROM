@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="crecker_force_120hz_title">Принудительные 120 Гц</string>
+    <string name="crecker_force_120hz_summary">Поддерживать частоту экрана 120 Гц. Увеличивает расход батареи. Ограничения энергосбережения и температуры продолжают действовать.</string>
+    <string name="crecker_force_120hz_resolution_summary">120 Гц недоступны при текущем разрешении экрана.</string>
     <string name="unica_pif_custom_title">Импортировать пользовательские свойства PIF из файла</string>
     <string name="unica_pif_summary">Подменить ваше устройство для прохождения аттестации Google Play.</string>
     <string name="unica_pif_title">Play Integrity Fix</string>
