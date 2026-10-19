@@ -63,6 +63,7 @@ GET_WORK_DIR_HASH()
     # Include buildenv-generated options that impact the work dir but aren't part of the source tree.
     OPTS_HASH="$(
         printf '%s\n' \
+            "DEBUG=${DEBUG:-false}" \
             "FORCE_EXT4_IMAGES=${FORCE_EXT4_IMAGES:-false}" \
             "TARGET_ENABLE_ENCRYPTION=${TARGET_ENABLE_ENCRYPTION:-false}" \
             "TARGET_ENABLE_KSU=${TARGET_ENABLE_KSU:-true}" \

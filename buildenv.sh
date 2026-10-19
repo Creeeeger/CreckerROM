@@ -49,7 +49,7 @@ _PRINT_USAGE()
 {
     echo "Usage: source buildenv.sh [options] <target>" >&2
     echo "Options:" >&2
-    echo " --debug : Enable verbose debug logs" >&2
+    echo " --debug : Enable verbose debug logs and early boot ADB" >&2
     echo " --official : Mark the generated config/build as official" >&2
     echo " --unofficial : Mark the generated config/build as unofficial" >&2
     echo " --ext4-images : Force EROFS target partitions to be built as ext4" >&2
