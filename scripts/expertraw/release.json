@@ -1,0 +1,27 @@
+{
+  "version": "6.0.02.8",
+  "version_code": 600208222,
+  "source": "Samsung Galaxy Store stubDownload",
+  "device_id": "SM-S948B",
+  "sdk": 37,
+  "oneui": 90000,
+  "bytes": 586141896,
+  "sha256": "6814ff38d5eb820a5956b38a1d1a99fe811075420f4933eae2962114d2086a88",
+  "samsung_cert_sha256": "34df0e7a9f1cf1892e45c056b4973cd81ccf148a4050d11aea4ac5a65f900a42",
+  "profile_asset": "assets/variation/miracle/m3q/galaxyraw-feature.xml",
+  "backend": {
+    "version": "4.0.06.3",
+    "version_code": 400603020,
+    "source": "Samsung Galaxy Store stubDownload",
+    "device_id": "SM-G998B",
+    "sdk": 35,
+    "oneui": 70000,
+    "bytes": 562799351,
+    "sha256": "32f24e52eab345bb6c4f54d144672c52d901bdc375e07b4fc8bf36597c0fd3cd",
+    "native_files": [
+      "lib/arm64-v8a/libMultiFrameProcessing40.camera.samsung.so",
+      "lib/arm64-v8a/libMultiFrameProcessing40Tuning.camera.samsung.so",
+      "lib/arm64-v8a/libMultiFrameProcessing30.snapwrapper.camera.samsung.so"
+    ]
+  }
+}

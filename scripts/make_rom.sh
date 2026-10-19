@@ -40,7 +40,8 @@ GET_WORK_DIR_HASH()
     local TREE_HASH
     local OPTS_HASH
     TREE_HASH="$(
-        find "$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" -type f -print0 | \
+        find "$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" "$SRC_DIR/scripts/expertraw" \
+            -type f ! -name '*.pyc' -print0 | \
             sort -z | xargs -0 sha1sum | sha1sum | cut -d " " -f 1
     )"
 

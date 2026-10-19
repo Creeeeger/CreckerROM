@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Android 15 Expert RAW port; patch author: Creeeeger. -->
+<permissions>
+    <privapp-permissions package="com.samsung.android.app.galaxyraw">
+        <permission name="android.permission.CAPTURE_AUDIO_HOTWORD" />
+        <permission name="android.permission.CHANGE_CONFIGURATION" />
+        <permission name="android.permission.MANAGE_USERS" />
+        <permission name="android.permission.MODIFY_AUDIO_ROUTING" />
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+        <permission name="android.permission.READ_WALLPAPER_INTERNAL" />
+        <permission name="android.permission.SET_ANIMATION_SCALE" />
+        <permission name="android.permission.STATUS_BAR" />
+        <permission name="android.permission.SYSTEM_CAMERA" />
+        <permission name="android.permission.UPDATE_APP_OPS_STATS" />
+        <permission name="android.permission.WRITE_MEDIA_STORAGE" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+        <permission name="com.samsung.accessibility.permission.WRITE_SETTINGS" />
+        <permission name="com.samsung.android.app.assistantmenu.permission.ADVERTISE_ASSISTANTMENU" />
+        <permission name="com.samsung.android.bixby.agent.permission.RECEIVE_BIXBY_VIEW_STATE" />
+        <permission name="com.samsung.android.permission.ACCESS_SYSTEM_KEY_DISPATCHING" />
+        <permission name="com.samsung.android.permission.SEM_MEDIA_CONTENTS" />
+        <permission name="com.samsung.android.permission.SSRM_NOTIFICATION_PERMISSION" />
+        <permission name="com.samsung.android.providers.media.READ" />
+        <permission name="com.samsung.android.providers.media.WRITE" />
+        <permission name="com.samsung.android.scs.ai.image.permission.BIND_IMAGE_SERVICE" />
+        <permission name="com.samsung.android.scs.ai.image.permission.IMAGE_PROVIDER" />
+        <permission name="com.samsung.android.scs.ai.suggestion.permission.SUGGESTION_PROVIDER" />
+        <permission name="com.samsung.android.settings.analyzestorage.permission" />
+        <permission name="com.samsung.android.sharelive.permission.SHARE_LIVE_UPDATE" />
+        <permission name="com.samsung.android.voicewakeup.permission.READ_SETTING_PROVIDER" />
+        <permission name="com.samsung.cmh.data.READ" />
+        <permission name="com.samsung.cmh.data.WRITE" />
+        <permission name="com.samsung.keyguard.SHORTCUT_PERMISSION" />
+        <permission name="com.samsung.permission.HQM_NOTIFICATION_PERMISSION" />
+        <permission name="com.samsung.permission.SSENSOR" />
+        <permission name="com.samsung.provider.gppm.data.READ" />
+        <permission name="com.samsung.provider.gppm.data.WRITE" />
+        <permission name="com.sec.android.app.voicenote.Controller" />
+        <permission name="com.sec.android.diagmonagent.permission.DIAGMON" />
+        <permission name="com.sec.android.diagmonagent.permission.PROVIDER" />
+        <permission name="com.sec.android.gallery3d.provider2.READ" />
+        <permission name="com.sec.android.gallery3d.provider2.WRITE" />
+        <permission name="com.sec.android.settings.permission.SOFT_RESET" />
+        <permission name="com.wssnps.permission.COM_WSSNPS" />
+    </privapp-permissions>
+</permissions>

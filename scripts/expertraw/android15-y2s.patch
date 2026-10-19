@@ -1,0 +1,411 @@
+From: Creeeeger
+Subject: [PATCH] Port Expert RAW 6 to Android 15 and y2s camera streams
+
+--- a/smali_classes3/y4/e.smali
++++ b/smali_classes3/y4/e.smali
+@@ -282,6 +282,12 @@
+     invoke-static {v4}, Landroid/os/SemSystemProperties;->get(Ljava/lang/String;)Ljava/lang/String;
+ 
+     move-result-object v5
++
++    const-string/jumbo v5, "m3qxxx"
++
++    const-string/jumbo v6, "Expert RAW profile override: m3qxxx (S26 Ultra / y2s)"
++
++    invoke-static {v1, v6}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+ 
+     invoke-static {v5}, Ljava/util/Objects;->requireNonNull(Ljava/lang/Object;)Ljava/lang/Object;
+ 
+--- a/smali_classes3/y4/c.smali
++++ b/smali_classes3/y4/c.smali
+@@ -527,6 +527,12 @@
+     invoke-virtual {v1, v12, v8}, Ljava/util/EnumMap;->put(Ljava/lang/Enum;Ljava/lang/Object;)Ljava/lang/Object;
+ 
+     invoke-virtual {v0, v12}, Ly4/c;->P(Ly4/a;)Z
++
++    move-result v8
++
++    const-string v12, "SUPPORT_BACK_TELE_PRO"
++
++    invoke-static {v12, v8}, Ly4/e;->e(Ljava/lang/String;Z)Z
+ 
+     move-result v8
+ 
+@@ -6301,6 +6307,8 @@
+ 
+     move-result-object v1
+ 
++    const-string v1, "15.03.01"
++
+     sget-object v3, Ly4/j;->w0:Ly4/j;
+ 
+     invoke-virtual {v0, v3, v1}, Ljava/util/EnumMap;->put(Ljava/lang/Enum;Ljava/lang/Object;)Ljava/lang/Object;
+--- a/smali_classes3/w4/x.smali
++++ b/smali_classes3/w4/x.smali
+@@ -1245,7 +1245,7 @@
+ .method public final declared-synchronized startUpdateCheck(Z)V
+     .locals 6
+ 
+-    const-string v0, ", targetPlatformVersion : 17.06.01"
++    const-string v0, ", targetPlatformVersion : 15.03.01"
+ 
+     const-string v1, "## systemPlatformVersion : "
+ 
+@@ -1258,7 +1258,7 @@
+ 
+     move-result-object v2
+ 
+-    const-string v3, "17.06.01"
++    const-string v3, "15.03.01"
+ 
+     const-string v4, "CameraDialogManager"
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/RequestUpdateActivity.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/RequestUpdateActivity.smali
+@@ -70,7 +70,7 @@
+ 
+     move-result p0
+ 
+-    const-string v4, "17.06.01"
++    const-string v4, "15.03.01"
+ 
+     invoke-virtual {v4, v0}, Ljava/lang/String;->split(Ljava/lang/String;)[Ljava/lang/String;
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/interfaces/Constants.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/interfaces/Constants.smali
+@@ -850,7 +850,7 @@
+ 
+ .field public static final SUPER_SLOW_MOTION_FRC_TIME_0_8:I = 0x320
+ 
+-.field public static final TARGET_PLATFORM_VERSION:Ljava/lang/String; = "17.06.01"
++.field public static final TARGET_PLATFORM_VERSION:Ljava/lang/String; = "15.03.01"
+ 
+ .field public static final TEMP_FILE_PREFIX:Ljava/lang/String; = "!@#$%^"
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/util/Util.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/util/Util.smali
+@@ -991,7 +991,7 @@
+     :goto_1
+     invoke-virtual {v0, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+-    const-string p0, "\ntargetPlatformVersion: 17.06.01\nsystemPlatformVersion: "
++    const-string p0, "\ntargetPlatformVersion: 15.03.01\nsystemPlatformVersion: "
+ 
+     invoke-virtual {v0, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/CameraWindowManager.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/CameraWindowManager.smali
+@@ -1110,6 +1110,20 @@
+ .method public requestSystemKeyEvents(Z)V
+     .locals 3
+ 
++    iget-object v0, p0, Lcom/samsung/android/app/galaxyraw/CameraWindowManager;->mCameraContext:Lcom/samsung/android/app/galaxyraw/GalaxyRaw;
++
++    const-string v1, "com.samsung.android.permission.ACCESS_SYSTEM_KEY_DISPATCHING"
++
++    invoke-virtual {v0, v1}, Landroid/content/Context;->checkSelfPermission(Ljava/lang/String;)I
++
++    move-result v0
++
++    if-eqz v0, :expert_raw_system_keys
++
++    return-void
++
++    :expert_raw_system_keys
++
+     const/4 v0, 0x3
+ 
+     invoke-static {v0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/engine/request/CapabilityImpl.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/engine/request/CapabilityImpl.smali
+@@ -275,68 +275,13 @@
+ .end method
+ 
+ .method private checkColorCorrectionMode()V
+-    .locals 5
+-
+-    iget-object v0, p0, Lcom/samsung/android/app/galaxyraw/engine/request/CapabilityImpl;->mCamCapability:Lcom/samsung/android/app/galaxyraw/core2/CamCapability;
+-
+-    iget-object v0, v0, Lcom/samsung/android/app/galaxyraw/core2/CamCapability;->l:Lcom/samsung/android/app/galaxyraw/core2/local/capability/ColorCorrectionCapability;
+-
+-    iget-object v1, v0, Lcom/samsung/android/app/galaxyraw/core2/local/capability/ColorCorrectionCapability;->b:[I
+-
+-    const/4 v2, 0x0
+-
+-    if-nez v1, :cond_0
+-
+-    iget-object v1, v0, Lcom/samsung/android/app/galaxyraw/core2/local/capability/ColorCorrectionCapability;->a:Landroid/hardware/camera2/CameraCharacteristics;
+-
+-    sget-object v3, Landroid/hardware/camera2/CameraCharacteristics;->COLOR_CORRECTION_AVAILABLE_MODES:Landroid/hardware/camera2/CameraCharacteristics$Key;
+-
+-    invoke-virtual {v1, v3}, Landroid/hardware/camera2/CameraCharacteristics;->get(Landroid/hardware/camera2/CameraCharacteristics$Key;)Ljava/lang/Object;
+-
+-    move-result-object v1
+-
+-    check-cast v1, [I
+-
+-    invoke-static {v1}, Ljava/util/Optional;->ofNullable(Ljava/lang/Object;)Ljava/util/Optional;
+-
+-    move-result-object v1
+-
+-    new-array v3, v2, [I
+-
+-    invoke-virtual {v1, v3}, Ljava/util/Optional;->orElse(Ljava/lang/Object;)Ljava/lang/Object;
+-
+-    move-result-object v1
+-
+-    check-cast v1, [I
+-
+-    iput-object v1, v0, Lcom/samsung/android/app/galaxyraw/core2/local/capability/ColorCorrectionCapability;->b:[I
+-
+-    :cond_0
+-    iget-object v0, v0, Lcom/samsung/android/app/galaxyraw/core2/local/capability/ColorCorrectionCapability;->b:[I
+-
+-    array-length v1, v0
+-
+-    :goto_0
+-    if-ge v2, v1, :cond_2
+-
+-    aget v3, v0, v2
+-
+-    const/4 v4, 0x3
+-
+-    if-ne v3, v4, :cond_1
+-
+-    const/4 v0, 0x1
++    .locals 1
++
++    # Android 15 lacks the API 36 CCT keys. Use Samsung's existing WB controls.
++    const/4 v0, 0x0
+ 
+     iput-boolean v0, p0, Lcom/samsung/android/app/galaxyraw/engine/request/CapabilityImpl;->mIsColorCorrectionModeCctSupported:Z
+ 
+-    return-void
+-
+-    :cond_1
+-    add-int/lit8 v2, v2, 0x1
+-
+-    goto :goto_0
+-
+-    :cond_2
+     return-void
+ .end method
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/core2/MakerPublicKey.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/core2/MakerPublicKey.smali
+@@ -111,11 +111,9 @@
+ .method static constructor <clinit>()V
+     .locals 2
+ 
+-    sget-object v0, Landroid/hardware/camera2/CaptureRequest;->COLOR_CORRECTION_COLOR_TEMPERATURE:Landroid/hardware/camera2/CaptureRequest$Key;
++    sget-object v0, Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/SemCaptureRequest;->h:Landroid/hardware/camera2/CaptureRequest$Key;
+ 
+     sput-object v0, Lcom/samsung/android/app/galaxyraw/core2/MakerPublicKey;->b:Landroid/hardware/camera2/CaptureRequest$Key;
+-
+-    sget-object v0, Landroid/hardware/camera2/CaptureRequest;->COLOR_CORRECTION_COLOR_TINT:Landroid/hardware/camera2/CaptureRequest$Key;
+ 
+     sget-object v0, Landroid/hardware/camera2/CaptureRequest;->COLOR_CORRECTION_MODE:Landroid/hardware/camera2/CaptureRequest$Key;
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/core2/local/vendorkey/metadata/CaptureMetadataKey.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/core2/local/vendorkey/metadata/CaptureMetadataKey.smali
+@@ -585,7 +585,7 @@
+ 
+     const/16 v2, 0x1d
+ 
+-    sget-object v3, Landroid/hardware/camera2/CaptureResult;->COLOR_CORRECTION_COLOR_TEMPERATURE:Landroid/hardware/camera2/CaptureResult$Key;
++    sget-object v3, Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/SemCaptureResult;->C:Landroid/hardware/camera2/CaptureResult$Key;
+ 
+     move-object/from16 v32, v1
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/core2/processor/postSaving/module/PostSavingModuleSefInsert.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/core2/processor/postSaving/module/PostSavingModuleSefInsert.smali
+@@ -954,7 +954,7 @@
+ 
+     if-eqz v2, :cond_b
+ 
+-    sget-object v2, Landroid/hardware/camera2/CaptureResult;->COLOR_CORRECTION_COLOR_TEMPERATURE:Landroid/hardware/camera2/CaptureResult$Key;
++    sget-object v2, Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/SemCaptureResult;->C:Landroid/hardware/camera2/CaptureResult$Key;
+ 
+     invoke-static {v9, v2}, Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/SemCaptureResult;->b(Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/CaptureMetadata;Landroid/hardware/camera2/CaptureResult$Key;)Ljava/lang/Object;
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/interfaces/Resolution.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/interfaces/Resolution.smali
+@@ -367,6 +367,8 @@
+ .end field
+ 
+ 
++.field public static final enum RESOLUTION_4864X3648:Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
++
+ # instance fields
+ .field private final mHeight:I
+ 
+@@ -3600,6 +3602,39 @@
+     move-result-object v0
+ 
+     sput-object v0, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->$VALUES:[Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
++
++    # S20+ tele binning has a distinct 4:3 output size.
++    array-length v2, v0
++
++    add-int/lit8 v1, v2, 0x1
++
++    invoke-static {v0, v1}, Ljava/util/Arrays;->copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;
++
++    move-result-object v8
++
++    check-cast v8, [Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
++
++    new-instance v0, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
++
++    const-string v1, "RESOLUTION_4864X3648"
++
++    const/16 v3, 0x7f00
++
++    const/16 v4, 0x1300
++
++    const/16 v5, 0xe40
++
++    sget-object v6, Lcom/samsung/android/app/galaxyraw/interfaces/AspectRatio;->RATIO_4x3:Lcom/samsung/android/app/galaxyraw/interfaces/AspectRatio;
++
++    const/16 v7, 0x1e
++
++    invoke-direct/range {v0 .. v7}, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;-><init>(Ljava/lang/String;IIIILcom/samsung/android/app/galaxyraw/interfaces/AspectRatio;I)V
++
++    sput-object v0, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->RESOLUTION_4864X3648:Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
++
++    aput-object v0, v8, v2
++
++    sput-object v8, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->$VALUES:[Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
+ 
+     invoke-static {}, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->values()[Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/setting/repository/CameraSettingsImpl.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/setting/repository/CameraSettingsImpl.smali
+@@ -1719,6 +1719,16 @@
+ 
+ .method public getCameraResolution(II)I
+     .locals 2
++
++    const/16 v0, 0x64
++
++    if-ne p1, v0, :expert_raw_other_camera
++
++    const/16 v0, 0x7f00
++
++    return v0
++
++    :expert_raw_other_camera
+ 
+     invoke-virtual {p0, p1}, Lcom/samsung/android/app/galaxyraw/setting/repository/CameraSettingsImpl;->getCameraFacing(I)I
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/service/NotificationService.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/service/NotificationService.smali
+@@ -291,7 +291,7 @@
+ 
+     invoke-direct {v2, p1, v5}, Landroidx/core/app/NotificationCompat$Builder;-><init>(Landroid/content/Context;Ljava/lang/String;)V
+ 
+-    const v5, 0x7f080da5
++    const v5, 0x1080037
+ 
+     invoke-virtual {v2, v5}, Landroidx/core/app/NotificationCompat$Builder;->setSmallIcon(I)Landroidx/core/app/NotificationCompat$Builder;
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/core2/processor/PostProcessNotification.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/core2/processor/PostProcessNotification.smali
+@@ -89,7 +89,7 @@
+ 
+     invoke-virtual {v1, p0}, Landroid/app/Notification$Builder;->setContentTitle(Ljava/lang/CharSequence;)Landroid/app/Notification$Builder;
+ 
+-    const p0, 0x7f080da5
++    const p0, 0x01080037
+ 
+     invoke-virtual {v1, p0}, Landroid/app/Notification$Builder;->setSmallIcon(I)Landroid/app/Notification$Builder;
+ 
+--- a/smali_classes3/com/samsung/android/app/galaxyraw/core2/CamCapability.smali
++++ b/smali_classes3/com/samsung/android/app/galaxyraw/core2/CamCapability.smali
+@@ -2637,7 +2637,9 @@
+ .end method
+ 
+ .method public final h()Ljava/util/List;
+-    .locals 3
++    .locals 9
++
++    move-object v3, p0
+ 
+     iget-object p0, p0, Lcom/samsung/android/app/galaxyraw/core2/CamCapability;->m:Lcom/samsung/android/app/galaxyraw/core2/capability/Capability;
+ 
+@@ -2682,6 +2684,75 @@
+     iput-object v0, p0, Lcom/samsung/android/app/galaxyraw/core2/capability/Capability;->c:Ljava/util/List;
+ 
+     :cond_0
++    iget-object v0, p0, Lcom/samsung/android/app/galaxyraw/core2/capability/Capability;->c:Ljava/util/List;
++
++    invoke-interface {v0}, Ljava/util/List;->isEmpty()Z
++
++    move-result v1
++
++    if-eqz v1, :vendor_raw_done
++
++    # Exynos y2s publishes tele RAW only in Samsung's four-integer vendor table.
++    iget-object v3, v3, Lcom/samsung/android/app/galaxyraw/core2/CamCapability;->h:Lcom/samsung/android/app/galaxyraw/core2/capability/ScalerCapability;
++
++    iget-object v3, v3, Lcom/samsung/android/app/galaxyraw/core2/capability/ScalerCapability;->a:Landroid/hardware/camera2/CameraCharacteristics;
++
++    sget-object v1, Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/SemCameraCharacteristics;->f0:Landroid/hardware/camera2/CameraCharacteristics$Key;
++
++    invoke-static {v3, v1}, Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/SemCameraCharacteristics;->a(Landroid/hardware/camera2/CameraCharacteristics;Landroid/hardware/camera2/CameraCharacteristics$Key;)Ljava/lang/Object;
++
++    move-result-object v0
++
++    check-cast v0, [I
++
++    if-eqz v0, :vendor_raw_done
++
++    new-instance v1, Ljava/util/ArrayList;
++
++    invoke-direct {v1}, Ljava/util/ArrayList;-><init>()V
++
++    const/4 v2, 0x0
++
++    array-length v4, v0
++
++    const/16 v5, 0x20
++
++    :vendor_raw_loop
++    add-int/lit8 v6, v2, 0x3
++
++    if-ge v6, v4, :vendor_raw_store
++
++    aget v7, v0, v2
++
++    if-ne v7, v5, :vendor_raw_next
++
++    aget v7, v0, v6
++
++    if-nez v7, :vendor_raw_next
++
++    add-int/lit8 v6, v2, 0x1
++
++    aget v6, v0, v6
++
++    add-int/lit8 v7, v2, 0x2
++
++    aget v7, v0, v7
++
++    new-instance v8, Landroid/util/Size;
++
++    invoke-direct {v8, v6, v7}, Landroid/util/Size;-><init>(II)V
++
++    invoke-virtual {v1, v8}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++
++    :vendor_raw_next
++    add-int/lit8 v2, v2, 0x4
++
++    goto :vendor_raw_loop
++
++    :vendor_raw_store
++    iput-object v1, p0, Lcom/samsung/android/app/galaxyraw/core2/capability/Capability;->c:Ljava/util/List;
++
++    :vendor_raw_done
+     iget-object p0, p0, Lcom/samsung/android/app/galaxyraw/core2/capability/Capability;->c:Ljava/util/List;
+ 
+     return-object p0
