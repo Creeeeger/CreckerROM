@@ -9,6 +9,7 @@
 /vendor/etc/pdpcnt-conf\.xml u:object_r:vendor_configs_file:s0
 /vendor/etc/vintf u:object_r:vendor_configs_file:s0
 /vendor/etc/vintf/manifest u:object_r:vendor_configs_file:s0
+/vendor/etc/vintf/manifest/android\.hardware\.weaver\.xml u:object_r:vendor_configs_file:s0
 /vendor/etc/vintf/manifest/vendor\.samsung\.hardware\.radio_manifest_2_30\.xml u:object_r:vendor_configs_file:s0
 /vendor/etc/vintf/manifest/vendor\.samsung\.hardware\.radio\.exclude\.slsi\.xml u:object_r:vendor_configs_file:s0
 /vendor/etc/vintf/manifest/vendor\.samsung\.hardware\.sehradio_manifest_2_30\.xml u:object_r:vendor_configs_file:s0

@@ -9,6 +9,7 @@ vendor/etc/mtu-conf.xml 0 0 644 capabilities=0x0
 vendor/etc/pdpcnt-conf.xml 0 0 644 capabilities=0x0
 vendor/etc/vintf 0 2000 755 capabilities=0x0
 vendor/etc/vintf/manifest 0 2000 755 capabilities=0x0
+vendor/etc/vintf/manifest/android.hardware.weaver.xml 0 0 644 capabilities=0x0
 vendor/etc/vintf/manifest/vendor.samsung.hardware.radio_manifest_2_30.xml 0 0 644 capabilities=0x0
 vendor/etc/vintf/manifest/vendor.samsung.hardware.radio.exclude.slsi.xml 0 0 644 capabilities=0x0
 vendor/etc/vintf/manifest/vendor.samsung.hardware.sehradio_manifest_2_30.xml 0 0 644 capabilities=0x0

@@ -1,0 +1,8 @@
+<manifest version="1.0" type="device">
+    <!-- Keep this separate from manifest.xml, which per-device vendor patches replace. -->
+    <hal format="hidl">
+        <name>android.hardware.weaver</name>
+        <transport>hwbinder</transport>
+        <fqname>@1.0::IWeaver/default</fqname>
+    </hal>
+</manifest>
