@@ -1,4 +1,4 @@
 id=mass_cam
-name=Low-end Samsung Camera app
-author=salvogiangri
-description=Checks for target camera app variant and replace accordingly if required.
+name=Samsung Camera app fixes
+author=salvogiangri, HackMeGG
+description=Selects the target camera app variant and restores legacy scene detection for OCR.

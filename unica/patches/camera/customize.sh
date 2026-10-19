@@ -9,6 +9,19 @@ else
     LOG "- SOURCE_HAS_MASS_CAMERA_APP is not set. Ignoring."
 fi
 
+# Legacy scene detection/OCR backport by HackMeGG, adapted from UN1CA:
+# https://github.com/salvogiangri/UN1CA/commit/ec9e5c1abda401d32d72e962ae6d2fd0d5abf31a
+# TARGET_API_LEVEL describes the target vendor platform, not its launch API.
+if [ "$TARGET_API_LEVEL" -lt 34 ]; then
+    if $TARGET_HAS_MASS_CAMERA_APP; then
+        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+            "$MODPATH/legacy/camera_mass/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
+    else
+        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+            "$MODPATH/legacy/camera/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
+    fi
+fi
+
 PATCH_EXYNOS990_100X_ZOOM()
 {
     local FILE="$1"

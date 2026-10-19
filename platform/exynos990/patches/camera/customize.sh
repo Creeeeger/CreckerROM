@@ -1,3 +1,15 @@
+LOG_STEP_IN "- Fixing Shot suggestions"
+# Disable Snaplite in Shot suggestions, by HackMeGG (UN1CA):
+# https://github.com/salvogiangri/UN1CA/commit/1f0fa0c7fcbd08d0b6b7d249abb2d3ac2cf4718e
+# All Exynos990 targets share these engines. Include instruction context so
+# unrelated unconditional branches do not make HEX_PATCH skip the fix.
+# ARM32: blt -> b; ARM64: b.lt -> b, preserving each branch destination.
+HEX_PATCH "$WORK_DIR/vendor/lib/libshotsuggestion_engines.so" \
+    "606d21280ddb0220" "606d21280de00220"
+HEX_PATCH "$WORK_DIR/vendor/lib64/libshotsuggestion_engines.so" \
+    "685640b91f850071eb01005469000090" "685640b91f8500710f00001469000090"
+LOG_STEP_OUT
+
 LOG_STEP_IN "- Replacing camera blobs"
 BLOBS_LIST="
 system/lib64/libenn_wrapper_system.so

@@ -1,0 +1,194 @@
+From: HackMeGG <58815983+HackMeGG@users.noreply.github.com>
+Subject: [PATCH] Backport legacy Scene detection code
+
+Adapted for the OneUI 7 standard/mass Camera apps in ExtremeROM from:
+https://github.com/salvogiangri/UN1CA/commit/ec9e5c1abda401d32d72e962ae6d2fd0d5abf31a
+
+OneUI 7 sends text detection from MakerCallbackManager in both variants.
+Use its sceneDetectionInfo key (F0) and feature 24 to choose between HAL
+metadata and the legacy SceneDetectionNode callbacks. Query the cached
+available-features array directly to avoid variant-specific helper classes.
+Scenes 2 and 39 enable OCR; missing/short metadata disables it. Preserve
+callback change detection, logging and reset scene state for a new maker.
+
+---
+diff --git a/smali_classes3/com/samsung/android/camera/core2/maker/MakerCallbackManager.smali b/smali_classes3/com/samsung/android/camera/core2/maker/MakerCallbackManager.smali
+--- a/smali_classes3/com/samsung/android/camera/core2/maker/MakerCallbackManager.smali
++++ b/smali_classes3/com/samsung/android/camera/core2/maker/MakerCallbackManager.smali
+@@ -6,6 +6,8 @@
+ # static fields
+ .field public static final DEFAULT_INJECTED_DS_VALUE:I = -0xa
+
++.field public static volatile sceneDetectionEvent:I
++
+
+ # instance fields
+ .field private final TAG:Lcom/samsung/android/camera/core2/util/CLog$Tag;
+@@ -250,6 +252,10 @@
+     .locals 2
+
+     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
++
++    const/4 v0, -0x1
++
++    sput v0, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->sceneDetectionEvent:I
+
+     new-instance v0, Lcom/samsung/android/camera/core2/callback/AdaptiveLensModeInfoCallback$AdaptiveLensModeInfo;
+
+@@ -5025,21 +5031,83 @@
+ .end method
+
+ .method public sendTextDetectionInfoCallback(Lcom/samsung/android/camera/core2/CamDevice;Ljava/lang/Long;Landroid/hardware/camera2/CaptureResult;)V
+-    .locals 2
++    .locals 5
+
+     iget-object v0, p0, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->mTextDetectionInfoCallback:Lcom/samsung/android/camera/core2/callback/TextDetectionInfoCallback;
+
+-    if-eqz v0, :cond_0
+-
+-    if-eqz p1, :cond_0
+-
+-    sget-object v1, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->S0:Landroid/hardware/camera2/CaptureResult$Key;
++    if-eqz v0, :cond_5
++
++    if-eqz p1, :cond_5
++
++    invoke-virtual {p1}, Lcom/samsung/android/camera/core2/CamDevice;->m()Lcom/samsung/android/camera/core2/CamCapability;
++
++    move-result-object v1
++
++    iget-object v1, v1, Lcom/samsung/android/camera/core2/CamCapability;->f:Lcom/samsung/android/camera/core2/local/capability/FeatureCapability;
++
++    invoke-virtual {v1}, Lcom/samsung/android/camera/core2/local/capability/FeatureCapability;->a()[I
++
++    move-result-object v1
++
++    const/16 v2, 0x18
++
++    invoke-static {v1, v2}, Lcom/samsung/android/camera/core2/util/ArrayUtils;->contains([II)Z
++
++    move-result v1
++
++    const/4 v2, -0x1
++
++    if-eqz v1, :cond_0
++
++    sget-object v1, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->F0:Landroid/hardware/camera2/CaptureResult$Key;
+
+     invoke-static {p3, v1}, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->a(Landroid/hardware/camera2/CaptureResult;Landroid/hardware/camera2/CaptureResult$Key;)Ljava/lang/Object;
+
+     move-result-object p3
+
+-    check-cast p3, Ljava/lang/Integer;
++    check-cast p3, [J
++
++    if-eqz p3, :cond_1
++
++    array-length v3, p3
++
++    const/4 v4, 0x2
++
++    if-lt v3, v4, :cond_1
++
++    const/4 v3, 0x1
++
++    aget-wide v3, p3, v3
++
++    long-to-int v2, v3
++
++    goto :goto_0
++
++    :cond_0
++    sget v2, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->sceneDetectionEvent:I
++
++    :cond_1
++    :goto_0
++    const/4 v1, 0x2
++
++    if-eq v2, v1, :cond_2
++
++    const/16 v1, 0x27
++
++    if-ne v2, v1, :cond_3
++
++    :cond_2
++    const/4 v1, 0x1
++
++    goto :goto_1
++
++    :cond_3
++    const/4 v1, 0x0
++
++    :goto_1
++    invoke-static {v1}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object p3
+
+     iget-object v1, p0, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->mTextDetectionInfo:Ljava/lang/Integer;
+
+@@ -5047,7 +5115,7 @@
+
+     move-result v1
+
+-    if-nez v1, :cond_0
++    if-nez v1, :cond_5
+
+     iput-object p3, p0, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->mTextDetectionInfo:Ljava/lang/Integer;
+
+@@ -5063,7 +5131,7 @@
+
+     invoke-static {p0, v0, p1}, Lcom/samsung/android/camera/core2/util/CLog;->i(Lcom/samsung/android/camera/core2/util/CLog$Tag;Ljava/lang/String;[Ljava/lang/Object;)V
+
+-    :cond_0
++    :cond_5
+     return-void
+ .end method
+
+diff --git a/smali_classes3/com/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker$5.smali b/smali_classes3/com/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker$5.smali
+--- a/smali_classes3/com/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker$5.smali
++++ b/smali_classes3/com/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker$5.smali
+@@ -57,6 +57,8 @@
+ .method public onDetectScene(I[J)V
+     .locals 3
+
++    sput p1, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->sceneDetectionEvent:I
++
+     iget-object v0, p0, Lcom/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker$5;->this$0:Lcom/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker;
+
+     iget-object v0, v0, Lcom/samsung/android/camera/core2/maker/MakerBase;->mMakerCallbackManager:Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;
+diff --git a/smali_classes3/com/samsung/android/camera/core2/maker/BeautyPhotoMaker$4.smali b/smali_classes3/com/samsung/android/camera/core2/maker/BeautyPhotoMaker$4.smali
+--- a/smali_classes3/com/samsung/android/camera/core2/maker/BeautyPhotoMaker$4.smali
++++ b/smali_classes3/com/samsung/android/camera/core2/maker/BeautyPhotoMaker$4.smali
+@@ -57,6 +57,8 @@
+ .method public onDetectScene(I[J)V
+     .locals 3
+
++    sput p1, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->sceneDetectionEvent:I
++
+     iget-object v0, p0, Lcom/samsung/android/camera/core2/maker/BeautyPhotoMaker$4;->this$0:Lcom/samsung/android/camera/core2/maker/BeautyPhotoMaker;
+
+     iget-object v0, v0, Lcom/samsung/android/camera/core2/maker/MakerBase;->mMakerCallbackManager:Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;
+diff --git a/smali_classes3/com/samsung/android/camera/core2/maker/DualBokehPhotoMaker$2.smali b/smali_classes3/com/samsung/android/camera/core2/maker/DualBokehPhotoMaker$2.smali
+--- a/smali_classes3/com/samsung/android/camera/core2/maker/DualBokehPhotoMaker$2.smali
++++ b/smali_classes3/com/samsung/android/camera/core2/maker/DualBokehPhotoMaker$2.smali
+@@ -81,6 +81,8 @@
+ .method public onDetectScene(I[J)V
+     .locals 3
+
++    sput p1, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->sceneDetectionEvent:I
++
+     iget-object v0, p0, Lcom/samsung/android/camera/core2/maker/DualBokehPhotoMaker$2;->this$0:Lcom/samsung/android/camera/core2/maker/DualBokehPhotoMaker;
+
+     iget-object v0, v0, Lcom/samsung/android/camera/core2/maker/MakerBase;->mMakerCallbackManager:Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;
+diff --git a/smali_classes3/com/samsung/android/camera/core2/maker/SuperNightPhotoMaker$2.smali b/smali_classes3/com/samsung/android/camera/core2/maker/SuperNightPhotoMaker$2.smali
+--- a/smali_classes3/com/samsung/android/camera/core2/maker/SuperNightPhotoMaker$2.smali
++++ b/smali_classes3/com/samsung/android/camera/core2/maker/SuperNightPhotoMaker$2.smali
+@@ -57,6 +57,8 @@
+ .method public onDetectScene(I[J)V
+     .locals 3
+
++    sput p1, Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;->sceneDetectionEvent:I
++
+     iget-object v0, p0, Lcom/samsung/android/camera/core2/maker/SuperNightPhotoMaker$2;->this$0:Lcom/samsung/android/camera/core2/maker/SuperNightPhotoMaker;
+
+     iget-object v0, v0, Lcom/samsung/android/camera/core2/maker/MakerBase;->mMakerCallbackManager:Lcom/samsung/android/camera/core2/maker/MakerCallbackManager;

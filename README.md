@@ -47,6 +47,7 @@
   before
 - Crecker Kernel integration with preloaded KernelSU Next 3.4.1
 - 100x photo and video zoom on supported Exynos990 devices
+- Fixed Camera Shot suggestions on Exynos990 by disabling the incompatible Snaplite path
 - S24 ICCC vendor stack with repaired fabric-crypto and FKeyM secure-world integration
 - Preserved PROCA, Secure ADB, the OEM unlock toggle, target-aware StrongBox handling and the stock Knox services needed
   by Wallet-related components
@@ -287,6 +288,9 @@ BE WRITTEN)
   support while developing. A big thank you to Salvo for the screen capture detection controls, Vulkan renderer
   switch, and Google Photos spoofing implementations adapted from [UN1CA](https://github.com/salvogiangri/UN1CA)
 - **[Ocin4Ever](https://github.com/Ocin4Ever)** for a lot of help especially on smali, advice and emotional support :D
+- **[HackMeGG](https://github.com/HackMeGG)** for the [Shot suggestions fix](https://github.com/salvogiangri/UN1CA/commit/1f0fa0c7fcbd08d0b6b7d249abb2d3ac2cf4718e)
+  and [legacy Camera OCR/scene detection backport](https://github.com/salvogiangri/UN1CA/commit/ec9e5c1abda401d32d72e962ae6d2fd0d5abf31a),
+  originally contributed to UN1CA and adapted here for OneUI 7; thanks to Salvo Giangreco for maintaining UN1CA
 - **[Igor](https://github.com/BotchedRPR)** for getting me into porting, teaching me the basics, and emotional support
   down the road
 - **[Halal Beef](https://github.com/halal-beef)** for lk3rd, testing and misc help
