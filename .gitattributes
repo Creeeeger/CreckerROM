@@ -5,6 +5,7 @@
 
 # Common file extensions
 *.apk binary
+*.apk.[0-9][0-9] binary
 *.apex binary
 *.bin binary
 *.so binary

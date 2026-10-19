@@ -1,5 +1,8 @@
 out/
 
+# Local wallpaper inputs; tracked APKs are stored in the patch module.
+/wallpaper apks/
+
 # MacOS files
 *.DS_Store
 
