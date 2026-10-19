@@ -1,5 +1,5 @@
 From: Creeeeger
-Subject: [PATCH] Port Expert RAW 6 to Android 15 and y2s camera streams
+Subject: [PATCH] Port Expert RAW 6 to Android 15 and Exynos990 camera streams
 
 --- a/smali_classes3/y4/e.smali
 +++ b/smali_classes3/y4/e.smali
@@ -10,7 +10,7 @@ Subject: [PATCH] Port Expert RAW 6 to Android 15 and y2s camera streams
 +
 +    const-string/jumbo v5, "m3qxxx"
 +
-+    const-string/jumbo v6, "Expert RAW profile override: m3qxxx (S26 Ultra / y2s)"
++    const-string/jumbo v6, "Expert RAW profile override: m3qxxx (S26 Ultra / Exynos990)"
 +
 +    invoke-static {v1, v6}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
  
@@ -228,76 +228,6 @@ Subject: [PATCH] Port Expert RAW 6 to Android 15 and y2s camera streams
  
      invoke-static {v9, v2}, Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/SemCaptureResult;->b(Lcom/samsung/android/app/galaxyraw/core2/local/vendorkey/CaptureMetadata;Landroid/hardware/camera2/CaptureResult$Key;)Ljava/lang/Object;
  
---- a/smali_classes3/com/samsung/android/app/galaxyraw/interfaces/Resolution.smali
-+++ b/smali_classes3/com/samsung/android/app/galaxyraw/interfaces/Resolution.smali
-@@ -367,6 +367,8 @@
- .end field
- 
- 
-+.field public static final enum RESOLUTION_4864X3648:Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
-+
- # instance fields
- .field private final mHeight:I
- 
-@@ -3600,6 +3602,39 @@
-     move-result-object v0
- 
-     sput-object v0, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->$VALUES:[Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
-+
-+    # S20+ tele binning has a distinct 4:3 output size.
-+    array-length v2, v0
-+
-+    add-int/lit8 v1, v2, 0x1
-+
-+    invoke-static {v0, v1}, Ljava/util/Arrays;->copyOf([Ljava/lang/Object;I)[Ljava/lang/Object;
-+
-+    move-result-object v8
-+
-+    check-cast v8, [Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
-+
-+    new-instance v0, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
-+
-+    const-string v1, "RESOLUTION_4864X3648"
-+
-+    const/16 v3, 0x7f00
-+
-+    const/16 v4, 0x1300
-+
-+    const/16 v5, 0xe40
-+
-+    sget-object v6, Lcom/samsung/android/app/galaxyraw/interfaces/AspectRatio;->RATIO_4x3:Lcom/samsung/android/app/galaxyraw/interfaces/AspectRatio;
-+
-+    const/16 v7, 0x1e
-+
-+    invoke-direct/range {v0 .. v7}, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;-><init>(Ljava/lang/String;IIIILcom/samsung/android/app/galaxyraw/interfaces/AspectRatio;I)V
-+
-+    sput-object v0, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->RESOLUTION_4864X3648:Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
-+
-+    aput-object v0, v8, v2
-+
-+    sput-object v8, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->$VALUES:[Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
- 
-     invoke-static {}, Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;->values()[Lcom/samsung/android/app/galaxyraw/interfaces/Resolution;
- 
---- a/smali_classes3/com/samsung/android/app/galaxyraw/setting/repository/CameraSettingsImpl.smali
-+++ b/smali_classes3/com/samsung/android/app/galaxyraw/setting/repository/CameraSettingsImpl.smali
-@@ -1719,6 +1719,16 @@
- 
- .method public getCameraResolution(II)I
-     .locals 2
-+
-+    const/16 v0, 0x64
-+
-+    if-ne p1, v0, :expert_raw_other_camera
-+
-+    const/16 v0, 0x7f00
-+
-+    return v0
-+
-+    :expert_raw_other_camera
- 
-     invoke-virtual {p0, p1}, Lcom/samsung/android/app/galaxyraw/setting/repository/CameraSettingsImpl;->getCameraFacing(I)I
- 
 --- a/smali_classes3/com/samsung/android/app/galaxyraw/service/NotificationService.smali
 +++ b/smali_classes3/com/samsung/android/app/galaxyraw/service/NotificationService.smali
 @@ -291,7 +291,7 @@
@@ -345,7 +275,7 @@ Subject: [PATCH] Port Expert RAW 6 to Android 15 and y2s camera streams
 +
 +    if-eqz v1, :vendor_raw_done
 +
-+    # Exynos y2s publishes tele RAW only in Samsung's four-integer vendor table.
++    # Exynos990 publishes tele/front RAW only in Samsung's four-integer vendor table.
 +    iget-object v3, v3, Lcom/samsung/android/app/galaxyraw/core2/CamCapability;->h:Lcom/samsung/android/app/galaxyraw/core2/capability/ScalerCapability;
 +
 +    iget-object v3, v3, Lcom/samsung/android/app/galaxyraw/core2/capability/ScalerCapability;->a:Landroid/hardware/camera2/CameraCharacteristics;

@@ -4,23 +4,31 @@
 
 SKIPUNZIP=1
 
-if [ "$TARGET_CODENAME" != "y2s" ] || [ "$SOURCE_API_LEVEL" != "35" ]; then
-    LOGE "The Expert RAW port requires y2s with the Android 15 system image"
+if [ "$TARGET_PLATFORM" != "exynos990" ] || [ "$SOURCE_API_LEVEL" != "35" ]; then
+    LOGE "The Expert RAW port requires Exynos990 with the Android 15 system image"
     exit 1
 fi
 
-ENSURE_SHARED_PLATFORM_SIGNING_CERTS || exit 1
+EXPERTRAW_PROFILE="$SRC_DIR/scripts/expertraw/profiles/$TARGET_CODENAME.json"
+[ -f "$EXPERTRAW_PROFILE" ] || {
+    LOGE "No Expert RAW lens profile for $TARGET_CODENAME"
+    exit 1
+}
 
-EXPERTRAW_STAGE="$OUT_DIR/expertraw/y2s/module"
+ENSURE_SHARED_PLATFORM_SIGNING_CERTS || exit 1
+SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_CONFIG_GALAXYRAW_PLATFORM_VERSION" "15.03.01" || exit 1
+
+EXPERTRAW_STAGE="$OUT_DIR/expertraw/$TARGET_CODENAME/module"
 mkdir -p "$EXPERTRAW_STAGE/system/priv-app/ExpertRAW" "$EXPERTRAW_STAGE/system/etc/permissions"
 python3 "$SRC_DIR/scripts/expertraw/build.py" \
     --tools "$TOOLS_DIR" \
     --cache "$OUT_DIR/downloads/expertraw" \
     --cert "$(GET_PLATFORM_CERT_X509_PATH)" \
     --key "$(GET_PLATFORM_CERT_PK8_PATH)" \
-    --profile "$MODPATH/profile.json" \
+    --device "$TARGET_CODENAME" \
+    --profile "$EXPERTRAW_PROFILE" \
     --output "$EXPERTRAW_STAGE/system/priv-app/ExpertRAW/ExpertRAW.apk" || exit 1
-mv "$EXPERTRAW_STAGE/system/priv-app/ExpertRAW/ExpertRAW.json" "$OUT_DIR/expertraw/y2s/ExpertRAW.json" || exit 1
+mv "$EXPERTRAW_STAGE/system/priv-app/ExpertRAW/ExpertRAW.json" "$OUT_DIR/expertraw/$TARGET_CODENAME/ExpertRAW.json" || exit 1
 cp "$MODPATH/privapp-permissions-expertraw.xml" "$EXPERTRAW_STAGE/system/etc/permissions/"
 
 cat > "$EXPERTRAW_STAGE/fs_config-system" <<'EOF'
@@ -56,4 +64,4 @@ ADD_TO_WORK_DIR "$EXPERTRAW_STAGE" system "system/etc/permissions/privapp-permis
 SET_METADATA system "system/etc/permissions/privapp-permissions-expertraw.xml" \
     0 0 644 "u:object_r:system_file:s0" || exit 1
 
-unset EXPERTRAW_STAGE
+unset EXPERTRAW_STAGE EXPERTRAW_PROFILE

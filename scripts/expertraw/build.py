@@ -15,6 +15,7 @@ import zipfile
 from pathlib import Path
 
 from apk import repack
+from lenses import configure_smali, load_profile
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -100,7 +101,9 @@ def run(*args, **kwargs):
 
 def build(args):
     release = json.loads((HERE / "release.json").read_text())
-    configuration = json.loads(args.profile.read_text())
+    args.profile = args.profile or HERE / "profiles" / f"{args.device}.json"
+    args.output = args.output or ROOT / "out/expertraw" / args.device / "ExpertRAW.apk"
+    configuration = load_profile(args.profile, args.device)
     source = store_source(release, args.cache, args.source)
     backend = store_source(release["backend"], args.cache, args.backend_source)
     tools = args.tools / "bin"
@@ -119,12 +122,13 @@ def build(args):
         if data[:8] != b"dex\n039\0":
             raise ValueError("Unexpected source DEX version; review the Android 15 port")
         dex.write_bytes(data)
-        print("Patching Android APIs, S26 Ultra profile selection and S20+ lens sizes", flush=True)
+        print(f"Patching Android APIs, S26 Ultra profile selection and {args.device} lens sizes", flush=True)
         # API 28 selects DEX 039. Do not emit DEX 041 container bytecode on Android 15.
         run(tools / "baksmali", "-JXmx2048M", "d", "--api", "28", "-j", "4", "-l",
             "--debug-info", "false", "--accessor-comments", "false", "--sequential-labels",
             "-o", work / "smali_classes3", dex)
-        run("patch", "--batch", "--fuzz=0", "-p1", "-i", HERE / "android15-y2s.patch", cwd=work)
+        run("patch", "--batch", "--fuzz=0", "-p1", "-i", HERE / "android15-exynos990.patch", cwd=work)
+        configure_smali(work / "smali_classes3", configuration)
         dex_dir = work / "dex"
         dex_dir.mkdir()
         run(tools / "smali", "-JXmx2048M", "a", "--api", "28", "-j", "4",
@@ -142,7 +146,8 @@ def build(args):
     metadata = {
         "author": "Creeeeger",
         "version": release["version"], "version_code": release["version_code"],
-        "sdk": 35, "profile": "m3q (S26 Ultra)", "device": "y2s",
+        "sdk": 35, "profile": "m3q (S26 Ultra)", "device": args.device,
+        "models": configuration["models"], "raw_resolutions": configuration["raw_resolutions"],
         "source_sha256": release["sha256"], "backend_sha256": release["backend"]["sha256"],
         "backend_version": release["backend"]["version"],
         "apk_sha256": sha256(args.output),
@@ -153,14 +158,15 @@ def build(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--device", choices=("r8s", "x1s", "y2s", "z3s", "c1s", "c2s"), default="y2s")
     parser.add_argument("--source", type=Path, help="Offline APK matching release.json")
     parser.add_argument("--backend-source", type=Path, help="Offline APK for the compatible native backend")
     parser.add_argument("--cache", type=Path, default=ROOT / "out/downloads/expertraw")
     parser.add_argument("--tools", type=Path, default=ROOT / "out/tools")
-    parser.add_argument("--profile", type=Path, default=ROOT / "target/y2s/patches/expertraw/profile.json")
+    parser.add_argument("--profile", type=Path, help="Override the selected device's lens profile")
     parser.add_argument("--cert", type=Path, default=ROOT / "security/creckerrom_platform.x509.pem")
     parser.add_argument("--key", type=Path, default=ROOT / "security/creckerrom_platform.pk8")
-    parser.add_argument("--output", type=Path, default=ROOT / "out/expertraw/y2s/ExpertRAW.apk")
+    parser.add_argument("--output", type=Path, help="Output APK (default: out/expertraw/<device>/ExpertRAW.apk)")
     try:
         build(parser.parse_args())
     except (OSError, ValueError, subprocess.CalledProcessError, ET.ParseError) as error:

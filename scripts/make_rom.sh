@@ -39,8 +39,12 @@ GET_WORK_DIR_HASH()
 {
     local TREE_HASH
     local OPTS_HASH
+    local HASH_DIRS=("$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" "$SRC_DIR/scripts/expertraw")
+    if [ -d "$SRC_DIR/platform/$TARGET_PLATFORM/patches/expertraw" ]; then
+        HASH_DIRS+=("$SRC_DIR/platform/$TARGET_PLATFORM/patches/expertraw")
+    fi
     TREE_HASH="$(
-        find "$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" "$SRC_DIR/scripts/expertraw" \
+        find "${HASH_DIRS[@]}" \
             -type f ! -name '*.pyc' -print0 | \
             sort -z | xargs -0 sha1sum | sha1sum | cut -d " " -f 1
     )"

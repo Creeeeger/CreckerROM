@@ -1,0 +1,704 @@
+{
+  "author": "Creeeeger",
+  "method": "Static emulation of Samsung sensor constructors and metadata stream generators; capture validation only on y2s",
+  "devices": {
+    "r8s": {
+      "reference_model": "SM-G780F",
+      "models": [
+        "SM-G780F"
+      ],
+      "firmware": "G780FXXSOFYJ1/G780FOXMOFYJ1/G780FXXSOFYJ1",
+      "camera_feature_sha256": "fcc556202baf331fdeb5c9719c4781c370987e4f0803f7efc558ccfba4fde525",
+      "hal_sha256": "a0aa97d42454d4f51028888d4d3336e957410d294cacbf23bc1336a85dcd9f8d",
+      "stock_values": {
+        "BACK_WIDE_CAMERA_ID": "2",
+        "BACK_TELE_CAMERA_ID": "52",
+        "FRONT_DYNAMIC_FOV_CAMERA_ID": "3",
+        "BACK_CAMERA_RESOLUTION_4BY3_LARGE": "4032x3024",
+        "BACK_WIDE_CAMERA_RESOLUTION_4BY3_LARGE": "4000x3000",
+        "FRONT_CAMERA_RESOLUTION_4BY3_LARGE": "6528x4896",
+        "FRONT_CAMERA_SENSOR_CROP_RESOLUTION_4BY3_LARGE": "5264x3948"
+      },
+      "lenses": [
+        {
+          "camera_id": 0,
+          "sensor": "2LD",
+          "sensor_id": 52,
+          "standard_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 2,
+          "sensor": "3L6",
+          "sensor_id": 59,
+          "standard_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 52,
+          "sensor": "HI847",
+          "sensor_id": 217,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3264,
+              2448,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 1,
+          "sensor": "IMX616",
+          "sensor_id": 121,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              6528,
+              4896,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 3,
+          "sensor": "IMX616",
+          "sensor_id": 121,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              6528,
+              4896,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        }
+      ]
+    },
+    "x1s": {
+      "reference_model": "SM-G981B",
+      "models": [
+        "SM-G980F",
+        "SM-G981B"
+      ],
+      "firmware": "G981BXXSNHYB1/G981BOXMNHYB1/G981BXXSNHYB1",
+      "camera_feature_sha256": "cd877555490f6e618c40733879e6ba37d07ed08741ff809a571b76c749c4eb9e",
+      "hal_sha256": "4cb10bba5d3414a78280e4e5125f2c2cd739b8145e7a3674d2be956cbfcf2741",
+      "stock_values": {
+        "BACK_WIDE_CAMERA_ID": "2",
+        "BACK_TELE_CAMERA_ID": "52",
+        "FRONT_DYNAMIC_FOV_CAMERA_ID": "3",
+        "BACK_CAMERA_RESOLUTION_4BY3_LARGE": "4032x3024",
+        "BACK_WIDE_CAMERA_RESOLUTION_4BY3_LARGE": "4032x3024",
+        "FRONT_CAMERA_RESOLUTION_4BY3_LARGE": "3648x2736",
+        "FRONT_CAMERA_SENSOR_CROP_RESOLUTION_4BY3_LARGE": "2944x2208"
+      },
+      "lenses": [
+        {
+          "camera_id": 0,
+          "sensor": "2LD",
+          "sensor_id": 52,
+          "standard_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 2,
+          "sensor": "2LA",
+          "sensor_id": 53,
+          "standard_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 52,
+          "sensor": "GW2",
+          "sensor_id": 54,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              4864,
+              3648,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 1,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 3,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        }
+      ]
+    },
+    "y2s": {
+      "reference_model": "SM-G986B",
+      "models": [
+        "SM-G985F",
+        "SM-G986B"
+      ],
+      "firmware": "G986BXXSNHYB1/G986BOXMNHYB1/G986BXXSNHYB1",
+      "camera_feature_sha256": "f19566096c3d04e5a7686f19e4f5787a271db18312a275248303e603dff14360",
+      "hal_sha256": "9347f1b5366b7bb13aa38bb35e2f4b26b280df18d68102c8d057074f8036607f",
+      "stock_values": {
+        "BACK_WIDE_CAMERA_ID": "2",
+        "BACK_TELE_CAMERA_ID": "52",
+        "FRONT_DYNAMIC_FOV_CAMERA_ID": "3",
+        "BACK_CAMERA_RESOLUTION_4BY3_LARGE": "4032x3024",
+        "BACK_WIDE_CAMERA_RESOLUTION_4BY3_LARGE": "4032x3024",
+        "FRONT_CAMERA_RESOLUTION_4BY3_LARGE": "3648x2736",
+        "FRONT_CAMERA_SENSOR_CROP_RESOLUTION_4BY3_LARGE": "2944x2208"
+      },
+      "lenses": [
+        {
+          "camera_id": 0,
+          "sensor": "2LD",
+          "sensor_id": 52,
+          "standard_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": [
+            "_ZdaPv",
+            "_Znam",
+            "__vsnprintf_chk",
+            "__vsprintf_chk",
+            "fopen"
+          ]
+        },
+        {
+          "camera_id": 2,
+          "sensor": "2LA",
+          "sensor_id": 53,
+          "standard_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 52,
+          "sensor": "GW2",
+          "sensor_id": 54,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              4864,
+              3648,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": [
+            "fopen"
+          ]
+        },
+        {
+          "camera_id": 1,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 3,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        }
+      ]
+    },
+    "z3s": {
+      "reference_model": "SM-G988B",
+      "models": [
+        "SM-G988B"
+      ],
+      "firmware": "G988BXXSNHYB1/G988BOXMNHYB1/G988BXXSNHYB1",
+      "camera_feature_sha256": "a7eef14fa5ca8348f68b1aece5718a690d5b894ee82c3908d40af79d6f91f83f",
+      "hal_sha256": "7898ad7e3d5044d0278b7b9f5f13d3c13df5c308fb6bff5a4eadde52f96a3ed1",
+      "stock_values": {
+        "BACK_WIDE_CAMERA_ID": "2",
+        "BACK_TELE_CAMERA_ID": "52",
+        "FRONT_DYNAMIC_FOV_CAMERA_ID": "3",
+        "BACK_CAMERA_RESOLUTION_4BY3_LARGE": "4000x3000",
+        "BACK_WIDE_CAMERA_RESOLUTION_4BY3_LARGE": "4000x3000",
+        "FRONT_CAMERA_RESOLUTION_4BY3_LARGE": "3648x2736",
+        "FRONT_CAMERA_SENSOR_CROP_RESOLUTION_4BY3_LARGE": "2944x2208"
+      },
+      "lenses": [
+        {
+          "camera_id": 0,
+          "sensor": "HM1",
+          "sensor_id": 56,
+          "standard_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              12000,
+              9000,
+              0
+            ],
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": [
+            "_ZdaPv",
+            "_Znam",
+            "__vsnprintf_chk",
+            "__vsprintf_chk",
+            "fopen"
+          ]
+        },
+        {
+          "camera_id": 2,
+          "sensor": "2L3",
+          "sensor_id": 36,
+          "standard_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 52,
+          "sensor": "IMX586",
+          "sensor_id": 117,
+          "standard_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 1,
+          "sensor": "GH1",
+          "sensor_id": 55,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              7296,
+              5472,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 3,
+          "sensor": "GH1",
+          "sensor_id": 55,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              7296,
+              5472,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        }
+      ]
+    },
+    "c1s": {
+      "reference_model": "SM-N981B",
+      "models": [
+        "SM-N980F",
+        "SM-N981B"
+      ],
+      "firmware": "N981BXXSIHYH3/N981BOXMIHYH3/N981BXXSIHYH3",
+      "camera_feature_sha256": "db4b4b6e25a8646d6603d0bc5207f7d4a1be05ed1f06236e7badafc784d2f925",
+      "hal_sha256": "7f6dc9925de169c216d16b28ae42f48f9e444e6b93c4ca563b700a01a286e0e5",
+      "stock_values": {
+        "BACK_WIDE_CAMERA_ID": "2",
+        "BACK_TELE_CAMERA_ID": "52",
+        "FRONT_DYNAMIC_FOV_CAMERA_ID": "3",
+        "BACK_CAMERA_RESOLUTION_4BY3_LARGE": "4032x3024",
+        "BACK_WIDE_CAMERA_RESOLUTION_4BY3_LARGE": "4032x3024",
+        "FRONT_CAMERA_RESOLUTION_4BY3_LARGE": "3648x2736",
+        "FRONT_CAMERA_SENSOR_CROP_RESOLUTION_4BY3_LARGE": "2944x2208"
+      },
+      "lenses": [
+        {
+          "camera_id": 0,
+          "sensor": "2LD",
+          "sensor_id": 52,
+          "standard_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 2,
+          "sensor": "2LA",
+          "sensor_id": 53,
+          "standard_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4032,
+              3024,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 52,
+          "sensor": "GW2",
+          "sensor_id": 54,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              4864,
+              3648,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 1,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 3,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        }
+      ]
+    },
+    "c2s": {
+      "reference_model": "SM-N986B",
+      "models": [
+        "SM-N985F",
+        "SM-N986B"
+      ],
+      "firmware": "N986BXXSIHYH3/N986BOXMIHYH3/N986BXXSIHYH3",
+      "camera_feature_sha256": "f08c04f83879dd65bdc382fa40f11376d2dfbe6c408a3aa12d664195d990a5a5",
+      "hal_sha256": "9f365aca2e2f9bd03b243df258694b1f10a48c20e181c8dfd0e59e360ca024eb",
+      "stock_values": {
+        "BACK_WIDE_CAMERA_ID": "2",
+        "BACK_TELE_CAMERA_ID": "52",
+        "FRONT_DYNAMIC_FOV_CAMERA_ID": "3",
+        "BACK_CAMERA_RESOLUTION_4BY3_LARGE": "4000x3000",
+        "BACK_WIDE_CAMERA_RESOLUTION_4BY3_LARGE": "4000x3000",
+        "FRONT_CAMERA_RESOLUTION_4BY3_LARGE": "3648x2736",
+        "FRONT_CAMERA_SENSOR_CROP_RESOLUTION_4BY3_LARGE": "2944x2208"
+      },
+      "lenses": [
+        {
+          "camera_id": 0,
+          "sensor": "HM1",
+          "sensor_id": 56,
+          "standard_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              12000,
+              9000,
+              0
+            ],
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 2,
+          "sensor": "2L3",
+          "sensor_id": 36,
+          "standard_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 52,
+          "sensor": "3M5",
+          "sensor_id": 64,
+          "standard_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "vendor_raw": [
+            [
+              32,
+              4000,
+              3000,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 1,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        },
+        {
+          "camera_id": 3,
+          "sensor": "3J1",
+          "sensor_id": 38,
+          "standard_raw": [],
+          "vendor_raw": [
+            [
+              32,
+              3648,
+              2736,
+              0
+            ]
+          ],
+          "runtime_calls_stubbed": []
+        }
+      ]
+    }
+  }
+}
