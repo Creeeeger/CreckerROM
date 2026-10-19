@@ -35,7 +35,7 @@
 - Extra CSC features (Call recording, Network speed in status bar, 5GHz Hotspot)
 - Countless other small optimizations
 
-## CreckerROM features and fixes
+## CreckerROM 2.7.0 features and fixes
 
 - Full custom AVB and Samsung signing for Exynos990, covering AP images, `vbmeta_samsung`, sparse `super`, the boot
   chain and rebuilt platform applications so locked-bootloader builds use one consistent signing identity
@@ -43,30 +43,62 @@
   correct BL1 metadata, rollback/RP revisions, LTE/5G runtime aliases and signed PIT handling
 - Encrypted Exynos990 boot support with selectable encrypted or unencrypted builds
 - Correct Exynos990 HIDL DRK path, restoring proper IMEI and device-identity reporting
-- Working Samsung Cloud E2EE, Pass, Pay, Wallet, other Samsung services, Knox Guard and literally everything else broken
-  before
-- Crecker Kernel integration with preloaded KernelSU Next 3.4.1
+- Working Samsung Cloud E2EE
+- Working Samsung Pass, including passkey creation and updates
+- Working Samsung Pay
+- Working Samsung Wallet
+- Working Samsung crypto wallet
+- Working Samsung Blockchain Keystore
+- Working Knox Guard
+- Working Hermes
+- Working Weaver
+- Widevine upgraded from L3 to L1
+- Crecker Kernel integration with KernelSU Next 3.4.1
+- Build option to include or exclude KernelSU in both the kernel and manager app
+- Selectable TWRP or stock recovery
 - 100x photo and video zoom on supported Exynos990 devices
-- Fixed Camera Shot suggestions on Exynos990 by disabling the incompatible Snaplite path
-- S24 ICCC vendor stack with repaired fabric-crypto and FKeyM secure-world integration
+- Camera feed no longer flickers above 40x zoom while recording video, confirmed on retest
+- Motion Photos capture and Samsung Gallery playback; open Gallery and wait a second before taking Motion Photos
+- Fixed Camera Shot suggestions on Exynos990 (thanks to UN1CA)
+- Telephoto camera support in Pro photo mode
+- Video recording with the telephoto camera in Pro mode
+- Special telephoto mode combinations in video
+- Samsung Log recording at 4K 60 FPS and 8K 24 FPS
+- Expert RAW port for the S20 platform, verified on S20+; other S20/Note20 variants need confirmation
+- Factory reset from Android Settings clears FRP and boots into TWRP, where the reset can be completed
+- Factory reset with encryption enabled
+- Factory reset directly from stock recovery
+- S24 ICCC vendor stack with repaired fabric-crypto integration
+- FKeyMaster Trusted Applet ported from Teegris 5 to Teegris 4
+- Custom Trusted Applet signing with a certificate
+- Script to regenerate or restore all keys
+- DEFEX policy retained on the device
+- Debug Guard works in builds without `--debug`
 - Preserved PROCA, Secure ADB, the OEM unlock toggle, target-aware StrongBox handling and the stock Knox services needed
   by Wallet-related components
 - Built-in Play Integrity Fix with profile updates directly from Settings; no external PIF module is required
   (integrated with thanks to [salvogiangri](https://github.com/salvogiangri))
-- Screenshot/screen recording detection control, a Vulkan renderer switch, and optional Google Photos Pixel XL
-  spoofing under **Settings → UN1CA features**, adapted from UN1CA with a big thanks to
-  [Salvo Giangreco (salvogiangri)](https://github.com/salvogiangri).
+- Optional unlimited Google Photos storage via Pixel XL spoofing under **Settings → UN1CA features**
+  (thanks to [Salvo](https://github.com/salvogiangri)); off by default, reopen Photos after enabling, availability
+  depends on Google
+- Vulkan renderer switch under **Settings → UN1CA features**: ON uses Vulkan, OFF uses OpenGL; reboot after changing
+  (thanks to [Salvo](https://github.com/salvogiangri))
+- Disable screen capture detection under **Settings → UN1CA features**: hides screenshot and screen recording callbacks
+  from apps (thanks to [Salvo](https://github.com/salvogiangri))
 - Three debloat levels while preserving the applications and services required for messaging, Samsung accounts, firmware
   updates, Motion Photos, SIM unlocking and storage sharing
-- S26 Ultra wallpaper resources integrated into the ROM
+- Meta bloat services removed by default
+- Fixed display corner radius
+- Stock wallpapers added
+- Option to force a 120 Hz refresh rate
 - Exact-model KVM/EL2 profiles and mode-specific Crecker Kernel builds for every supported Exynos990 model
 - Model-labelled Odin and Heimdall output, plus signed rollback-firmware and kernel-only testing workflows
+- Fixed excessive build disk usage
 
 # Known bugs
 
-- Samsung Log video recording at 4K 60 FPS and 8K 24 FPS is broken
-- The camera feed flickers at high zoom levels (>40x) while recording video
-- Samsung Pass passkey compatibility is included for all Exynos990 targets; on-device registration has been verified on S20+ (y2s)
+- 32 Bit support is missing
+- Document saving in camera shows but crashes on extract / save
 
 # Building
 
@@ -126,7 +158,7 @@ case-insensitively. A non-KVM build selects the stable
 
 | Flag                               | What it does                                                                                                                                                                                               | When to use it                                                                                                                     |
 |------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| `--debug`                          | Enables verbose command and AVB diagnostic logging and early boot ADB. ADB authentication stays enabled; builds without this flag do not apply the boot ADB patches.                                         | Troubleshooting a failed build or developing build-system changes.                                                                 |
+| `--debug`                          | Enables verbose command and AVB diagnostic logging and early boot ADB. ADB authentication stays enabled; builds without this flag do not apply the boot ADB patches.                                       | Troubleshooting a failed build or developing build-system changes.                                                                 |
 | `--official`                       | Marks the generated configuration as an official build. This is the default in a clean shell.                                                                                                              | Release builds.                                                                                                                    |
 | `--unofficial`                     | Marks the generated configuration as unofficial.                                                                                                                                                           | Local development and test builds.                                                                                                 |
 | `--ext4-images`                    | Builds partitions configured for EROFS as ext4 instead. Partitions already requiring another filesystem keep their required format.                                                                        | Filesystem compatibility testing or debugging an EROFS-specific problem.                                                           |
@@ -136,8 +168,8 @@ case-insensitively. A non-KVM build selects the stable
 | `--ultra-debloat`                  | Alias for `--debloat ultra`.                                                                                                                                                                               | Convenience for the smallest supported app set.                                                                                    |
 | `--heimdall-only`                  | Disables Odin package creation and produces only the Heimdall flash folder.                                                                                                                                | Linux/Heimdall workflows or when individual flash images are required.                                                             |
 | `--kernel-only`                    | Builds the kernel module and packages only signed `boot.img`, `dtbo.img`, and `vbmeta.img` in a Heimdall folder. It automatically enables AVB, Heimdall-only mode, and omits full partition descriptors.   | Fast kernel testing. Exynos990 targets still require the exact `--avb-model`.                                                      |
-| `--ksu`                            | Includes KernelSU in the kernel and preloads its manager app. Enabled by default; the last KSU flag wins.                                                                                                   | Explicitly selecting the default KSU build.                                                                                        |
-| `--no-ksu`                         | Disables KernelSU during kernel compilation and omits the preloaded manager app.                                                                                                                          | Builds without KernelSU, including kernel-only builds.                                                                             |
+| `--ksu`                            | Includes KernelSU in the kernel and preloads its manager app. Enabled by default; the last KSU flag wins.                                                                                                  | Explicitly selecting the default KSU build.                                                                                        |
+| `--no-ksu`                         | Disables KernelSU during kernel compilation and omits the preloaded manager app.                                                                                                                           | Builds without KernelSU, including kernel-only builds.                                                                             |
 | `--avb`                            | Enables full custom AVB image signing, vbmeta generation, and the platform's bootloader-signing flow.                                                                                                      | Complete AVB builds intended for flashing.                                                                                         |
 | `--avb-low-security`               | Enables AVB but skips partition-image footer signing and omits partition descriptors from vbmeta. It implies `--avb`.                                                                                      | Development and recovery testing only; do not use it for a normal release.                                                         |
 | `--avb-model <model>`              | Selects the exact Exynos990 handset model and its BL1 signing metadata. `--avb-model=<model>` is also accepted.                                                                                            | Every AVB, low-security AVB, kernel-only, or rollback build for an Exynos990 target. Use the phone model, not the target codename. |
@@ -288,7 +320,8 @@ BE WRITTEN)
   support while developing. A big thank you to Salvo for the screen capture detection controls, Vulkan renderer
   switch, and Google Photos spoofing implementations adapted from [UN1CA](https://github.com/salvogiangri/UN1CA)
 - **[Ocin4Ever](https://github.com/Ocin4Ever)** for a lot of help especially on smali, advice and emotional support :D
-- **[HackMeGG](https://github.com/HackMeGG)** for the [Shot suggestions fix](https://github.com/salvogiangri/UN1CA/commit/1f0fa0c7fcbd08d0b6b7d249abb2d3ac2cf4718e)
+- **[HackMeGG](https://github.com/HackMeGG)** for
+  the [Shot suggestions fix](https://github.com/salvogiangri/UN1CA/commit/1f0fa0c7fcbd08d0b6b7d249abb2d3ac2cf4718e)
   and [legacy Camera OCR/scene detection backport](https://github.com/salvogiangri/UN1CA/commit/ec9e5c1abda401d32d72e962ae6d2fd0d5abf31a),
   originally contributed to UN1CA and adapted here for OneUI 7; thanks to Salvo Giangreco for maintaining UN1CA
 - **[Igor](https://github.com/BotchedRPR)** for getting me into porting, teaching me the basics, and emotional support
