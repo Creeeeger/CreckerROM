@@ -1,9 +1,9 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-FileCopyrightText: 2026 Creeeeger <104427569+Creeeeger@users.noreply.github.com>
 # TZAR /sbin/root_task patch file v1
-# Default TARGET_SAMSUNG_TZAR_PATCH_FILE member path inside startup.tzar.
-# Default TARGET_SAMSUNG_TZAR_PATCH_TABLE; populate the rows before use.
 # format: enabled|offset|old_hex|new_hex|function|instruction
-# Disabled example from the repository sample tzar.img.
-# Replace or delete this row, then set enabled to 1 for each real patch.
+# Offsets are ELF file offsets, not Ghidra addresses.
+# Target: G986BXXSNHYB1 /sbin/root_task (Build ID 4c29e2e21d1d3cff1e718a1f04627dc14f021c61).
 
-# --- Disabled sample row ---
-0|0x00000000|7F|7E|sample_only|replace this disabled example row
+# --- Temporary TA authentication bypass ---
+1|0x0000DBDC|FD7BB8A9FD030091|00008052C0035FD6|ta_pkg_verify|TEMPORARY: mov w0 #0; ret - skip all TA package authentication
