@@ -31,6 +31,15 @@ BUILD_ODIN_SUPER_IMAGE()
     CMD+=" --sparse"
     CMD+=" --output \"$OUTPUT_FILE\""
 
-    EVAL "$CMD" || exit 1
+    # lpmake expands sparse inputs into temporary raw images. Keep those on the
+    # build filesystem rather than a potentially quota-limited /tmp tmpfs.
+    (
+        local LPM_TMP_DIR
+        mkdir -p "$OUT_DIR/tmp" || exit 1
+        LPM_TMP_DIR="$(mktemp -d "$OUT_DIR/tmp/lpmake.XXXXXX")" || exit 1
+        trap 'rm -rf -- "$LPM_TMP_DIR"' EXIT
+        export TMPDIR="$LPM_TMP_DIR"
+        EVAL "$CMD"
+    ) || exit 1
     SIGN_SUPER_IMAGE_IF_REQUIRED "$OUTPUT_FILE"
 }
