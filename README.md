@@ -54,6 +54,7 @@
 - Working Weaver
 - Widevine upgraded from L3 to L1
 - Crecker Kernel integration with KernelSU Next 3.4.1
+- Restored 32-bit ARM app support for the Galaxy S20 and Note20 series
 - Build option to include or exclude KernelSU in both the kernel and manager app
 - Selectable TWRP or stock recovery
 - 100x photo and video zoom on supported Exynos990 devices
@@ -97,7 +98,6 @@
 
 # Known bugs
 
-- 32 Bit support is missing
 - Document saving in camera shows but crashes on extract / save
 
 # Building

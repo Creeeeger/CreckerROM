@@ -1,0 +1,4 @@
+id=32bit_support
+name=32-bit ARM app support
+author=Creeeeger
+description=Restores the ARM32 app runtime and dual zygote from local files for the S20/Note20 series.

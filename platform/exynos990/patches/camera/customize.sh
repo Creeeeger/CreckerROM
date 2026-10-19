@@ -38,11 +38,10 @@ system/lib64/libDualCamBokehCapture.camera.samsung.so
 "
 for blob in $BLOBS_LIST
 do
-    DELETE_FROM_WORK_DIR "system" "$blob" &
+    # Each deletion edits the same filesystem metadata and public library
+    # lists. Parallel sed -i calls can overwrite one another's removals.
+    DELETE_FROM_WORK_DIR "system" "$blob"
 done
-
-# shellcheck disable=SC2046
-wait $(jobs -p) || exit 1
 
 BLOBS_LIST="
 system/lib64/libPortraitDistortionCorrectionCali.arcsoft.so

@@ -54,6 +54,11 @@ GET_WORK_DIR_HASH()
     if [ -d "$SRC_DIR/platform/$TARGET_PLATFORM/patches" ]; then
         HASH_DIRS+=("$SRC_DIR/platform/$TARGET_PLATFORM/patches")
     fi
+    case "$TARGET_CODENAME" in
+        x1s|y2s|z3s|r8s|c1s|c2s)
+            HASH_DIRS+=("$SRC_DIR/scripts/internal/check_32bit_support.py")
+            ;;
+    esac
     TREE_HASH="$(
         find "${HASH_DIRS[@]}" \
             -type f ! -name '*.pyc' -print0 | \
@@ -70,6 +75,7 @@ GET_WORK_DIR_HASH()
             "ROM_VERSION=${ROM_VERSION:-}" \
             "ROM_KERNEL_LOCALVERSION=${ROM_KERNEL_LOCALVERSION:-}" \
             "ROM_DISPLAY_NAME=${ROM_DISPLAY_NAME:-}" \
+            "COMPAT32_SOURCE_DIR=${COMPAT32_SOURCE_DIR:-}" \
             "ROM_DEBLOAT_LEVEL=${ROM_DEBLOAT_LEVEL:-default}" | \
             sha1sum | cut -d " " -f 1
     )"
@@ -278,6 +284,14 @@ if $BUILD_ROM; then
         "$SRC_DIR/scripts/internal/apply_modules.sh" "$SRC_DIR/unica/mods" || exit 1
         LOG_STEP_OUT
     fi
+
+    case "$TARGET_CODENAME" in
+        x1s|y2s|z3s|r8s|c1s|c2s)
+            LOG_STEP_IN true "Checking ARM32 boot files and public library ABIs"
+            python3 "$SRC_DIR/scripts/internal/check_32bit_support.py" "$WORK_DIR" --fix-public-libraries || exit 1
+            LOG_STEP_OUT
+            ;;
+    esac
 
     if [ -d "$APKTOOL_DIR" ]; then
         LOG_STEP_IN true "Building APKs/JARs"
