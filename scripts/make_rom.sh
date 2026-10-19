@@ -24,6 +24,11 @@ source "$SRC_DIR/scripts/utils/module_utils.sh" || exit 1
 
 FORCE=false
 BUILD_ROM=false
+export TARGET_ENABLE_KSU="${TARGET_ENABLE_KSU:-true}"
+if [ "$TARGET_ENABLE_KSU" != "true" ] && [ "$TARGET_ENABLE_KSU" != "false" ]; then
+    LOGE "TARGET_ENABLE_KSU must be true or false (got: $TARGET_ENABLE_KSU)"
+    exit 1
+fi
 TARGET_BUILD_KERNEL_ONLY="${TARGET_BUILD_KERNEL_ONLY:-false}"
 if [ "$TARGET_BUILD_KERNEL_ONLY" != "true" ] && [ "$TARGET_BUILD_KERNEL_ONLY" != "false" ]; then
     LOGE "TARGET_BUILD_KERNEL_ONLY must be true or false (got: $TARGET_BUILD_KERNEL_ONLY)"
@@ -54,6 +59,7 @@ GET_WORK_DIR_HASH()
         printf '%s\n' \
             "FORCE_EXT4_IMAGES=${FORCE_EXT4_IMAGES:-false}" \
             "TARGET_ENABLE_ENCRYPTION=${TARGET_ENABLE_ENCRYPTION:-false}" \
+            "TARGET_ENABLE_KSU=${TARGET_ENABLE_KSU:-true}" \
             "ROM_DEBLOAT_LEVEL=${ROM_DEBLOAT_LEVEL:-default}" | \
             sha1sum | cut -d " " -f 1
     )"

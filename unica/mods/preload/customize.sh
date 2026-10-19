@@ -2,9 +2,15 @@ KERNELSU_MANAGER_APK="https://github.com/KernelSU-Next/KernelSU-Next/releases/do
 # https://github.com/tiann/KernelSU/issues/886
 APK_PATH="system/preload/KernelSU-Next/com.rifsxd.ksunext-mesa==/base.apk"
 
-LOG "- Adding KernelSU-Next.apk to preload apps"
-mkdir -p "$WORK_DIR/system/$(dirname "$APK_PATH")"
-DOWNLOAD_FILE "$KERNELSU_MANAGER_APK" "$WORK_DIR/system/$APK_PATH"
+mkdir -p "$WORK_DIR/system/system/preload"
+if [ "${TARGET_ENABLE_KSU:-true}" = "true" ]; then
+    LOG "- Adding KernelSU-Next.apk to preload apps"
+    mkdir -p "$WORK_DIR/system/$(dirname "$APK_PATH")"
+    DOWNLOAD_FILE "$KERNELSU_MANAGER_APK" "$WORK_DIR/system/$APK_PATH"
+else
+    LOG "- Omitting KernelSU-Next.apk from preload apps"
+    rm -rf "$WORK_DIR/system/system/preload/KernelSU-Next"
+fi
 
 sed -i "/system\/preload/d" "$WORK_DIR/configs/fs_config-system"
 sed -i "/system\/preload/d" "$WORK_DIR/configs/file_context-system"
@@ -16,8 +22,7 @@ while read -r i; do
     echo "/$FILE u:object_r:system_file:s0" >> "$WORK_DIR/configs/file_context-system"
 done <<< "$(find "$WORK_DIR/system/system/preload")"
 
-rm -f "$WORK_DIR/system/system/etc/vpl_apks_count_list.txt"
-while read -r i; do
+while IFS= read -r i; do
     FILE="$(echo "$i" | sed "s.$WORK_DIR/system..")"
-    echo "$FILE" >> "$WORK_DIR/system/system/etc/vpl_apks_count_list.txt"
-done <<< "$(find "$WORK_DIR/system/system/preload" -name "*.apk" | sort)"
+    echo "$FILE"
+done < <(find "$WORK_DIR/system/system/preload" -name "*.apk" | sort) > "$WORK_DIR/system/system/etc/vpl_apks_count_list.txt"

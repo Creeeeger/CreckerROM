@@ -1,4 +1,6 @@
 # [
+source "$SRC_DIR/scripts/utils/kernel_utils.sh" || return 1
+
 CREEEEGER_KERNEL_REPO="https://github.com/Creeeeger/exynos990Kernel"
 CREEEEGER_KERNEL_REPO="${CREEEEGER_KERNEL_REPO%/}"
 CREEEEGER_KERNEL_STABLE_BRANCH="OneUI7_8_stable"
@@ -17,24 +19,16 @@ HAS_LTE_DTBO()
 
 BUILD_KERNEL()
 {
-    local PARENT
-    PARENT="$(pwd)"
-
-    cd "$KERNEL_TMP_DIR" || return 1
-
-    if ! EVAL "./build.sh -m ${TARGET_CODENAME} -k y -r n"; then
-        cd "$PARENT" || true
-        return 1
+    local KSU_OPTION=y
+    if [ "${TARGET_ENABLE_KSU:-true}" = "false" ]; then
+        KSU_OPTION=n
     fi
+
+    RUN_KERNEL_BUILD "$TARGET_CODENAME" "$KSU_OPTION" -r n || return 1
 
     if HAS_LTE_DTBO; then
-        if ! EVAL "./build.sh -m ${TARGET_CODENAME}lte -k n -r n -d y"; then
-            cd "$PARENT" || true
-            return 1
-        fi
+        RUN_KERNEL_BUILD "${TARGET_CODENAME}lte" n -r n -d y || return 1
     fi
-
-    cd "$PARENT" || return 1
 }
 
 SELECT_KERNEL_REMOTE_BRANCH()

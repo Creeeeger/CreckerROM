@@ -8,15 +8,17 @@ cd "$SCRIPT_DIR"
 
 PRINT_USAGE()
 {
-    echo "Usage: $0 [--stock]" >&2
+    echo "Usage: $0 [--stock] [--ksu|--no-ksu]" >&2
     echo " --stock : Use stock recovery from each target AP firmware (default: TWRP)" >&2
+    echo " --ksu : Include KernelSU in the kernel and preload its manager app (default)" >&2
+    echo " --no-ksu : Disable KernelSU in the kernel and omit its manager app" >&2
 }
 
-RECOVERY_OPTIONS=()
+BUILD_OPTIONS=()
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --stock)
-            RECOVERY_OPTIONS=(--stock)
+        --stock|--ksu|--no-ksu)
+            BUILD_OPTIONS+=("$1")
             ;;
         -h|--help)
             PRINT_USAGE
@@ -55,7 +57,7 @@ for BUILD in "${BUILDS[@]}"; do
             --no-debloat \
             --avb \
             --avb-model "$MODEL" \
-            "${RECOVERY_OPTIONS[@]}" \
+            "${BUILD_OPTIONS[@]}" \
             "$TARGET"
 
         export TARGET_BUILD_HEIMDALL_PACKAGE=false
