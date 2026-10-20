@@ -83,6 +83,10 @@ if [ "$#" -ne 1 ] || [ ! -d "$TMP_IMG_DIR" ]; then
 fi
 
 INIT_DEFAULTS
+# The packaging pass changes headers before Samsung signing. Check here rather
+# than editing signed payload bytes and invalidating their Samsung signatures.
+python3 "$SRC_DIR/scripts/internal/boot_patch_level.py" \
+    --patch-level "$AVB_SECURITY_PATCH_LEVEL" --images-dir "$TMP_IMG_DIR" --verify || exit 1
 SETUP_AVBTOOL
 PARSE_ORIGINAL_VBMETA_LAYOUT
 PARSE_ORIGINAL_VBMETA_SAMSUNG_LAYOUT

@@ -229,12 +229,27 @@ SIGN_CHAIN_PARTITIONS()
     done
 }
 
+AVB_PROPERTY_VALUE()
+{
+    case "$1" in
+        com.android.build.*.security_patch)
+            if [ "$AVB_SECURITY_PATCH_LEVEL" != "preserve" ]; then
+                printf '%s' "$AVB_SECURITY_PATCH_LEVEL"
+                return 0
+            fi
+            ;;
+    esac
+    printf '%s' "$2"
+}
+
 BUILD_OPTIONAL_PROPS()
 {
     local ENTRY
     local KEY
     local VALUE
-    local SECURITY_PATCH_OVERRIDE="${TARGET_AVB_VBMETA_SECURITY_PATCH_OVERRIDE:-2026-02-01}"
+    local SECURITY_PATCH_OVERRIDE="$AVB_SECURITY_PATCH_LEVEL"
+    local COPIED_KEYS=""
+    local PARTITION
     local BOOT_OS_VERSION
     local BOOT_PATCH
     local SYSTEM_OS_VERSION
@@ -250,15 +265,20 @@ BUILD_OPTIONAL_PROPS()
         for ENTRY in $ORIGINAL_VBMETA_PROPS; do
             KEY="${ENTRY%%=*}"
             VALUE="${ENTRY#*=}"
-            case "$KEY" in
-                "com.android.build.boot.security_patch" | \
-                "com.android.build.system.security_patch" | \
-                "com.android.build.vendor.security_patch")
-                    [ "$SECURITY_PATCH_OVERRIDE" != "preserve" ] && VALUE="$SECURITY_PATCH_OVERRIDE"
-                    ;;
-            esac
+            VALUE="$(AVB_PROPERTY_VALUE "$KEY" "$VALUE")"
             VBMETA_PROPS+=("--prop" "$KEY:$VALUE")
+            APPEND_UNIQUE "COPIED_KEYS" "$KEY"
         done
+        if [ "$SECURITY_PATCH_OVERRIDE" != "preserve" ]; then
+            # Some stock layouts omit a partition property entirely. Do not
+            # leave stale boot metadata just because its property was absent.
+            for PARTITION in boot system vendor; do
+                KEY="com.android.build.$PARTITION.security_patch"
+                if ! LIST_HAS_ITEM "$KEY" "$COPIED_KEYS"; then
+                    VBMETA_PROPS+=("--prop" "$KEY:$SECURITY_PATCH_OVERRIDE")
+                fi
+            done
+        fi
         LOG_PARTITION_SET "Using original vbmeta props" "$ORIGINAL_VBMETA_PROPS"
         if [ "$SECURITY_PATCH_OVERRIDE" = "preserve" ]; then
             AVB_DEBUG_LOG "Preserving original vbmeta boot/system/vendor security_patch props"
@@ -276,9 +296,13 @@ BUILD_OPTIONAL_PROPS()
     [ -z "$VENDOR_OS_VERSION" ] && VENDOR_OS_VERSION="$(GET_PROP "vendor" "ro.build.version.release")"
     VENDOR_PATCH="$(GET_PROP "vendor" "ro.vendor.build.version.security_patch")"
     [ -z "$VENDOR_PATCH" ] && VENDOR_PATCH="$(GET_PROP "vendor" "ro.build.version.security_patch")"
-    BOOT_PATCH="$SECURITY_PATCH_OVERRIDE"
-    SYSTEM_PATCH="$SECURITY_PATCH_OVERRIDE"
-    VENDOR_PATCH="$SECURITY_PATCH_OVERRIDE"
+    if [ "$SECURITY_PATCH_OVERRIDE" != "preserve" ]; then
+        BOOT_PATCH="$SECURITY_PATCH_OVERRIDE"
+        SYSTEM_PATCH="$SECURITY_PATCH_OVERRIDE"
+        VENDOR_PATCH="$SECURITY_PATCH_OVERRIDE"
+    elif [[ "$BOOT_PATCH" =~ ^[0-9]{4}-[0-9]{2}$ ]]; then
+        BOOT_PATCH+="-01"
+    fi
 
     [ -n "$BOOT_OS_VERSION" ] && VBMETA_PROPS+=("--prop" "com.android.build.boot.os_version:$BOOT_OS_VERSION")
     [ -n "$BOOT_PATCH" ] && VBMETA_PROPS+=("--prop" "com.android.build.boot.security_patch:$BOOT_PATCH")
@@ -436,7 +460,7 @@ MAKE_VBMETA_SAMSUNG()
     done
 
     for ENTRY in $ORIGINAL_VBMETA_SAMSUNG_PROPS; do
-        CMD+=(--prop "${ENTRY%%=*}:${ENTRY#*=}")
+        CMD+=(--prop "${ENTRY%%=*}:$(AVB_PROPERTY_VALUE "${ENTRY%%=*}" "${ENTRY#*=}")")
     done
 
     if [ -n "$RELEASE_STRING" ]; then

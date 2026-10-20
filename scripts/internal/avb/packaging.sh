@@ -34,6 +34,7 @@ CREATE_IMAGE_PACK()
         echo "low_security=$TARGET_AVB_LOW_SECURITY"
         echo "include_partition_descriptors=$TARGET_AVB_INCLUDE_PARTITION_DESCRIPTORS"
         echo "vbmeta_flags=$TARGET_AVB_VBMETA_FLAGS"
+        echo "security_patch_level=$AVB_SECURITY_PATCH_LEVEL"
         echo "preserve_samsung_signatures=$TARGET_AVB_PRESERVE_SAMSUNG_SIGNATURES"
         echo "vbmeta_key_path=$VBMETA_SIGN_KEY_PATH"
         echo "vbmeta_public_key_blob=keys/vbmeta.avbpubkey"

@@ -19,6 +19,7 @@
 # [
 source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
 source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
+source "$SRC_DIR/scripts/utils/security_patch_utils.sh" || exit 1
 
 source "$SRC_DIR/scripts/internal/packaging/super_images.sh" || exit 1
 source "$SRC_DIR/scripts/internal/packaging/image_inputs.sh" || exit 1

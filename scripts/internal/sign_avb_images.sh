@@ -15,6 +15,7 @@
 
 # [
 source "$SRC_DIR/scripts/utils/firmware_utils.sh" || exit 1
+source "$SRC_DIR/scripts/utils/security_patch_utils.sh" || exit 1
 
 # This wrapper only wires function modules together; avb/pipeline.sh owns the
 # execution order and keeps the cross-module state in globals.

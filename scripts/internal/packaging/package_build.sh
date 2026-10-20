@@ -133,6 +133,12 @@ else
     COPY_TARGET_RECOVERY_IMAGE_TO_TMP
 fi
 
+if $TARGET_ENABLE_CUSTOM_AVB; then
+    LOG_STEP_IN "- Preparing boot image security patch metadata"
+    PREPARE_BOOT_PATCH_LEVEL "$TMP_DIR" || exit 1
+    LOG_STEP_OUT
+fi
+
 if $TARGET_ENABLE_SAMSUNG_SIGNING && $TARGET_SAMSUNG_SIGN_AP_IMAGES; then
     LOG_STEP_IN "- Samsung-signing AP images before AVB"
     # Stage-2 signatures cover image bytes. AVB footers are added after this so
