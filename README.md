@@ -205,6 +205,14 @@ source ./buildenv.sh --kernel-only --avb-model G985F y2s
 m
 ```
 
+To build an existing local kernel branch, set `KERNEL_BRANCH` after sourcing the build environment:
+
+```sh
+source ./buildenv.sh --debug --kernel-only --avb-model G985F --heimdall-only y2s
+export KERNEL_BRANCH=Samsung_security
+m
+```
+
 Example G985F KVM build:
 
 ```sh

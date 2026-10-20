@@ -26,11 +26,19 @@ BUILD_KERNEL()
     local KERNEL_LOCALVERSION="$ROM_KERNEL_LOCALVERSION"
     local KERNEL_BASE_CONFIG="arch/arm64/configs/exynos9830_defconfig"
     local KSU_OPTION=y
+    local POLICY_ARGS=()
     if [ "${TARGET_ENABLE_KSU:-true}" = "false" ]; then
         KSU_OPTION=n
     fi
 
-    RUN_KERNEL_BUILD "$TARGET_CODENAME" "$KSU_OPTION" -r n || return 1
+    if grep -q -- '--dpolicy-system' "$KERNEL_TMP_DIR/build.sh"; then
+        POLICY_ARGS=(
+            --dpolicy "${DPOLICY_PATH:-$FW_DIR/$TARGET_FIRMWARE_PATH/vendor/etc/dpolicy}"
+            --dpolicy-system "${DPOLICY_SYSTEM_PATH:-$WORK_DIR/system/dpolicy_system}"
+        )
+    fi
+
+    RUN_KERNEL_BUILD "$TARGET_CODENAME" "$KSU_OPTION" -r n "${POLICY_ARGS[@]}" || return 1
 
     if HAS_LTE_DTBO; then
         RUN_KERNEL_BUILD "${TARGET_CODENAME}lte" n -r n -d y || return 1
@@ -70,6 +78,17 @@ SAFE_PULL_CHANGES()
     local LOCAL
     local REMOTE
     local REMOTE_BRANCH
+
+    if [ -n "${KERNEL_BRANCH:-}" ]; then
+        if ! git check-ref-format --branch "$KERNEL_BRANCH" >/dev/null 2>&1 || \
+                ! git -C "$KERNEL_TMP_DIR" show-ref --verify --quiet "refs/heads/$KERNEL_BRANCH"; then
+            ABORT "Requested local kernel branch does not exist: $KERNEL_BRANCH"
+            return 1
+        fi
+        LOG "- Using local kernel branch: $KERNEL_BRANCH (automatic updates skipped)"
+        git -C "$KERNEL_TMP_DIR" switch -- "$KERNEL_BRANCH" || return 1
+        return 0
+    fi
 
     # Repair repositories previously cloned with --single-branch as well as
     # configuring fresh clones: every origin branch must have a remote ref.
@@ -130,7 +149,12 @@ REPLACE_KERNEL_BINARIES()
     local KERNEL_TMP_DIR="$KERNEL_TMP_DIR-$TARGET_PLATFORM"
     [[ ! -d "$KERNEL_TMP_DIR" ]] && mkdir -p "$KERNEL_TMP_DIR"
 
-    if [[ -d "$KERNEL_TMP_DIR/.git" ]]; then
+    if [ -n "${KERNEL_BRANCH:-}" ]; then
+        if [ ! -e "$KERNEL_TMP_DIR/.git" ]; then
+            ABORT "KERNEL_BRANCH requires an existing local kernel checkout: $KERNEL_TMP_DIR"
+            return 1
+        fi
+    elif [[ -d "$KERNEL_TMP_DIR/.git" ]]; then
         local CURRENT_URL
 
         CURRENT_URL="$(git -C "$KERNEL_TMP_DIR" remote get-url origin 2>/dev/null || true)"
@@ -141,7 +165,7 @@ REPLACE_KERNEL_BINARIES()
         fi
     fi
 
-    if [[ ! -d "$KERNEL_TMP_DIR/.git" ]]; then
+    if [[ ! -e "$KERNEL_TMP_DIR/.git" ]]; then
         LOG "- Cloning Creeeeger kernel repo"
         EVAL "git clone --recurse-submodules \"$CREEEEGER_KERNEL_REPO\" \"$KERNEL_TMP_DIR\"" || return 1
     else
