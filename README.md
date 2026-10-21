@@ -97,6 +97,13 @@
 - Model-labelled Odin and Heimdall output, plus signed rollback-firmware and kernel-only testing workflows
 - Fixed excessive build disk usage
 
+# Attestation root certificate renewal
+
+For legacy Google attestation root expiry errors, boot into TWRP and run
+`python3 scripts/update_attestation_root.py` from the computer. It creates and
+verifies a complete EFS backup on the desktop, renews the four public root
+certificates, verifies the changes, and reboots.
+
 # Known bugs
 
 - Document saving in camera shows but crashes on extract / save
