@@ -1,0 +1,4 @@
+id=security_patch
+name=Security patch properties
+author=Creeeeger
+description=Aligns reported system and vendor patch levels with the configured release metadata; does not apply security fixes.
