@@ -26,7 +26,6 @@ system/app/CompanionDeviceManager/CompanionDeviceManager.apk
 system/app/ContainerService/ContainerService.apk
 system/app/DAAgent/DAAgent.apk
 system/app/DRParser/DRParser.apk
-system/app/DsmsAPK/DsmsAPK.apk
 system/app/EasterEgg/EasterEgg.apk
 system/app/EasyOneHand3/EasyOneHand3.apk
 system/app/EasymodeContactsWidget81/EasymodeContactsWidget81.apk
@@ -112,7 +111,6 @@ system/priv-app/DesktopSystemUI/DesktopSystemUI.apk
 system/priv-app/DeviceBasedServiceConsent/DeviceBasedServiceConsent.apk
 system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk
 system/priv-app/DeviceKeystring/DeviceKeystring.apk
-system/priv-app/DeviceQualityAgent35/DeviceQualityAgent35.apk
 system/priv-app/DigitalWellbeing/DigitalWellbeing.apk
 system/priv-app/DynamicLockscreen/DynamicLockscreen.apk
 system/priv-app/DynamicSystemInstallationService/DynamicSystemInstallationService.apk
@@ -179,7 +177,6 @@ system/priv-app/SamsungIntelliVoiceServices/SamsungIntelliVoiceServices.apk
 system/priv-app/SamsungMagnifier3/SamsungMagnifier3.apk
 system/priv-app/SamsungMessages/SamsungMessages.apk
 system/priv-app/SamsungMultiConnectivity/SamsungMultiConnectivity.apk
-system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk
 system/priv-app/SecAppSeparation/SecAppSeparation.apk
 system/priv-app/SecFactoryPhoneTest/SecFactoryPhoneTest.apk
 system/priv-app/SecSetupWizard_Global/SecSetupWizard_Global.apk

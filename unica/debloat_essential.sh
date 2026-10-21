@@ -49,6 +49,51 @@ system/etc/permissions/privapp-permissions-com.microsoft.skydrive.xml
 system/priv-app/OneDrive_Samsung_v3
 "
 
+# Carrier app promotion/installers
+# Exact directories used by the current y2s work dir (S721B EUX source).
+PRISM_DEBLOAT+="
+priv-app/appcloud_oobe_hutchison-release_V7.1.29.0
+priv-app/appcloud_oobe_samsungGlobal_release
+priv-app/appcloud_oobe_samsungOrange
+priv-app/Ignite-telefonicaSamsungSamsungAgent_21.1.0-189_release-universal
+priv-app/Ignite-aoneSamsungSamsungAgent_10.0.052-6492_release
+priv-app/Ignite-timSamsungSamsungAgent_10.7.020-6760_release
+priv-app/Ignite-bouyguesSamsungAgent_11.1.023-6793_release
+priv-app/AppCenter
+priv-app/CombinedStarter-16.00.00(160005783)-build_5783-Release-signed-aligned-pd
+priv-app/MyApps-1.9.2-logoff-obson-prodSamsungRelease
+priv-app/SFRJeux-9.2.2-logoff-obson-samsungRelease
+"
+
+# Amazon preload attribution and My Galaxy
+PRISM_DEBLOAT+="
+app/AmazonMDIP-release-signed-sdk34-Samsung
+app/MDIP-TIM_O2UK_DTDE_VFAU_OPTUSAU_3IT-sdk34-111723
+priv-app/MyGalaxy
+"
+
+# Samsung app provisioning, recommendations, customization and diagnostic/analytics uploaders
+SYSTEM_DEBLOAT+="
+system/app/MAPSAgent
+system/priv-app/OMCAgent5
+system/priv-app/DiagMonAgent94
+system/priv-app/DeviceQualityAgent35
+system/priv-app/knoxanalyticsagent
+system/etc/default-permissions/default-permissions-com.samsung.android.rubin.app.xml
+system/etc/permissions/signature-permissions-com.samsung.android.rubin.app.xml
+system/etc/permissions/privapp-permissions-com.samsung.android.rubin.app.xml
+system/etc/permissions/privapp-permissions-com.samsung.android.app.omcagent.xml
+system/etc/permissions/privapp-permissions-com.sec.android.diagmonagent.xml
+system/etc/permissions/privapp-permissions-com.samsung.android.dqagent.xml
+system/etc/permissions/privapp-permissions-com.samsung.android.knox.analytics.uploader.xml
+"
+
+# Wi-Fi diagnostics, DSMS reports and Smart Suggestions
+SYSTEM_DEBLOAT+="
+system/app/WifiGuider
+system/app/DsmsAPK
+"
+
 # eSIM
 if $SOURCE_IS_ESIM_SUPPORTED; then
     if ! $TARGET_IS_ESIM_SUPPORTED; then

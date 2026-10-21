@@ -22,25 +22,28 @@ RUN_KERNEL_BUILD()
 
     cd "$KERNEL_TMP_DIR" || return 1
 
-    if [ "$KSU_OPTION" = "n" ] || [ -n "$KERNEL_LOCALVERSION" ]; then
-        [ -f "$MODEL_CONFIG" ] || {
-            LOGE "Missing kernel model config: $MODEL_CONFIG"
-            return 1
-        }
-        CONFIG_BACKUP_DIR="$(mktemp -d)" || return 1
-        trap '
-            if [ -f "$CONFIG_BACKUP_DIR/model" ]; then
-                cp -p "$CONFIG_BACKUP_DIR/model" "$MODEL_CONFIG"
-            fi
-            if [ -f "$CONFIG_BACKUP_DIR/base" ]; then
-                cp -p "$CONFIG_BACKUP_DIR/base" "$KERNEL_BASE_CONFIG"
-            fi
-            rm -rf "$CONFIG_BACKUP_DIR"
-        ' EXIT
-        trap 'exit 130' INT
-        trap 'exit 143' TERM
-        cp -p "$MODEL_CONFIG" "$CONFIG_BACKUP_DIR/model" || return 1
-    fi
+    # Always stage the model fragment: ROM kernels omit compressed swap in all
+    # build modes, including --debug and --kernel-only.
+    [ -f "$MODEL_CONFIG" ] || {
+        LOGE "Missing kernel model config: $MODEL_CONFIG"
+        return 1
+    }
+    CONFIG_BACKUP_DIR="$(mktemp -d)" || return 1
+    trap '
+        if [ -f "$CONFIG_BACKUP_DIR/model" ]; then
+            cp -p "$CONFIG_BACKUP_DIR/model" "$MODEL_CONFIG"
+        fi
+        if [ -f "$CONFIG_BACKUP_DIR/base" ]; then
+            cp -p "$CONFIG_BACKUP_DIR/base" "$KERNEL_BASE_CONFIG"
+        fi
+        rm -rf "$CONFIG_BACKUP_DIR"
+    ' EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    cp -p "$MODEL_CONFIG" "$CONFIG_BACKUP_DIR/model" || return 1
+
+    sed -i '/^CONFIG_ZRAM\(_[A-Z0-9_]*\)\?=/d; /^# CONFIG_ZRAM\(_[A-Z0-9_]*\)\? is not set/d; /^CONFIG_ZSWAP=/d; /^# CONFIG_ZSWAP is not set/d' "$MODEL_CONFIG" || return 1
+    printf '\n# CONFIG_ZRAM is not set\n# CONFIG_ZSWAP is not set\n' >> "$MODEL_CONFIG" || return 1
 
     if [ -n "$KERNEL_LOCALVERSION" ]; then
         [ -f "$KERNEL_BASE_CONFIG" ] || {
@@ -71,11 +74,13 @@ RUN_KERNEL_BUILD()
     fi
     EVAL "$CMD" || return 1
 
-    if [ "$KSU_OPTION" = "n" ] || [ -n "$KERNEL_LOCALVERSION" ]; then
-        [ -s out/.config ] || {
-            LOGE "Kernel build did not produce out/.config"
-            return 1
-        }
+    [ -s out/.config ] || {
+        LOGE "Kernel build did not produce out/.config"
+        return 1
+    }
+    if grep -Eq '^CONFIG_(ZRAM|ZSWAP)=[ym]$' out/.config; then
+        LOGE "Compressed swap is still enabled in the compiled kernel config"
+        return 1
     fi
     if [ -n "$KERNEL_LOCALVERSION" ] && \
             ! grep -Fqx "CONFIG_LOCALVERSION=\"$KERNEL_LOCALVERSION\"" out/.config; then

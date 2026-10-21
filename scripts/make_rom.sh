@@ -285,6 +285,10 @@ if $BUILD_ROM; then
         LOG_STEP_OUT
     fi
 
+    LOG_STEP_IN true "Applying Power Policy Manager"
+    source "$SRC_DIR/unica/power/customize.sh" || exit 1
+    LOG_STEP_OUT
+
     case "$TARGET_CODENAME" in
         x1s|y2s|z3s|r8s|c1s|c2s)
             LOG_STEP_IN true "Checking ARM32 boot files and public library ABIs"

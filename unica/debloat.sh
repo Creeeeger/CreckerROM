@@ -53,7 +53,6 @@ system/app/ccinfo
 system/app/ChromeCustomizations
 system/app/Fast
 system/app/KidsHome_Installer
-system/app/MAPSAgent
 system/app/MDMApp
 system/app/PlayAutoInstallConfig
 system/app/Rampart
@@ -77,7 +76,6 @@ system/app/SilentLog
 system/app/SimAppDialog
 system/app/Traceur
 system/app/UniversalMDMClient
-system/app/WifiGuider
 system/etc/default-permissions/default-permissions-com.sec.spp.push.xml
 system/etc/init/digitalkey_init_ble_tss2.rc
 system/etc/init/samsung_pass_authenticator_service.rc
@@ -95,7 +93,6 @@ system/etc/permissions/privapp-permissions-com.samsung.android.samsungpass.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.samsungpositioning.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.spayfw.xml
 system/etc/permissions/privapp-permissions-com.samsung.oda.service.xml
-system/etc/permissions/privapp-permissions-com.sec.android.diagmonagent.xml
 system/etc/permissions/privapp-permissions-com.sec.android.soagent.xml
 system/etc/permissions/privapp-permissions-com.sec.bcservice.xml
 system/etc/permissions/privapp-permissions-com.sec.imslogger.xml
@@ -116,7 +113,6 @@ system/priv-app/AREmojiEditor
 system/priv-app/AuthFramework
 system/priv-app/BCService
 system/priv-app/CpAgent
-system/priv-app/DiagMonAgent94
 system/priv-app/DigitalKey
 system/priv-app/EnhancedAttestationAgent
 system/priv-app/ImsLogger
