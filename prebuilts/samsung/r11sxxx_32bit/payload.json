@@ -1,0 +1,3035 @@
+{
+  "donor": {
+    "model": "SM-S711B",
+    "firmware": "S711BXXSAEYH1",
+    "android_api": 35,
+    "oneui": 70000,
+    "build_id": "AP3A.240905.015.A2",
+    "repository": "https://github.com/RandomPush/samsung_r11s_dump",
+    "commit": "dcd4f778e22e0ba45202b6653ef01d3554599462"
+  },
+  "files": {
+    "system/apex/com.google.android.art_compressed.apex": {
+      "sha256": "2e119328b943c5b32f510862709cb0dab69cb27a8fb28ac06bb526bf8f7146f3",
+      "git_blob": "113ee9a7a147eafba2622b48b74eb695de03987e"
+    },
+    "system/apex/com.google.android.conscrypt_compressed.apex": {
+      "sha256": "13123cbda17e860a8e1eeff2715fb177c519f842637014da4df3bde0760303e6",
+      "git_blob": "5b7f140313b3c49bc0f94c6444e30588f70c0557"
+    },
+    "system/apex/com.google.android.media_compressed.apex": {
+      "sha256": "0f65bf48c04d320ce1975bc8da8abba5d754001cb6300963fc26067eb5e162e6",
+      "git_blob": "54f0d93da31183788545ac1ab7e81ca4bc63e4e5"
+    },
+    "system/apex/com.google.android.mediaprovider_compressed.apex": {
+      "sha256": "6fdd50e4750c771e07dae497da6b5df4f79f4b15a027700ff4a6a753522839ae",
+      "git_blob": "2a93e01a2beda9cbe8118b9b47d75538c9d6a400"
+    },
+    "system/apex/com.google.android.neuralnetworks_compressed.apex": {
+      "sha256": "0cfc675d69117655a526011c56ae07a1f98b8f27231f5a650b07706b4e5f8cad",
+      "git_blob": "486041c5e8ccdf8a1632762899fe14ddb37b4d24"
+    },
+    "system/apex/com.google.android.os.statsd_compressed.apex": {
+      "sha256": "538e25d226c704cd008574655e620f5c0b2161ed57b0d97d5ef4b53bfe3389e0",
+      "git_blob": "2fc006d4e65a54b37bf4c45c196fdff490409ed1"
+    },
+    "system/apex/com.google.android.tethering_compressed.apex": {
+      "sha256": "1469a7802e1bf9437d66f9966175970c5e367ff39413b549bce101c43b4dd2f0",
+      "git_blob": "c954180828fbebcada34f9ff286fe2129f09d150"
+    },
+    "system/bin/app_process32": {
+      "sha256": "18a0665ec6be1bf6877552854e6491ab736f8fb5ebb77d30338c36e8b4018f26",
+      "git_blob": "0e6464bfb6646ef8adb20b8ebc3b1046d23d21ec"
+    },
+    "system/bin/boringssl_self_test32": {
+      "sha256": "16617e3219add320b7d4a1a756b7c2047682b77ced492786c5276510630971c0",
+      "git_blob": "4da24138ff96970b41fb9e7ec0927122a136755a"
+    },
+    "system/lib/aaudio-aidl-cpp.so": {
+      "sha256": "e20f98b3f2513204115720f407af0a6ce68e288b35c28bbf9b32c0651a71bf22",
+      "git_blob": "b554a842cd11478b5aa1c84a12f2e7e1d5b3cd0c"
+    },
+    "system/lib/aconfig_mediacodec_flags_c_lib.so": {
+      "sha256": "c642931b679b006a3fe12e00bab3ad5bce73ddd62cb5137d7aaf3852eef44cbe",
+      "git_blob": "ff1b28eb8dc805590c47d2416b90c53e4fd9330a"
+    },
+    "system/lib/aconfig_text_flags_c_lib.so": {
+      "sha256": "68d5c4b76f637e4d8e874215ee2b3cd6122e48f9794753578884d429c84e6c85",
+      "git_blob": "9987eade3df455c90ae0155541c5491da42463db"
+    },
+    "system/lib/aidl_comm_kg_client.so": {
+      "sha256": "c050c6c43107e28928707732cbd7dd23ab77fb56666cef913a4117fcc7399bb6",
+      "git_blob": "e12b513134a2840c49cfbcf6c9103256d898f502"
+    },
+    "system/lib/android.companion.virtual.virtualdevice_aidl-cpp.so": {
+      "sha256": "d458a02cd0175a1d112cad05af40fb37efc0e9424a318feab0549a0bc59162e2",
+      "git_blob": "5fb2ccdd257aecdc03340329fed8e09481097f69"
+    },
+    "system/lib/android.companion.virtualdevice.flags-aconfig-cc.so": {
+      "sha256": "b774f8fa21ee5fda4368a6292ccc8272433c6bdddc2bd3d15ee7b81865979213",
+      "git_blob": "5df61926ecd7ca6ade56db2a00d0c6e1096712cd"
+    },
+    "system/lib/android.database.sqlite-aconfig-cc.so": {
+      "sha256": "f47d6301e782e2c7a4d26d9d326b48dbc6bc9621c49bf9bd2b5bcb2c383c762f",
+      "git_blob": "1859ef06cd8ee96e0db87de5fc4494f93157e107"
+    },
+    "system/lib/android.frameworks.schedulerservice@1.0.so": {
+      "sha256": "80af70d729e2f1dcf68662b7366d0220c71a58318ffa9413d7fc12b7cc27edce",
+      "git_blob": "4d61d2b287089f71513d5137ba6b803699572287"
+    },
+    "system/lib/android.frameworks.sensorservice-V1-ndk.so": {
+      "sha256": "382e034fafe3f14a96080bec8bbeb4834906df5aa06162256804be08a8a18ebd",
+      "git_blob": "1a0bfea19f004daf3f72878630ea1b9bd7fc54b9"
+    },
+    "system/lib/android.frameworks.sensorservice@1.0.so": {
+      "sha256": "13e95948aa80e17104de1d1722888078a9481822e380ce5c2e64e6a98718fd07",
+      "git_blob": "26dada86d1262f5227ab4654a70678ba429e8858"
+    },
+    "system/lib/android.frameworks.stats-V2-ndk.so": {
+      "sha256": "d7d4e0f903f2b09358e82d745ce3f3060f63031a849903b546cbafa2ef9d4ee8",
+      "git_blob": "f8168177428f6a307baacd5a1c747d614cc23293"
+    },
+    "system/lib/android.frameworks.stats@1.0.so": {
+      "sha256": "4ee8c50868aae511efe3f6e4780ddb0a261fc3794ab5218f1366b758d35abc29",
+      "git_blob": "28370015d7932092adc6f5ff79b3e8572e41534e"
+    },
+    "system/lib/android.hardware.atrace@1.0.so": {
+      "sha256": "2e7d6b938420f832d8bd4252fdde5e2aecd9d5bd9dd0765f172431b5c69c149b",
+      "git_blob": "aec54430c8c66060b672447249949fe55754107b"
+    },
+    "system/lib/android.hardware.audio.common-V3-ndk.so": {
+      "sha256": "899bd2d36d22b584389cad3c8cb8f59281a44f2cee53f9404b1b0a58be11b990",
+      "git_blob": "364f77160e1b54ce509671584af310f472674948"
+    },
+    "system/lib/android.hardware.audio.common-util.so": {
+      "sha256": "a2b7cf6f5195b50e4f4c16524851ea7049553bba290ece4804352810f3273108",
+      "git_blob": "88c994110a2bfc4a43cb88265ae2a70cdf6fc8e6"
+    },
+    "system/lib/android.hardware.audio.common@2.0.so": {
+      "sha256": "4517945d69c16c03c7dc08faff8ddd2152b7902ecc3e1e2fc76d5762427b3d56",
+      "git_blob": "dc5c8042e4518f3498efe22b9dfc94e93b4d2e64"
+    },
+    "system/lib/android.hardware.audio.common@5.0-util.so": {
+      "sha256": "e59073e805aa5c7ee664876eaf4b3815cc8e26bdf7d7528d31366319dc89fea4",
+      "git_blob": "5a66b246a20f3fd7e53e969d05148dc00f548c80"
+    },
+    "system/lib/android.hardware.audio.common@5.0.so": {
+      "sha256": "a5fcb6c186def3ebf1a5ab963bba75a2121dd868208b664809a361391d172786",
+      "git_blob": "bd106cc98b0483e5c209642881ac6120ad119483"
+    },
+    "system/lib/android.hardware.audio.common@6.0-util.so": {
+      "sha256": "3a75fb59a5183bd3f368ec25f83ffea33dfe999490b05621153e4b8ece7f452a",
+      "git_blob": "fe497d914dadb10b004ede7976c1e3f738c97066"
+    },
+    "system/lib/android.hardware.audio.common@6.0.so": {
+      "sha256": "a8ba0e4837b80f34c999be3d5b41a6c9864bfa5fa98ff953f2c34bd9cdf3f863",
+      "git_blob": "e41614aa16af57e65d1c6344293caaea34e177ea"
+    },
+    "system/lib/android.hardware.audio.core-V2-ndk.so": {
+      "sha256": "1ef97d774fde7f05a81927cf5ece7f492452df4f8885474bf1cfa2e1f3525df3",
+      "git_blob": "2527bee5af69c4bce70907b7836d3d1e4521c1b8"
+    },
+    "system/lib/android.hardware.audio.core.sounddose-V2-ndk.so": {
+      "sha256": "634de2313c29511fde23000a53a2571ccd9e88d3826021fd7351fc21fcce1852",
+      "git_blob": "48e9d05995f65c8efb45529be43dfabf48ca1c5e"
+    },
+    "system/lib/android.hardware.audio.effect-V2-ndk.so": {
+      "sha256": "7f0b3755fd8962e75e6f10a566d9c20b35354d398f9f5602c6eb02b9528a95d9",
+      "git_blob": "c3a8f615ec662a170688e623166402fe87e33ef9"
+    },
+    "system/lib/android.hardware.audio.effect@5.0-util.so": {
+      "sha256": "da8ed88ddc387825fde71c8332124a4edfd6a1120c9236372c6366ae5560c973",
+      "git_blob": "caa4686a3491be3ad36856d1b2404a285dec224a"
+    },
+    "system/lib/android.hardware.audio.effect@5.0.so": {
+      "sha256": "e90505c8ea15b00118a6f5b0204f1d08afd72a82ebd72500c3c0e2837845f3d9",
+      "git_blob": "d9fb172200299570e507d389b5b202c8831a54e5"
+    },
+    "system/lib/android.hardware.audio.effect@6.0-util.so": {
+      "sha256": "016a773cf07627e76aaecc021253959e9b9626924c11b5d45986473b90054491",
+      "git_blob": "aa3503afb368dcaac23701e0e19a35aed032c517"
+    },
+    "system/lib/android.hardware.audio.effect@6.0.so": {
+      "sha256": "ba19d93620270ce62b4ba0a3e0fa6a037b96f4304f1762ea6865292b23a432eb",
+      "git_blob": "f987a89371f4c0dd08a5dc9e2bd5c0cb72e1ce82"
+    },
+    "system/lib/android.hardware.audio.sounddose-V2-ndk.so": {
+      "sha256": "b5bddd4f6ea61f9d37d47be00cd8bc0fc3fb2323bf098f8f17848f37d3778d40",
+      "git_blob": "76d32b75a87bca13b0c637098b39e719bbfa577d"
+    },
+    "system/lib/android.hardware.audio@5.0-util.so": {
+      "sha256": "77ff1306aab31c2222811894f605278237fd83ab955656b1003d47bd9e61d76d",
+      "git_blob": "61e8470676145aec64a3aab4df5b412bf5999d5b"
+    },
+    "system/lib/android.hardware.audio@5.0.so": {
+      "sha256": "3192204a8e733e1c33182874c33616da6e417da8d21c0cec3f1f452ac0cf093b",
+      "git_blob": "7291fc59c17f5f1bebfde00be47ec7dffd32251a"
+    },
+    "system/lib/android.hardware.audio@6.0-util.so": {
+      "sha256": "31d6ad9396c5a806266fb27e4620801906d4dfbd7d94f280d23ff109e71d2371",
+      "git_blob": "00269a5b9ed2209bbe058db0f27855592c3fef5e"
+    },
+    "system/lib/android.hardware.audio@6.0.so": {
+      "sha256": "91c26815fa1bf48c3a1f65f959c3107a9d485ac75291316f3d8ef50f6ae379e4",
+      "git_blob": "cf6e6f37951d2d87b82b34b57ba7567c81ba424d"
+    },
+    "system/lib/android.hardware.biometrics.fingerprint@2.1.so": {
+      "sha256": "de009ff9c6007f979634d6b81aee972271e1595121daa91cc806179b5db10c0b",
+      "git_blob": "77214913b8e4b19258240e5dc3615e85c03e6e6c"
+    },
+    "system/lib/android.hardware.broadcastradio@1.0.so": {
+      "sha256": "0059d1699e84e77935331eec4bff398f5d6fd47bbff613c9a76e03d99c4f2d1c",
+      "git_blob": "641c2e068e48bc06c5c78a75368b7f4cf4979e38"
+    },
+    "system/lib/android.hardware.broadcastradio@1.1.so": {
+      "sha256": "a2c6c842dbaa76ab6682bb1b79c96a860172775d4f5aceb71a36f29c761747ac",
+      "git_blob": "1fa422b5b028aaedd44cc08e0be9729663393dfe"
+    },
+    "system/lib/android.hardware.camera.common@1.0.so": {
+      "sha256": "89fcd3f1b7d70d1896fc2318e60131be65c50d1eb93b70b77878234292bedf4d",
+      "git_blob": "03dd7661b85ed8c26f12b34cfe0c08f60f5e8b39"
+    },
+    "system/lib/android.hardware.camera.device@3.2.so": {
+      "sha256": "02b23a15b0e1d0018a871ded17a62f666f1d60fecc00b75d83a7d2e2fdda8ead",
+      "git_blob": "057951f8dbe28e10a07b4a750979877e30f34fbe"
+    },
+    "system/lib/android.hardware.cas.native@1.0.so": {
+      "sha256": "e90b9e4fcadc44273e545c67cc3a9c080e2833bf3076a321c952c376b74fb4d6",
+      "git_blob": "a2afb58a219a2b196e75311cfc11222c04c9f249"
+    },
+    "system/lib/android.hardware.cas@1.0.so": {
+      "sha256": "5d2c464350a645c76a0b093765c57918535f9d80478c1ee5255a2b616e6a84d1",
+      "git_blob": "a59dd836ace5de64886c2c51e4813d16fbbd6239"
+    },
+    "system/lib/android.hardware.common-V2-ndk.so": {
+      "sha256": "cc5c0178e76082ac7ab5ffeaab71a6a8f136978f5dffe92258428e7fddb835f2",
+      "git_blob": "afa9dbe9b704df4d1303f2cc1392b9f48bd2d1c3"
+    },
+    "system/lib/android.hardware.common.fmq-V1-ndk.so": {
+      "sha256": "47bf8be81e540aad90f1b7eeb043d32a98b66c35d74b5f6e6b589544f68318ea",
+      "git_blob": "3871ad4aaee242bc900857b468580332b143fe67"
+    },
+    "system/lib/android.hardware.configstore-utils.so": {
+      "sha256": "1df37206a4643a0f82b127396e7e138768aef520d0df98d0af2f06c3213acea1",
+      "git_blob": "dd60fae26f9619ebc004dac97b980dd138aab6cf"
+    },
+    "system/lib/android.hardware.configstore@1.0.so": {
+      "sha256": "e09e0a0ce9f26e064d8c68887fe4b918ad8b94145738516c6acef242843be9d5",
+      "git_blob": "20defc834ce4edc82efb31711156dde84cf2969f"
+    },
+    "system/lib/android.hardware.configstore@1.1.so": {
+      "sha256": "3155d9afd8fb5bdc25cd8d0eda8069b4db6756c151d77032346ecd0464481c2c",
+      "git_blob": "295f1df2e7ce75d19eaa34ff62c4925bee568a02"
+    },
+    "system/lib/android.hardware.contexthub@1.0.so": {
+      "sha256": "56e253bdfb4061209af450312768be3c5bbd6e287cd8346a7b20a6a42d043d62",
+      "git_blob": "9d066e1783f866737b3ccc9e73468b450faa48c3"
+    },
+    "system/lib/android.hardware.drm-V1-ndk.so": {
+      "sha256": "85b09b52b0f0e6f2761287e1694261bf36ca800856c470dc8622be6e53ad0b23",
+      "git_blob": "5a0d26aca1443f9ca90517d14877856270b71b10"
+    },
+    "system/lib/android.hardware.drm@1.0.so": {
+      "sha256": "ba2cc27278c8937da7bf4ce7d133aafc566a3da831b2388a6651e3b50c5bc5e8",
+      "git_blob": "ace8331fc1bcce9dbe8acfc8b15997449ec80ab2"
+    },
+    "system/lib/android.hardware.drm@1.1.so": {
+      "sha256": "72bb8ff843697cd62a6edf4ae1c00176a6abf766f636118e335b3572feac0849",
+      "git_blob": "66d92be4df0985bb9a5a0e71f991d69bde5329e9"
+    },
+    "system/lib/android.hardware.drm@1.2.so": {
+      "sha256": "fb0347ec1632d4658b030a9c174c8235fc6086863d761972c49bc735ff83bb42",
+      "git_blob": "53366bf1159650a758c4c52a2377b3f88a2cd995"
+    },
+    "system/lib/android.hardware.drm@1.3.so": {
+      "sha256": "16660d7ce3f8ff7935ba93aab5aeb1c4f823b4d76bbcc9fcd9b986af24445921",
+      "git_blob": "5253905a4306fcd72b4ca6ea89c071f4616572c5"
+    },
+    "system/lib/android.hardware.drm@1.4.so": {
+      "sha256": "6af42b0b906ddeb75674941fb3c875dc34e98d1ba957fde6e087cae96548f325",
+      "git_blob": "3094dbb1e30209ae1fb58c1dd45cefe3563d278e"
+    },
+    "system/lib/android.hardware.fastboot@1.0.so": {
+      "sha256": "6c19ffea5e48111e90f1664c4582fc46f4f000df45f553b5d244d5fab1936ceb",
+      "git_blob": "c49424da4e283cdb6d4b67a2a9665118c1e74200"
+    },
+    "system/lib/android.hardware.gnss-V3-cpp.so": {
+      "sha256": "509d5512410e975608d90e30227281508beb50f91feecc39169c121c01985111",
+      "git_blob": "c5603827b911a5a6da66ae7dccb25bf3e0c252c9"
+    },
+    "system/lib/android.hardware.gnss.measurement_corrections@1.0.so": {
+      "sha256": "8d7532a65ce5f93d9dc3dc2f0b7189b17cb04495eb7d791f86d57f086f35a3fc",
+      "git_blob": "1b2f59faf2faa594317ba9bb41d394a458d1fc49"
+    },
+    "system/lib/android.hardware.gnss.measurement_corrections@1.1.so": {
+      "sha256": "16d47e5e8b1d14b6fe824c06dd3c08f882d255f7319d79e750a16d8b6624eca9",
+      "git_blob": "b0790a207a5c64bae60ab0b69ae0af57601bfe0c"
+    },
+    "system/lib/android.hardware.gnss.visibility_control@1.0.so": {
+      "sha256": "3f1bd95128a8f366680fae91ff7a76f98e559dd7ac3d08225fa10abe12ad73b2",
+      "git_blob": "37bd6ae35e9236b018d083ab3735368bafa7ff56"
+    },
+    "system/lib/android.hardware.gnss@1.0.so": {
+      "sha256": "df35f051adffbb6be3e8762ee873c8b1cea5de78ee9d0654b781a2e6957800c5",
+      "git_blob": "1ccf87334cca6c0952759e0e1084091ce9632d70"
+    },
+    "system/lib/android.hardware.gnss@1.1.so": {
+      "sha256": "324667569c57a6adb2f82ee3569c1e99942102c9f5b2eeebbf4b511a2e97d189",
+      "git_blob": "0114c0e7dc0ed6dcddb418ea6587364ecb83622e"
+    },
+    "system/lib/android.hardware.gnss@2.0.so": {
+      "sha256": "a2d3dcce4224f898a065324f479dbe819df4ad8d1ac205a0a38b7703c2089241",
+      "git_blob": "38b5303630fd8aef5e7c82fc9d0d3b966d3d398d"
+    },
+    "system/lib/android.hardware.gnss@2.1.so": {
+      "sha256": "69550fb47ac41327dae6c3d7d48687ee8f2d45b6738af832cf85cdcbe47b0924",
+      "git_blob": "c008a994945ae730b7e81a0acd07335931ef753e"
+    },
+    "system/lib/android.hardware.graphics.allocator-V2-ndk.so": {
+      "sha256": "0a1b18b7ca849786a8b491b821004e2ac5619d823136c63e1ba0bf0c11e83687",
+      "git_blob": "e8f2c373878fd8c46122b9b358b227c41164f1f2"
+    },
+    "system/lib/android.hardware.graphics.allocator@2.0.so": {
+      "sha256": "82a888ed6676d4970723f398fcfbf7eac6d685211b1b69143281650f644c3747",
+      "git_blob": "15ca904b79561b9060f002fe1a9a8e290c1a1882"
+    },
+    "system/lib/android.hardware.graphics.allocator@3.0.so": {
+      "sha256": "15615d64af2f6a2de421ac49fbdc651c4fe3b166e28809523cf88797a3995a4a",
+      "git_blob": "9e50bce5de60f46731a689249b1f4693c071890f"
+    },
+    "system/lib/android.hardware.graphics.allocator@4.0.so": {
+      "sha256": "9431c1faf9d91de0b2a222e44ac2fd4d5f0b2382584f0ecc32dd8fe0af6d6281",
+      "git_blob": "8e82565e3aef9350298e29fbebcf769e882e85b5"
+    },
+    "system/lib/android.hardware.graphics.bufferqueue@1.0.so": {
+      "sha256": "ea35b953f1b7e3c5e991dd3a38e65a7b453f320250787de328391aabb515ce1e",
+      "git_blob": "12e4de1cbc8e929050eedd4c2a886dab9756cefc"
+    },
+    "system/lib/android.hardware.graphics.bufferqueue@2.0.so": {
+      "sha256": "67a94dda43f9546b5112860fb1c065c681c822e0eda7c7f2837495c5f1001455",
+      "git_blob": "cee2d176368de4e7c2e65c8bdf3f486bf2d9120c"
+    },
+    "system/lib/android.hardware.graphics.common-V5-ndk.so": {
+      "sha256": "b6f30a8d8937df672be50fb4fa65c7a25594d28387ae9a918765b3baec649b73",
+      "git_blob": "b822d666cba439e380a6079c7c333aac5e3f91b4"
+    },
+    "system/lib/android.hardware.graphics.common@1.0.so": {
+      "sha256": "c51f9f288be499677a6167ca7194d047a9ab47b9ba750d35ad7835306ba7f6bb",
+      "git_blob": "a4bd5fad130e0c6c32e02063c41d69fae89d4896"
+    },
+    "system/lib/android.hardware.graphics.common@1.1.so": {
+      "sha256": "fb453a8d4e3fdcad52424a3987785be5d69797c4e896643c670011c5f5b045ea",
+      "git_blob": "d96d787b14ccfedeaae55cbdf00413938f40817a"
+    },
+    "system/lib/android.hardware.graphics.common@1.2.so": {
+      "sha256": "528b385d5f1da15533b431a0115517a2039a860cf03676baa383064d338774b8",
+      "git_blob": "1f548630ece2176f90e803edf24b91252d13f77c"
+    },
+    "system/lib/android.hardware.graphics.composer3-V3-ndk.so": {
+      "sha256": "7d6f8ac1a42502dc4c73084a667c63b6d5af1d9caa0a02fe5e34629ef58f9627",
+      "git_blob": "99a6f2ea501925ea1e1d9233ed3e2aee2c4a63ff"
+    },
+    "system/lib/android.hardware.graphics.mapper@2.0.so": {
+      "sha256": "0517764d896361b5c951dbab6fe82ca44f390315e532cab74fb4a1d22470e0e4",
+      "git_blob": "a22e3487ebe3eecf183586061968d180a857d50a"
+    },
+    "system/lib/android.hardware.graphics.mapper@2.1.so": {
+      "sha256": "37ea85b102a1a6fbaa0d7f9f03ac6075c4015b9686cccf7ce9778cd23b1ee72e",
+      "git_blob": "21d26b0891bb11b09bf43d8bcf94ee92e1508525"
+    },
+    "system/lib/android.hardware.graphics.mapper@3.0.so": {
+      "sha256": "e3b18709b948c44465dfc1ea0e68d40f1f902fb5a4309ddc8768202f234709a4",
+      "git_blob": "a66393152a998f4e70b8d7156c97197cadf4aa8f"
+    },
+    "system/lib/android.hardware.graphics.mapper@4.0.so": {
+      "sha256": "58cde95b5f3ffe2ba3a7ec6be281a84c457db36ee2b57f1a2bf97ee8d123d3b6",
+      "git_blob": "67c825ac302b7a895ebd4acf34a204a6038ef2c0"
+    },
+    "system/lib/android.hardware.health-V2-ndk.so": {
+      "sha256": "c73b744476157a09430a3be12ffa387144aac2a8a96995ee307a61bf7bcd0333",
+      "git_blob": "097d834aa643378399ce6b3e33fe8c8a165d639b"
+    },
+    "system/lib/android.hardware.health@1.0.so": {
+      "sha256": "76d7ef6d47e8b672b52ee546271dae70716cda2cf52cde40dbf4919ee49ed3a9",
+      "git_blob": "dc6be7fa15ba0967125e05597779a738556ee460"
+    },
+    "system/lib/android.hardware.health@2.0.so": {
+      "sha256": "d57053621b5509a5c2a50f57c07613c5dec911b7b9623f4a9db39a96e00a9ae4",
+      "git_blob": "ad70421b787b62bd1f3fe65b28731c97b8141993"
+    },
+    "system/lib/android.hardware.input.common-V1-ndk.so": {
+      "sha256": "a3172770bd34580e492aeecaaf2f4301a054563ae95e833bbc2e6b57cd30672d",
+      "git_blob": "4a7d39830bf3e4575ae2c5b1dbd4f954f723798a"
+    },
+    "system/lib/android.hardware.input.processor-V1-ndk.so": {
+      "sha256": "813c0b8f2a41ec53a9f7d6e54a70fc4b45130242b80893cd27b05d2c143779f8",
+      "git_blob": "9d2cd88246ff246230b662f1624f395fd93e9842"
+    },
+    "system/lib/android.hardware.ir@1.0.so": {
+      "sha256": "eacd39011c5e7e2990e4b3ca8d8b172a4735a8da0374bb21b69dd63fd2db3782",
+      "git_blob": "aaccaec922aaebdf7f3621d676d0a6532014f8ff"
+    },
+    "system/lib/android.hardware.light@2.0.so": {
+      "sha256": "080684bf25300384a502c85a0f6a581d8b78827477fdc2bdcb9e19aecf86fed7",
+      "git_blob": "ab1a7008df4e497978577caaa46028082557446a"
+    },
+    "system/lib/android.hardware.media.bufferpool2-V2-ndk.so": {
+      "sha256": "776a437ef7feef85a7996c2af7d7ec432cb93d479b43f25bced29d8968aa4adc",
+      "git_blob": "efad38e813e657d61de3a7ecc5de97d09c51339b"
+    },
+    "system/lib/android.hardware.media.bufferpool@2.0.so": {
+      "sha256": "f97b8ad5094b6120143fe7a684ff7560e9aa9c8cce6d5a0bc842fb9d4ac8a5b3",
+      "git_blob": "804b8d82b539ebc1edcb8556682658600ce6b23d"
+    },
+    "system/lib/android.hardware.media.c2-V1-ndk.so": {
+      "sha256": "1119a0fe3d5eb1d6c9956e1f4d5b74cde1c0542f42c6ff17a51a49bf12604c50",
+      "git_blob": "c2ceb8d2994281fe79bfdc1687c320ddad035f69"
+    },
+    "system/lib/android.hardware.media.c2@1.0.so": {
+      "sha256": "c459512f3cbec7fd2aa966a40e826225374fb7e99a7223cdd9c46eb9a1dcf267",
+      "git_blob": "8d22dfef35a15541ce65eb0311654db1dae8839c"
+    },
+    "system/lib/android.hardware.media.c2@1.1.so": {
+      "sha256": "bd2307e4097413a1d78fe0cf35a1cf95293978bde3a2b721582d02ce7b197017",
+      "git_blob": "2e8851b4b2dd88790ea6fdb733fe380fe74b76a5"
+    },
+    "system/lib/android.hardware.media.c2@1.2.so": {
+      "sha256": "8ad584c854092ebceab26a8fbdf5a9e522f1db72ef227b91f4a98a7b450bd686",
+      "git_blob": "046993c07dedd0325ead18eff9a7fc82c9953a7b"
+    },
+    "system/lib/android.hardware.media.omx@1.0.so": {
+      "sha256": "359b02be309d59c8e95ce41bbc3127f6f6c9a9e870044bf7dc432a0713d7702f",
+      "git_blob": "fcccc5efd7a353e848394bacc2c4d29a12330c5f"
+    },
+    "system/lib/android.hardware.media@1.0.so": {
+      "sha256": "57f52e3b56a6862796d1e751f6ca5a5baaf7410b3c2cf087405e4b8bf92696a9",
+      "git_blob": "0fd8580f60b560d1cd1b7e656906b7d393d11f2a"
+    },
+    "system/lib/android.hardware.memtrack-V1-ndk.so": {
+      "sha256": "080afe9c73ded0d65cd1eb118a36a995ffe42d94b033d4df3da91d068ea02c19",
+      "git_blob": "efeb29a3af211bee273b7cc0ff1698502c4ff8b1"
+    },
+    "system/lib/android.hardware.memtrack@1.0.so": {
+      "sha256": "2d9bb3d04acffb17d5cc2b6968607e65ff87a81ad5ac0894f2c853be30a2bc4e",
+      "git_blob": "e690616103c4ae11018e7de3a2965c086f5c34b2"
+    },
+    "system/lib/android.hardware.power-V5-ndk.so": {
+      "sha256": "b37c7fd77e5a2c3342b2d0efef621087932ce3c63bfbcf585e627a9cef3fd708",
+      "git_blob": "07a6d531a44c299b88bff2d09283d4f009b9fb48"
+    },
+    "system/lib/android.hardware.power.stats-V1-cpp.so": {
+      "sha256": "fb06576b44e41610039f250e82878109990bcaa823f2151bfcaa12f11f541e23",
+      "git_blob": "a34377094b0589acb3c6545275ff545290e404ea"
+    },
+    "system/lib/android.hardware.power.stats-V1-ndk.so": {
+      "sha256": "75917f342d5ed09bf357072bc3ff234a7cdb94868f70e64c4d2188ad2129b99d",
+      "git_blob": "6597923c22fbdbcc507107e65d2695dfe06b818b"
+    },
+    "system/lib/android.hardware.power.stats@1.0.so": {
+      "sha256": "4b05905f9e4b4b7632177be3bb556e3ca689ec7e9a8eb061a36999144d1acd90",
+      "git_blob": "b870dba1f423f087dee132a526a26865dc5a89ba"
+    },
+    "system/lib/android.hardware.power@1.0.so": {
+      "sha256": "20088aa09bb5ed2e29f4401076f80f091afecf4dc34d4dcb42be0c0e81e008ac",
+      "git_blob": "64ac0fa963d79bceb47e90d6bede92434f677452"
+    },
+    "system/lib/android.hardware.power@1.1.so": {
+      "sha256": "83c9194dc595afe28d30346642ddcfc9836d1cae808797e9df6b7252df476111",
+      "git_blob": "5482e2bf39af9efa81d46bfe5f63bffcc431a8aa"
+    },
+    "system/lib/android.hardware.power@1.2.so": {
+      "sha256": "0b7d48d1064fa121b8a02626cd30577e0a51656b0e68652b74fec9cf905746d0",
+      "git_blob": "bc42408f0f3c6f1aa9220dc8baba30521ddd46db"
+    },
+    "system/lib/android.hardware.power@1.3.so": {
+      "sha256": "b5e52694917face04046a19d4b4b51c8d5ada6bbbd88a9235de2738bc4028785",
+      "git_blob": "685450c4df98c654c0557c8a020881f6f7bc149a"
+    },
+    "system/lib/android.hardware.radio.config@1.0.so": {
+      "sha256": "aadbe61751ad7a0c3ea30eb20ad5b7ba27550a57fc5c42926ed938f38a06368f",
+      "git_blob": "59b91759f845e0dbd22b2e88cb1174b51bed638d"
+    },
+    "system/lib/android.hardware.radio.deprecated@1.0.so": {
+      "sha256": "a783ce8988fa8f28d41a22a0bd07a1e280816495f29696224e75376b71c9f28e",
+      "git_blob": "a2a9b001bb750b202c3d1b0ca63a2b0c9768c7ec"
+    },
+    "system/lib/android.hardware.radio@1.0.so": {
+      "sha256": "55e0af95dd5bb02239b306f5d233afb6d66f22841b2cf43d8b13747498e0577e",
+      "git_blob": "f897a720dd64462134d6f8bffad39e6c0e454eb1"
+    },
+    "system/lib/android.hardware.radio@1.1.so": {
+      "sha256": "cc6f4e8eaea5cf057c95a41453f1f657a38730250fb56d19e68ad317a15dd01b",
+      "git_blob": "75a28e7bd401bb0dbc2066f24909bd528afa0b35"
+    },
+    "system/lib/android.hardware.radio@1.2.so": {
+      "sha256": "f192507d4ab26d04285d60a97faeb767674e688863136eb570029673f4aa49f3",
+      "git_blob": "df54bdb577f6802dc912de169eddc2f4c79ceacc"
+    },
+    "system/lib/android.hardware.radio@1.3.so": {
+      "sha256": "70cb475defeb2b5c862eab11e287ef9987082cce303683f6c83dcee0a5d860fd",
+      "git_blob": "38eb51c0ea3095a4c8aa5c1b2f29ea7c308a1a6d"
+    },
+    "system/lib/android.hardware.radio@1.4.so": {
+      "sha256": "27148d7f432aa7834ff487663e9fc24f4d98e1bb36323352aa37ada188abf0fc",
+      "git_blob": "11405ab8ad7ec00e07bf645619e86ada1b15950e"
+    },
+    "system/lib/android.hardware.renderscript@1.0.so": {
+      "sha256": "5d6b6be18cb5594171baf98f9e4a185b0783c5fa5719a7015d2fe765ad7a4855",
+      "git_blob": "7e79a8720a310dcf9926279715acc8c17218a62f"
+    },
+    "system/lib/android.hardware.secure_element@1.0.so": {
+      "sha256": "19f8f08dd94a4fd8b12b0c2bdebaae451c9835bb908c4e4311ba2e160df8b920",
+      "git_blob": "af3d0627561254f5cc7f75f958efc02b14f95275"
+    },
+    "system/lib/android.hardware.security.keymint-V1-ndk.so": {
+      "sha256": "6c7b573156d74c5ab21564263054179579babb58624062cf89b67a98d892237d",
+      "git_blob": "4dda3fcef9e05c1d6c585867a3593805ddafa01d"
+    },
+    "system/lib/android.hardware.security.secureclock-V1-ndk.so": {
+      "sha256": "a8faa3c2c68f1a1b1eb80daf652b4206c8c5e7b7f8513cde6fc4d26f8fc16314",
+      "git_blob": "bcf6a4247e9021209ca806fd3bbe86a023f3c2cd"
+    },
+    "system/lib/android.hardware.sensors-V2-ndk.so": {
+      "sha256": "4b7dd4d452d33ab509a817e1eeb0963f12e56fa62c6bb1012dcf5c5f5e07effa",
+      "git_blob": "44edfeba62db2ba5236429675ab7fe09726e23e6"
+    },
+    "system/lib/android.hardware.sensors@1.0.so": {
+      "sha256": "8f62b90be7f486e0c2cf551368620c9529b5de303b0db4f47075e5ce851c26f0",
+      "git_blob": "267e9de082b942f2cea7862ffccff643acadfa06"
+    },
+    "system/lib/android.hardware.sensors@2.0.so": {
+      "sha256": "59650ba7648b23608b4f75e577ce4cf9952f89d7f108e24ae5c013211fda5e45",
+      "git_blob": "3650efa1ee75fdda5ae726d41d3ff0b3c2035a18"
+    },
+    "system/lib/android.hardware.sensors@2.1.so": {
+      "sha256": "8ceb984ba3f754438af81e78efb91ae59030ca7d3e6727f7b8c10b8442b7a4a4",
+      "git_blob": "cef2c7a3f649c3fcd7cc9bb3f9372b01ffd73505"
+    },
+    "system/lib/android.hardware.thermal-V2-ndk.so": {
+      "sha256": "cc71e4978550bc6ae6c4243d39d1104dbbea2166a3d6eb70c76fb9b38f996598",
+      "git_blob": "22d01353fdc3dfd004587349a9cef6a26ccf18b8"
+    },
+    "system/lib/android.hardware.thermal@1.0.so": {
+      "sha256": "0be98fe2f8e255bbfac400894d8280e4efae08e0ee1657136b24934f2fbac7e1",
+      "git_blob": "696aa4cd2dd77a43246f17cfbc5a40ded48ac2a8"
+    },
+    "system/lib/android.hardware.tv.input-V2-ndk.so": {
+      "sha256": "b26450d99ef4e58ef7f43297397dd5026ea94107b57d61207d566989c3af5c57",
+      "git_blob": "170f0be52b5d10512ca5a97e1bec05482298f9fb"
+    },
+    "system/lib/android.hardware.tv.input@1.0.so": {
+      "sha256": "c3be9cd4d093d06e00979bb981149e7498bcd0ff1e490743d459cef616def8fd",
+      "git_blob": "b0fe42dd74c57409deef648f724e99ba3ebc54c3"
+    },
+    "system/lib/android.hardware.tv.tuner-V2-ndk.so": {
+      "sha256": "4f023db1936bda0e1b4120ed21742233e859009798f27b711d98100561e7c98f",
+      "git_blob": "e453be54b5381167f199eed68a3692c1d56c7f85"
+    },
+    "system/lib/android.hardware.usb@1.0.so": {
+      "sha256": "adca4cb4c1705be004db5f492d4a2bd4562f42a44110ab37c929ec577b35994f",
+      "git_blob": "d4ce9d0be5912a5e8aa0581789eaaad95de90bd8"
+    },
+    "system/lib/android.hardware.usb@1.1.so": {
+      "sha256": "1e5d7a1e7916c9222c6b1dfa942ca6ada196bfeccc1a344b71a4e80c9547b272",
+      "git_blob": "79ff434457fbb437b3526aabec063ee8c67f8fba"
+    },
+    "system/lib/android.hardware.vibrator-V2-cpp.so": {
+      "sha256": "a9fbc5313b141c32acb9ffe23dfe2a8cc3e555e7f4aa60c3f69f3f6943020066",
+      "git_blob": "98b319ac475a2b5430f97d9beddb256fd3c47c39"
+    },
+    "system/lib/android.hardware.vibrator@1.0.so": {
+      "sha256": "a09140ef555a8a9bc9550fb7d7a31ff469f892640aec349ccba982d61fcc771e",
+      "git_blob": "d7b2a39b949e513cf89b61790bb48f97c697603d"
+    },
+    "system/lib/android.hardware.vibrator@1.1.so": {
+      "sha256": "2cac571b5a6a6cb715b182054de080a4dabb5cd7ee9e971092b7117adeca3c7a",
+      "git_blob": "10a32424937683957851000d12386bd7f0932fd2"
+    },
+    "system/lib/android.hardware.vibrator@1.2.so": {
+      "sha256": "21a3d6b7a782b8ec65a0d7e2e63be62d27d7f33997348c7d5dae20ca418e7fb2",
+      "git_blob": "c02c0e31d3d360fbe1cfbb649e0ba731b215b91d"
+    },
+    "system/lib/android.hardware.vibrator@1.3.so": {
+      "sha256": "575e06559e6ae7df2d63dbdeefa382a45439c25a466a79a0fa3d6a583ef38c34",
+      "git_blob": "58514beb37007865a997b7b79d1c11ff67a27307"
+    },
+    "system/lib/android.hardware.vr@1.0.so": {
+      "sha256": "253ffbad9a27b23aade633d2bc323fdbd1ed56f478926f06ec41b208c9b97928",
+      "git_blob": "12b771ef83ced7943c5705aa69d183358733a5a7"
+    },
+    "system/lib/android.hardware.weaver@1.0.so": {
+      "sha256": "6e644205aa0aaeacb6e8c1f9f2c91ad60771db9b2dcd6ccbbc82a0e3d95bda09",
+      "git_blob": "3b045affc544c6bf327d9f517e181877189a7b4e"
+    },
+    "system/lib/android.hidl.allocator@1.0.so": {
+      "sha256": "e4e8f7f31dff44296f704bea0ee6a1c549163af75316f6db18591d219c659d98",
+      "git_blob": "7d0f662a5da1fe355014eff93c6e68ef855141ed"
+    },
+    "system/lib/android.hidl.memory.token@1.0.so": {
+      "sha256": "0a4009f978bfab0a6859b9cd1cd828fc9bb406edd36a3c35ed4fa44ea82a2010",
+      "git_blob": "55e3852ccf00cc5f5ff1cf331fce02193c031350"
+    },
+    "system/lib/android.hidl.memory@1.0.so": {
+      "sha256": "2579218a8cc21fa35013d179edb50f7aec364be60cbeafcba55dd58578489d8e",
+      "git_blob": "2f1e8420846e3ff18320e2b30814137f4bbb0864"
+    },
+    "system/lib/android.hidl.safe_union@1.0.so": {
+      "sha256": "0573e597dd672871f117a16a69301c0ba08e8be6168298005511da81a8166a93",
+      "git_blob": "cff58cad7343ad136c34afbd9d81c361c6b9452e"
+    },
+    "system/lib/android.hidl.token@1.0-utils.so": {
+      "sha256": "54538a059bd64eb5c1bb22ee30c6a09a0b7233d2df47c90ce80b0c57ac6fa7a3",
+      "git_blob": "af919c76865e7e3333a3edf56f8ccd1bc25dbdfe"
+    },
+    "system/lib/android.hidl.token@1.0.so": {
+      "sha256": "36fdcb83687cef179635666def8ee39bb59dcaab4bb3b61abc502a6eebba67b3",
+      "git_blob": "838737cdb90e847323b8b51eb18a8c2cb4f38ebb"
+    },
+    "system/lib/android.media.audio.common.types-V1-ndk.so": {
+      "sha256": "fe0913c5df0d06e8d0e728c757b84aa30fa945eac19fc4adf8294e409d95494c",
+      "git_blob": "d57c37b98f19831626287a3bfd7f660d87507f3a"
+    },
+    "system/lib/android.media.audio.common.types-V3-cpp.so": {
+      "sha256": "912d00458fb5732b76fe6d9c48cd7a9e161547af013a6c5cb2b91313a0b7477a",
+      "git_blob": "d42e46a9a5ed3c9972a76c40dd9dade3a7f5a94a"
+    },
+    "system/lib/android.media.audio.common.types-V3-ndk.so": {
+      "sha256": "4d9658b14c82c2697c08aad2ead506c70586b36bf5e03ff18e4698a7cf7748a0",
+      "git_blob": "9b4ac517a4ff360da9978caf8e4015372e24a722"
+    },
+    "system/lib/android.media.audiopolicy-aconfig-cc.so": {
+      "sha256": "3e9dcddcf0cc4599683cfd4536ec256d46bd72385d9b0457cd16911c2e4eb898",
+      "git_blob": "3e04ac413c9535377b4dba759e5c9a57e93d0bb2"
+    },
+    "system/lib/android.os.flags-aconfig-cc-host.so": {
+      "sha256": "4d005bbf0629a557cdecbc786d8497ee7030a20863f903e1170f326abaf48e5d",
+      "git_blob": "a21715adf39327dcac3a9c4870369c0721d5abbb"
+    },
+    "system/lib/android.os.flags-aconfig-cc.so": {
+      "sha256": "c4963e20686896abe449a5710cdd57155e5c5dcca02838fd8e27e8a3319c6487",
+      "git_blob": "ae9cfbe00f67273eb585bc59ee4bcef2a7a2d02d"
+    },
+    "system/lib/android.system.net.netd@1.0.so": {
+      "sha256": "76e824fff72c6fdcca41d4de8be8678c9317e807461e217934b8c36faa62d414",
+      "git_blob": "1ad80f7444b14517b2b2f0f99f8590099776b28c"
+    },
+    "system/lib/android.system.suspend-V1-ndk.so": {
+      "sha256": "59d26d56b54aae10cd6c0953fb1016f4a91a0a9c62998701b218d55579a3fc9f",
+      "git_blob": "628342ae2ef348eeff3cd9b116f22d775ba4bb3f"
+    },
+    "system/lib/android.system.suspend.control-V1-cpp.so": {
+      "sha256": "81933b467280c2035e454c1b37e4f95cec3668b34b6d1a27707d8a233e245e78",
+      "git_blob": "72959f0ae8e6a2d3c93e53eb6cf6382b88dc6cb2"
+    },
+    "system/lib/android.system.suspend.control.internal-cpp.so": {
+      "sha256": "7ba53eb5f23f64d790bd1d50c291af7937073e2d5aec12668c13739b8d76c518",
+      "git_blob": "51ec1b7997889d95bb163fb1792654bc599e6833"
+    },
+    "system/lib/android_location_flags_c_lib.so": {
+      "sha256": "059fb39d07f5a9e5b19a89d7900f875474d82772e487c61db45c57eaec96c2d6",
+      "git_blob": "449e6e477118497350a56eb5366fb319c9cd51b4"
+    },
+    "system/lib/audio-permission-aidl-cpp.so": {
+      "sha256": "9c7c37f7a9a7e62fae92031bf771bf7c029c275b0b6d584550949c171d8fa098",
+      "git_blob": "c6456e591adeefa01febc5c1e843e3b738d74ffb"
+    },
+    "system/lib/audioclient-types-aidl-cpp.so": {
+      "sha256": "90c0d40bd0c05bbff161cb84763ee1019753d3f2e3ba48f0f08fd1b94e4d9671",
+      "git_blob": "95e71af40234f889f97a5e821c9bce1797f144b2"
+    },
+    "system/lib/audioflinger-aidl-cpp.so": {
+      "sha256": "583bc9a5decc039ded644b5c90a53d464e66d8b2bde9f6d1ef515cce49e051ba",
+      "git_blob": "553e2abf47f26582b963fb857b4e25cf5d1f8eaa"
+    },
+    "system/lib/audiopolicy-aidl-cpp.so": {
+      "sha256": "a1ce43c0829191c184389261179f761ddf93fc3144eb1ed65535cc86441343dd",
+      "git_blob": "22f21bf3e21a60fa6347df25ce4f58a2d90d98bc"
+    },
+    "system/lib/audiopolicy-types-aidl-cpp.so": {
+      "sha256": "6256a5cd32fb6e5a4ea6821a0755e6add6c9932e77fd8f17b4614b94980e2341",
+      "git_blob": "6169c54736061d1a3533fdab91816c3eaf407f2d"
+    },
+    "system/lib/av-audio-types-aidl-V1-ndk.so": {
+      "sha256": "386de9f0fbe1ebe49904bf3b4f8cf2ebf4ef2642c5338e05a4abf5229ec5c355",
+      "git_blob": "356c60571c0cb7036f9cc05e14998bebebbf8906"
+    },
+    "system/lib/av-types-aidl-cpp.so": {
+      "sha256": "b8d6752b8be7056a7a5ddbe4538e157b22140af3f8e0b8709e63df9d291b18ae",
+      "git_blob": "bb9dbe2bd1055db5830bbeaaffc694cb015f2c54"
+    },
+    "system/lib/bootstrap/libc.so": {
+      "sha256": "9a4d99141560f24cc0e58d372e4e592b219048e6f7e92549cbe8f57f6e6c713f",
+      "git_blob": "58b7767cb195430c10781ab48264531c72ed72c7"
+    },
+    "system/lib/bootstrap/libdl.so": {
+      "sha256": "3b6d27f37ed2f34b5d713cc414614666f43ebe587b8a29ca5806ec5e1aa7ef11",
+      "git_blob": "59fb1af99b15b3211af8a07acfd20d55f55b29eb"
+    },
+    "system/lib/bootstrap/libdl_android.so": {
+      "sha256": "df9280979906968d87152460ba92989ab3219e64120e5a247e1f1dff8812d007",
+      "git_blob": "1b9270ea6be2484ecfa86550ecff6ca5dbff636f"
+    },
+    "system/lib/bootstrap/libm.so": {
+      "sha256": "cae85b28958a8b5548f58fd33107bee1cb1f751e0b4cfe85103ecd8ed8a6345b",
+      "git_blob": "8e248ebd60dd24e62e6c3cab5e5f07144367f58f"
+    },
+    "system/lib/camera_platform_flags_c_lib.so": {
+      "sha256": "a1a49bbeee6160be15bc32b4b40bce486428ec354857759bd2b4471e65a3a2da",
+      "git_blob": "260dfb60d50ab8065ae8c10809da9b6bed013f06"
+    },
+    "system/lib/capture_state_listener-aidl-cpp.so": {
+      "sha256": "400b78aa32118225af9999acbfcbb0ef6eebb351ec303306930086b99cc44113",
+      "git_blob": "41cec682b5e7f196f552580c88382335a5405171"
+    },
+    "system/lib/com.android.media.aaudio-aconfig-cc.so": {
+      "sha256": "af2532b2d61695b7b52ae4851eac3ac293407350009e76ab730b80f3465f2a79",
+      "git_blob": "b0ba89ee3280df1fe871f21c324417701967ee97"
+    },
+    "system/lib/com.android.media.audio-aconfig-cc.so": {
+      "sha256": "4c85b39c7fc0486d11707f7ca577a5fe176199b37019ba40fbc301b0170178aa",
+      "git_blob": "0b5122a73d6f747cb8103dbf5c5eb65166337803"
+    },
+    "system/lib/com.android.media.audioclient-aconfig-cc.so": {
+      "sha256": "6c5f7f9abb863595a194649f5caa85cd39c0783c384677acc151ec531c0d79f8",
+      "git_blob": "837c7359ef35d91ac66e022bde3d74a43fe985c3"
+    },
+    "system/lib/com.android.server.inputflinger-ndk.so": {
+      "sha256": "f3f433729e9977b8204dd5925b8841459b5ae3760a82fa7762b6c4cdac3f2f65",
+      "git_blob": "3b3992a9b04d7a3ea9ec359dfe373764cf4a0fec"
+    },
+    "system/lib/drm/libfwdlockengine.so": {
+      "sha256": "c0d165eb4da608a60e4dacbce62ecc19bc4b9f07dfc4300f390bdc3fafe6eff1",
+      "git_blob": "7e9776cd2c5204c0a335856425d90396ee4953f5"
+    },
+    "system/lib/drm/libomaplugin.so": {
+      "sha256": "6edb09ad60700c4cda3c3a9eee1b33bdf8a09083a2474c79f066bc0c2fc6e716",
+      "git_blob": "68bef41604afc27400c3b7980c28d085cc8d2001"
+    },
+    "system/lib/effect-aidl-cpp.so": {
+      "sha256": "424d62d19c8ff91d7d8c3cf9653a8aaf05375beb8fca2576415aa6fd84ad11e3",
+      "git_blob": "de4ad0330fc9aae3b0cf3f3b3f6f820c32538c16"
+    },
+    "system/lib/framework-permission-aidl-cpp.so": {
+      "sha256": "fc437da121debfe46d5efb62b108accbb0d6fc4eec826b9b24537fd2f7917597",
+      "git_blob": "1b2f10ec212fda423dc122a1171a3fd2ac944477"
+    },
+    "system/lib/graphicbuffersource-aidl-ndk.so": {
+      "sha256": "a652dba6a3bc1b42cf563e0ddbb5b5ebe8b6912cfb425a9db810426cfecafee2",
+      "git_blob": "1f81941c5111239b93742028c28fd6085f40cf37"
+    },
+    "system/lib/heapprofd_client.so": {
+      "sha256": "b23219f6eea5c83690020ceb7c7892ae4f46c383961997c283466631e9463c9f",
+      "git_blob": "6d9b1a5d10a7ff861149e49be5e587b1f4c01e71"
+    },
+    "system/lib/heapprofd_client_api.so": {
+      "sha256": "7e14867667fd378186d83692ab565f713eb45231c4081827fa11363c5037eec1",
+      "git_blob": "a33b8df775957b4ba20e443c4c694a24aba5824d"
+    },
+    "system/lib/hidl_comm_ddar_client.so": {
+      "sha256": "ca46e98a397fef20daf86112ba5f80ea1d2c8a15ed47b1afa8d079df60e0192f",
+      "git_blob": "1dfa92170131e8695e7f82229761849cf8b49fce"
+    },
+    "system/lib/hidl_comm_iccc_client.so": {
+      "sha256": "7177b246c111ca39f90b01ffce2cde434d3f09e3902adcf17912fc0f7674fe2e",
+      "git_blob": "f1f1bb9b117d3f27ccf5684ff65d400f66eb7c70"
+    },
+    "system/lib/hidl_tlc_blockchain_comm_client.so": {
+      "sha256": "ba58c5ddda2627270e3c99b5c53a5442013bd6b76920a3c37db396acbfec96a6",
+      "git_blob": "ae5e79addbd065fcb526013e5a188eb061c7b3de"
+    },
+    "system/lib/hidl_tlc_payment_comm_client.so": {
+      "sha256": "fe2cc88138a2c507f7033d5becdd69126d8264f36ea28b8491b74a46f304540a",
+      "git_blob": "2326aced28f70d8c52ea6f81e5883ee7f894462d"
+    },
+    "system/lib/hw/android.hidl.memory@1.0-impl.so": {
+      "sha256": "ff3b24b059715b2fdf4e22261e2cc4207d5f7739c813087c5a76e6b2457afeb2",
+      "git_blob": "24919b81b3d03d5c441019055b1b57ebd3f3a614"
+    },
+    "system/lib/ld-android.so": {
+      "sha256": "4b4a8393b3b4c36343dc7d8218fed50b9a0a95fc1357152c536e75224216914a",
+      "git_blob": "86b93bef6d1eda7203dfd12f737d3d3891aed3f1"
+    },
+    "system/lib/lib-platform-compat-native-api.so": {
+      "sha256": "901d2c9a6808f402a2dc00b4bb511864e173705b827d2bbe476c8a41f30c2b6b",
+      "git_blob": "0bcf2eab295771eab91a3ba20242c2f4a025321c"
+    },
+    "system/lib/lib.engmode.samsung.so": {
+      "sha256": "a16411781e2b4fa948acf31dc0178879813c9934f8307badee2440b8a93de30f",
+      "git_blob": "dceb5b9ec66c502318a1b00053dd25741bbd331b"
+    },
+    "system/lib/lib.engmodejni.samsung.so": {
+      "sha256": "37485a671abc6beb030ea9cf3ca4e2c5a04c785d3761db01cb6b5cf4e68808b1",
+      "git_blob": "620b105b8312caec1038a754d54270247470c933"
+    },
+    "system/lib/libBSD_jni.so": {
+      "sha256": "ae0d6064efde63d9dcc52587b023dd02923d80c9f69c48da1a70648b4bcc83ad",
+      "git_blob": "e63e5daafd865629bd4fab1715c983b655b395c6"
+    },
+    "system/lib/libEGL.so": {
+      "sha256": "b2286fc73a12ebf9d39ff65192a5d4eebb64afa67fa00885f654d332e6d5a982",
+      "git_blob": "b6631abdec11a6de3c623536c09a312723734a61"
+    },
+    "system/lib/libEGL_angle.so": {
+      "sha256": "202284bbfbba42f0ed7e859b94a4ab2e81996ad748ab1374390136579cb3ec55",
+      "git_blob": "29bb38fca04ff77b857972357da12640751ee8a0"
+    },
+    "system/lib/libETC1.so": {
+      "sha256": "68115623fec39905e8ea4bd20f71cb73e25bfac2cbc2315cc05ee57b8a238764",
+      "git_blob": "9c5b1964675fbccc1cf0cd9b4ff062c9da518723"
+    },
+    "system/lib/libFFTEm.so": {
+      "sha256": "6fbba3aa922f6ab448368307361877fc37bf6038e5373afaad5793cc2defdc81",
+      "git_blob": "9aa1b756480273eb65ed137b335a8c11a03599ba"
+    },
+    "system/lib/libFace_Landmark_API.camera.samsung.so": {
+      "sha256": "1c06909036b4f918064c9296de3828e41fcddc791bcd0258ef8317ff4ba0568a",
+      "git_blob": "ef6688922237b45c0bee2a87e71d3cdf2ddf902e"
+    },
+    "system/lib/libGLESv1_CM.so": {
+      "sha256": "72b148801f2d99ed6ef860d8d706c071e0ad8648029d0fc666862f786d2e36d7",
+      "git_blob": "9847d65d289a6e0ea129f46355b726169cb380b7"
+    },
+    "system/lib/libGLESv1_CM_angle.so": {
+      "sha256": "f14ce8fa990162bba47db1ad0fb8e6aab4f630611143708e33708503cdb63e9d",
+      "git_blob": "9ff5bc38c7bde82efaaf6a2b28a94d9cf221dc01"
+    },
+    "system/lib/libGLESv2.so": {
+      "sha256": "1096eed6c2e1ab80aa519c24d233198314524addf7db22443699d5688173414f",
+      "git_blob": "7ca7a2c109c4d6e5af13ff63edb2a9a4b5b7cd42"
+    },
+    "system/lib/libGLESv2_angle.so": {
+      "sha256": "5f832cb9df6cf67e48a180f4c6d200572868de0b6e5d34541df26b5ed644ca39",
+      "git_blob": "0d5b78312438569fa2c06b50f8c11de9ab7c632e"
+    },
+    "system/lib/libGLESv3.so": {
+      "sha256": "e1d3b7981b67f25cb192d8876bfa259eaac30bfb61a527518c2b0c1664613535",
+      "git_blob": "b97ffcd9c6c8f5610aaf6f1beaff29200ce8ee5b"
+    },
+    "system/lib/libInteractiveSegmentation.camera.samsung.so": {
+      "sha256": "01c392e8150f3f50a65a1943fc44f96e38b6d7a51bd214c3eded911d436fa271",
+      "git_blob": "e44782fbc8c1c51500c88113e3243b26fc82b7ec"
+    },
+    "system/lib/libMattingCore.camera.samsung.so": {
+      "sha256": "c2e9811a00e4f43adb17f1ddef71f03ed49bc5a8275e4f2fbdcf1e9a534f7078",
+      "git_blob": "e19e5494658d1f2dbeecdb639c143b1b799ab22c"
+    },
+    "system/lib/libOpenCv.camera.samsung.so": {
+      "sha256": "84aa0ee744335b995dd4186d2b1ea44a213c73b2f3836142fb0569a8ed275d1f",
+      "git_blob": "838765422ff711efef553b464410abf28086440d"
+    },
+    "system/lib/libOpenMAXAL.so": {
+      "sha256": "346a94777e63a28b6910add5d212502b40b2fec35b5631ab15009368bfebee79",
+      "git_blob": "7a8f21647645c669d9b28a6713e546a33db41ee7"
+    },
+    "system/lib/libOpenSLES.so": {
+      "sha256": "87ebfac0de5a7ea10e541c3c12d46aa5f51d7ddf554c779cfb7739747d1e3dcc",
+      "git_blob": "359f9a39b45d812c6b55917abaeba564cbbbc395"
+    },
+    "system/lib/libPlatformProperties.so": {
+      "sha256": "cfb3471552741c16119568ac88ec638ce719151f17063b8e13feb9e609879149",
+      "git_blob": "b255c40c4e766391bb505d1d06e17a3fec611ca6"
+    },
+    "system/lib/libQmageDecoder.so": {
+      "sha256": "f6df19a50c6914a170c25badc46e3f560e117dd96e06849386d8845112232be3",
+      "git_blob": "ce6cefef1a13338b80c1775f339d8417aeb7c8fa"
+    },
+    "system/lib/libRS.so": {
+      "sha256": "562a9008123c97bc5256cec4cdb0cc8d5922711abb90d274ba798bdc8665181f",
+      "git_blob": "23f945797506c0357b8d29bd0767a98b6e09e58c"
+    },
+    "system/lib/libRSCacheDir.so": {
+      "sha256": "cd944a386b39b904ef18c521ffca42002480e5c1359bf657317a9f879400b814",
+      "git_blob": "f18e55985717301afc977cfa9caf905e2661cd19"
+    },
+    "system/lib/libRSCpuRef.so": {
+      "sha256": "1f4a81a76f7d32abcbc3710a3bb355e204852790ebd18a9311996a7515a264f7",
+      "git_blob": "bf543a6ba4b794b055f72d69cb587ccd87b76573"
+    },
+    "system/lib/libRSDriver.so": {
+      "sha256": "d098f6a72774daa1808b746817cfd8a42b7f5984df1fd43b2eb81dfb8e46e6de",
+      "git_blob": "f4e08993b35fead87636baba7fd0a840960ae7d4"
+    },
+    "system/lib/libRS_internal.so": {
+      "sha256": "79194b11256d998858e2b1976becdd99e5234f1e448783cff3fe5ea0f3c8dfe1",
+      "git_blob": "59d7d00bcc849b830b41e02e13ca25a237795e04"
+    },
+    "system/lib/libSAG_VM_Energy_v300.so": {
+      "sha256": "da95b5a12414c336528ca11524510e1b0f66f6d46e25e3dee0e367a112a6151d",
+      "git_blob": "fdfbf2b6f11127092ad57d9c5ac2d46f9fca20ff"
+    },
+    "system/lib/libSAG_VM_Score_V300.so": {
+      "sha256": "258726d9e68f21c8d172936f38dfd948aa3389e7ea1a88ea13d0fc76456ba9dc",
+      "git_blob": "a15733a50f9debcf84ecc17ba4daeffa5ffaf04f"
+    },
+    "system/lib/libSDKMoireDetector.spenocr.samsung.so": {
+      "sha256": "d6169d770677f4cf40034386f3caba715a5cff06999a8c8f793a261e55721823",
+      "git_blob": "e1e87491c90dc0eb905907faf334c5e0d7665ab3"
+    },
+    "system/lib/libSDKRecognitionOCR.spenocr.samsung.so": {
+      "sha256": "c920b57618d0d00ec2e5e2bb57ea5e9350055f97ab9fd45621e90ec196b397d1",
+      "git_blob": "2477c949e7ee981fada952c6f1c4a3c1151b9651"
+    },
+    "system/lib/libSDKRecognitionText.spensdk.samsung.so": {
+      "sha256": "36a3c4f02dee551e68541e683df55c117880fd32a64438e5b50f906cff68b29e",
+      "git_blob": "d7f45b54bb251615e744a37d921da7d54690e63c"
+    },
+    "system/lib/libSDKonnxruntime.spenocr.samsung.so": {
+      "sha256": "64885f40f823e181649ebb9428f827350848c538cc9da27dd77b97e9ec488e33",
+      "git_blob": "be65266047bb3edbb36c075257b26c0995b120f1"
+    },
+    "system/lib/libSEF.quram.so": {
+      "sha256": "486b37eb06d9dfdac82334ce359f096d5645d7ef3491743724d93f25892360ec",
+      "git_blob": "51265235c98a3c86a06d64acdbedcb99bb662879"
+    },
+    "system/lib/libSFEffect.fonteffect.samsung.so": {
+      "sha256": "b4116b8f2df97d65c76cb3f85e3bce3663d2f4ae6c4da3d68812c8880d0b0483",
+      "git_blob": "b1f0d2ad630cfc14142f26fb660e52e5e60928c1"
+    },
+    "system/lib/libScalable_Encoder.so": {
+      "sha256": "5145de6747735f9315d5fc83160a74b1dd83c5d351bcab04ed54586602697fd2",
+      "git_blob": "53de110d074d35c4be468cb53211666e1177d10e"
+    },
+    "system/lib/libSegmentationCore.camera.samsung.so": {
+      "sha256": "19541facaedd81ffb543833cd16d7138294c0a51c9761563a2076b8afbabaeea",
+      "git_blob": "2ba517813d8c83f316fd2337447cf10c0de8f3bc"
+    },
+    "system/lib/libSemanticMap_v1.camera.samsung.so": {
+      "sha256": "50df70fc41f0c46efca9ca1f789c187943ef7506a3688d6e2e687444e1938052",
+      "git_blob": "8b4808ef68bb87a065ab18d54d57052dc99017f4"
+    },
+    "system/lib/libSlowShutter_jni.media.samsung.so": {
+      "sha256": "7f3627e51c0b037fd8328385c480519da671e73a37c63777e3cc69955f514e8a",
+      "git_blob": "7cc54ac549ec6b8f2a438c70a51100f7254dfa31"
+    },
+    "system/lib/libSoundAlive_VSP_ver316c_ARMCpp.so": {
+      "sha256": "c01c4b1affc6550d2b6b9a7a824ff3b5609c4a20cad359b16581575080f5fe96",
+      "git_blob": "2a027d58c3c390e9494682bfd6c95b00d8515872"
+    },
+    "system/lib/libSurfaceFlingerProp.so": {
+      "sha256": "159c8e233f7ed8c752d7d91febe46b920183af6a9e16ca29e26bfbc44856d569",
+      "git_blob": "0f770c2d297c1ebe0c69b6ea4a6f29dfe952ad69"
+    },
+    "system/lib/libWallpaperFilter.so": {
+      "sha256": "288a7fb2accd418e7ebe4049c1666b6c388abb4693745f8e5f40c42b6e4643b0",
+      "git_blob": "395d1612cceecc2e6437f720d0872361955c2072"
+    },
+    "system/lib/lib_SAG_EQ_ver2000.so": {
+      "sha256": "3a057e59a0f3600a707b4655c03ea6fb44e927bf8a50e11520f445ef15f38f5d",
+      "git_blob": "b43b3e006624bd1600d073d6866ffd8ae68ddc5b"
+    },
+    "system/lib/lib_SoundAlive_AlbumArt_ver105.so": {
+      "sha256": "d8b2d82cf422f1ffd9a884b01c3057bcb32458f2167f7f501fedba31cee36fa4",
+      "git_blob": "54a8ef292a5bd5046199e519bc56c19a9f801ff1"
+    },
+    "system/lib/lib_SoundAlive_SRC192_ver205a.so": {
+      "sha256": "04b2e9842f4d19ae314bf53a533477f211e30a255aa1f29f82f787599f748715",
+      "git_blob": "ad7bcc20e7533c3a0d23d611ddfc39d4da1bf98c"
+    },
+    "system/lib/lib_SoundAlive_SRC384_ver320.so": {
+      "sha256": "24094abd006164bfae9cf9e9b067186bb612b512bbacd073a7050bbc4ab9fa2c",
+      "git_blob": "2c3304f8d6483ec38da87d42226117b86da648be"
+    },
+    "system/lib/lib_SoundAlive_play_plus_ver800.so": {
+      "sha256": "71ff628ef6f128ef932c0de2597bbe73c3e51aa6ca44a5d6f17533d52a5b877d",
+      "git_blob": "2fb0024a24cf2741ec68d666b88d92c4d63bbf4a"
+    },
+    "system/lib/lib_SoundBooster_ver2000.so": {
+      "sha256": "7bf1e27a99764908a9b5ca8e745dd2965b5197c2a32d81a949bc592ba36991a2",
+      "git_blob": "eb0c7bd765d6f9ee219824fbaf538d5c9dd6b128"
+    },
+    "system/lib/lib_nativeJni.dk.samsung.so": {
+      "sha256": "7204f6abb4aa47ab4ea5a4f391fd10ef62f3ce384286b86f5cf67150ad136ea7",
+      "git_blob": "e96b4445adc6980034a56aec2c9533c9f8abc08f"
+    },
+    "system/lib/lib_native_client.dk.samsung.so": {
+      "sha256": "7708efc180fac27aa6e8726d62e8d98e70686c98ef2d6cd7ce6ca0da72f63267",
+      "git_blob": "5e22635bbbc2a6d9298928db86dbcfd04347b5a9"
+    },
+    "system/lib/lib_soundaliveresampler.so": {
+      "sha256": "13792d6527c61a1ed3f369d38ba52a29c114f8cc95c2963dd2f2c3364c6eea67",
+      "git_blob": "9a8287af20fb998e36db9a6a9d6ff2560885b225"
+    },
+    "system/lib/lib_vnd_client.dk.samsung.so": {
+      "sha256": "6e496e655aeeed64dc754bc5e03e66bfce9eb27c3150b7775cc3490c9c6db71e",
+      "git_blob": "671812eedfeb817cab3b695caf2f435e94f8ef5e"
+    },
+    "system/lib/libaaudio.so": {
+      "sha256": "e435ae8802b9cb31434bbb6d27d833f340453fb5ff8f5a4bd1ee0fb49bde3fe9",
+      "git_blob": "8f286ecefa10a7e41531bda4970fe619b924f78f"
+    },
+    "system/lib/libaaudio_internal.so": {
+      "sha256": "cae9a13ce55aab1cfc629fa80417ab2828b6c9fdc1866cb934bae242404742e0",
+      "git_blob": "487b0afbdb8fffceb98206b758b837f826c45ba8"
+    },
+    "system/lib/libabcfingr.so": {
+      "sha256": "1809d0405d4c406d252bf36fb8254e78fdc9097d40057d2c780e4f7dee9f7703",
+      "git_blob": "e625eca1c2adae9aeef09fc3dad9fd57f002fe2f"
+    },
+    "system/lib/libaccauthentication_jni.so": {
+      "sha256": "6c884832d575eef3885d76ba65bc249746661efbdfdbee343b32e8403e4063bc",
+      "git_blob": "d25d7e63af32abf0a611a22f1c202aa1fe23dd55"
+    },
+    "system/lib/libaconfig_storage_read_api_cc.so": {
+      "sha256": "f71f1286a083e5dcbe81440b1653fc01376a397877e6adf1e2cb36f4620852bc",
+      "git_blob": "93db53995826f3bef173706497c338c537edfa4f"
+    },
+    "system/lib/libactivitymanager_aidl.so": {
+      "sha256": "df9f5dae8642a42cfcdf178bb135c15d0a57a7b878e0676a7b828c60b27c232a",
+      "git_blob": "3495158a3a1b43f882f018be8993fa406705bfcb"
+    },
+    "system/lib/libadbd_auth.so": {
+      "sha256": "cf98b5d528bcd74343be3907b9dd0b0d15cf3ae5d0bc192d82c999cefff9d86e",
+      "git_blob": "6fd50ad78f8fa16adb114702fdefcbda87c3d612"
+    },
+    "system/lib/libadbd_fs.so": {
+      "sha256": "bb605110bfdce79e9e3b770b4b68fabe52aadb841882f62c1b726d6a20a52721",
+      "git_blob": "7548b2f40e571f45ee1e44e38d24de7d248ddf8a"
+    },
+    "system/lib/libagifencoder.quram.so": {
+      "sha256": "13d305e7e5be05d8bcf29ec62ac35361c928fa6ca68679faded99c2aa0918acb",
+      "git_blob": "f4347691ab14bad7dbbde3243eeb577b5213375b"
+    },
+    "system/lib/libalarm_jni.so": {
+      "sha256": "13b7efb7d794452aabf1cf7e7512aa61b532dd07f7856cac3f82524582a9bff4",
+      "git_blob": "709faa39b3709c6f98aae115f4b0d80e52d2b5d9"
+    },
+    "system/lib/libamDNN.media.samsung.so": {
+      "sha256": "09b593cf900310dc8f6328af34830529566d599b75ebb7938217dcb5bd322a94",
+      "git_blob": "9a71e330fc227e3940093ece366fe3247c2805e4"
+    },
+    "system/lib/libamidi.so": {
+      "sha256": "3bb185c3aa3450de6d0c7d165e63fb816393ff16a7e7a6a3f34f7968e3335e11",
+      "git_blob": "066ac85c8542fe4b95467874b74db6348ad5e5ea"
+    },
+    "system/lib/libandroid.so": {
+      "sha256": "a17eb1033697e17344a7c0792ef19babedb39c3801fb2d99f7ac157d1cfa6458",
+      "git_blob": "a23a627b663fc5acebc3738a0ca712c6509100c5"
+    },
+    "system/lib/libandroid.vexfwk.samsung.so": {
+      "sha256": "6a0d33c65f8b65ff666137cd104306c49d52eeaf0224e68d0b69a48e3fe2f47e",
+      "git_blob": "29159423d9f7dd9b5fc29a503c7745e715713ead"
+    },
+    "system/lib/libandroid_net.so": {
+      "sha256": "73254e9210f92b4c6a7a5ef3807f91e024bfadd69111ca2fa762e7aade4cf6c1",
+      "git_blob": "445dd8fb8244df2971218c111eabf3be3b73672a"
+    },
+    "system/lib/libandroid_runtime.so": {
+      "sha256": "98a9c4edf05967c2e11c4945a4133d18c70b78bf2598209d4cbdca89eeeb7767",
+      "git_blob": "d82cd8aa898892b29b8bb77377682485509d9a96"
+    },
+    "system/lib/libandroid_runtime_lazy.so": {
+      "sha256": "0d7988064a0d1857947a83128cd381c9b0103c48a958d53dc70d618cc8057fdd",
+      "git_blob": "b1a11c529d0abef81573a9c0d85b0201442c2cbe"
+    },
+    "system/lib/libandroid_servers.so": {
+      "sha256": "13869e4003078cb3e99a614e7e9e3ff0afe81e387534863f4b14c02178b30396",
+      "git_blob": "c92a0f4f88b809e4ceeb37155264aefc3b215559"
+    },
+    "system/lib/libandroidfw.so": {
+      "sha256": "3314a40a4ebf26972430bd8332aa90c559378c63833a4f076dce1c42645837b9",
+      "git_blob": "92659cb89a32e14622cf0e9c9be126fa010372fb"
+    },
+    "system/lib/libapexsupport.so": {
+      "sha256": "9bcbe51005b3cd66c468736bd1ac647347e839dbca9a2335832b4df74b7d2f0c",
+      "git_blob": "685d65c9da45f6bc251b9cda0063ab56fbfd799c"
+    },
+    "system/lib/libaplayer.so": {
+      "sha256": "5bccae419c01635364f5c50bab7a31d34ccf5025ccf37084b37407f26dde31a3",
+      "git_blob": "1a74a1e0b855141f8ee9004fb9140c27897dc927"
+    },
+    "system/lib/libappfuse.so": {
+      "sha256": "85c06add1876cd0f1759f1cc1f65d9a2f51a7ca82c3befe98eb8bcee49d11b3b",
+      "git_blob": "b4680a5d377cb12693bcf0fb328e689ca86c5a75"
+    },
+    "system/lib/libaresdns.so": {
+      "sha256": "3d60e4e4abd8763b015c9a1a6307be1b8d31ed5c9e49fa07ceb4bc7be483f34e",
+      "git_blob": "ce72ce79b367b44e3150ec8948c12806d1d5de10"
+    },
+    "system/lib/libartpalette-system.so": {
+      "sha256": "438b1697938fdcaa458785109846a4f8ffe31746e082b94ffd570c05787504aa",
+      "git_blob": "4417df723170856b6fa085ab6990b31d152295b7"
+    },
+    "system/lib/libasyncio.so": {
+      "sha256": "93678736ff0cc0c65f4a3130cd4d229d3e6c34c3f0e083d3fb62a1e73aca3106",
+      "git_blob": "b98d748a7ad556b17defe07f31fccaaed8c2d630"
+    },
+    "system/lib/libaudio-resampler.so": {
+      "sha256": "93048ec5a0016b4894072bd1a71686e10509fdd5071cf625f987111d617ce04f",
+      "git_blob": "adb4bb4b9ef276c2e9b391447f907fc85f3c7477"
+    },
+    "system/lib/libaudio_aidl_conversion_common_cpp.so": {
+      "sha256": "d172e90dfc309ec4767da01e865c11b0679d9f410483e46be16fa64e30b94f69",
+      "git_blob": "00d7727c987c9585e208aeac87a2093183c27016"
+    },
+    "system/lib/libaudio_aidl_conversion_common_ndk.so": {
+      "sha256": "cc12519c5d63929a20bc38fda1e9c5de6daa3c256262bdf80d8227980d22bc58",
+      "git_blob": "2ae64a64f36cf9c38ab9fdbb57d8ddb92a743266"
+    },
+    "system/lib/libaudio_aidl_conversion_common_ndk_cpp.so": {
+      "sha256": "1deebb582e9a48414a3a8478e45a8d5042a8ec75ad0d39a573bcf6515a52738f",
+      "git_blob": "bcece66da9c78c0db7d4e5a38229cf63e76005d1"
+    },
+    "system/lib/libaudio_aidl_conversion_core_ndk.so": {
+      "sha256": "2f72c5868ddabf86960a3881dbd74fc0c433738ec2c5f2b0e9811a4fbaa612d2",
+      "git_blob": "c3aee157a8ddef47fe09a4ba78fcabec19e1d69e"
+    },
+    "system/lib/libaudio_aidl_conversion_effect_ndk.so": {
+      "sha256": "feead8c2865b975d1bc5a372b1b70c0245fab7e9ae68aef4f60f6569f99f0052",
+      "git_blob": "daf039c43c6eef11933969025eec1a4405a5f62f"
+    },
+    "system/lib/libaudioaidlcommon.so": {
+      "sha256": "f418bf25f56c579297a721af8ad5e09a3911f0568e5a0e5c7ac6ac3c7d8f5885",
+      "git_blob": "4e5ad2690aeed9c7cc9f2c548c51e207eae49522"
+    },
+    "system/lib/libaudioclient.so": {
+      "sha256": "6d1e4d9afeb42e1de06142655533fad1999f30b992436a9f5a11ca8150c74364",
+      "git_blob": "c729f6381e36764da1b2f01265ed9c3ba1b8ed1c"
+    },
+    "system/lib/libaudioclient_aidl_conversion.so": {
+      "sha256": "402ec18d07464310b8c4b42a04ce3350c4043edcd588da918c1e46e53503172e",
+      "git_blob": "5af79fb7a9beb421d1c3b74fcfc68511bbdc3f11"
+    },
+    "system/lib/libaudiocoreaaudiorecorder.so": {
+      "sha256": "2528f5cc5c28e3db894ed792c4ea7d75869cfda9d250406ccb4460ca141896f0",
+      "git_blob": "bd8ec3a4990334e5bd1002b48e8c4209072df975"
+    },
+    "system/lib/libaudioeffect_jni.so": {
+      "sha256": "84f8b8ec7cc90072730b1a05e94d554e7bf2405a522cc954c40cb4367ffbce8f",
+      "git_blob": "f65f47513d60ccaeb645ec3163f7731f6fd25ba5"
+    },
+    "system/lib/libaudiofoundation.so": {
+      "sha256": "597418810cb17bbeac8ad0014e7bb62add16c15610490f0af8cdf826557c8bc9",
+      "git_blob": "86ae8f1fc98158e901fc65fbff0c99d690e82be9"
+    },
+    "system/lib/libaudiohal.so": {
+      "sha256": "3577120a750a6cee2d2bfdb24704501b6f8d8f940775e443a78a00e3a7092f7a",
+      "git_blob": "9b2cf8840580fc0df1f7e1ad663e7cfb921fb8cb"
+    },
+    "system/lib/libaudiohal@5.0.so": {
+      "sha256": "e7b8e60f1676ac7d21d845e9b6c03bd8cefb50babef1c7867594a69313fbcdb8",
+      "git_blob": "094799c2c011227a9976d0c1fe7015e72aa15487"
+    },
+    "system/lib/libaudiohal@6.0.so": {
+      "sha256": "55a4246289ba81871d529f1b3929dbc0834441cdaa23b4756dcf4c2e0b592514",
+      "git_blob": "97b43c78d3263cdf39ab06d57c000815573e8b4f"
+    },
+    "system/lib/libaudiohal@7.0.so": {
+      "sha256": "051ea3bdd27bead225ef3f7e72f95fcff44bcd546234011bab21f11b65afb645",
+      "git_blob": "eccda876384681d240c78f027ee204ceb9c7d23f"
+    },
+    "system/lib/libaudiohal@7.1.so": {
+      "sha256": "524d1c6c068f781f413211af68597b7db4fec6a70ce6c102e6bff47600ed0f04",
+      "git_blob": "21d7181ee0e00449d91707d3bd895e959cad621f"
+    },
+    "system/lib/libaudiohal@aidl.so": {
+      "sha256": "b8125d8f508855a6837dac4d8fb02a5d2a611aa02c3bb8eac66f676378824038",
+      "git_blob": "c4ffac17b9e572cd48744e0acf679f59d3ca2dc1"
+    },
+    "system/lib/libaudiohal_deathhandler.so": {
+      "sha256": "1056c674d75f7cf098955034b7d126c3d72a39edf738c182e78968040f77ee0e",
+      "git_blob": "237557c4ed3045a3560ae00cb7831fff77967f61"
+    },
+    "system/lib/libaudiomanager.so": {
+      "sha256": "6152d7af4df4b41ecce7e0d4864f7ff3f824259cdb1aa6b6021b9a59e389cde8",
+      "git_blob": "de2b82a4bf8e3a31d3cc89a979c8c6d25adcc7e2"
+    },
+    "system/lib/libaudiomirroring.so": {
+      "sha256": "1f5a482db5f31aad8b7d8066459c7ca2b46bab76d9f4513f949e83afc5cfccbe",
+      "git_blob": "49858a4272e8fea453c43291b864000b1f30d94a"
+    },
+    "system/lib/libaudiomirroring_jni.audiomirroring.samsung.so": {
+      "sha256": "f8e47512b524e500a5714128961bff60f5500e2686c079fbedaffa70d183e2af",
+      "git_blob": "3d8bfb8c852f9a68510a308216323504d237c3ab"
+    },
+    "system/lib/libaudiopolicy.so": {
+      "sha256": "3b3cceda020cc4154f1276f303a0e8b216b72315b4a428e4d66b8fbd53a0ad45",
+      "git_blob": "3913d18139ebec5d2832647f00940dc118b685a0"
+    },
+    "system/lib/libaudiopolicycomponents.so": {
+      "sha256": "b51c32ad58a8ad8039011399baf56ca0656b1f0fdb1fd5cc19b58c73d09dadfb",
+      "git_blob": "d191a4bd0280a1fedb1b0a643883ea73289cc9a4"
+    },
+    "system/lib/libaudiopolicyengineconfigurable.so": {
+      "sha256": "c6052046146c643d12235d0d0e0cbd9fa89e463ce4ef3a18b71d97c42bc37354",
+      "git_blob": "19e3eb5e412173801545b3212a69e409c617e90b"
+    },
+    "system/lib/libaudiosaplus_sec_legacy.so": {
+      "sha256": "ff453b78dd7647849dc9a72c4949dec48b00f85158be8ca46b4982c9b30f2158",
+      "git_blob": "80a6bfec0ae0e852e9790e5f375e9d37256be2b6"
+    },
+    "system/lib/libaudiosolution_jni.so": {
+      "sha256": "78661a348666ecc532e8356ef1d04ffb38a3bc6073a7a4db6b9dc56104c1f9de",
+      "git_blob": "146d945689fbe6b45423ee7e6a5d0569351d3c65"
+    },
+    "system/lib/libaudioutils.so": {
+      "sha256": "0ab3db631253cd5c804ce962bdf68bfedfabcf826d2cdbd0e25dab5d8193598b",
+      "git_blob": "226d790e6d4bf6770fc9acf5d17b33a79128b5bb"
+    },
+    "system/lib/libauthentication_jni.so": {
+      "sha256": "bd82148180426e0ed09403f7f6c283a516c2d7f31187e5c12fde6355929aac92",
+      "git_blob": "106e2b74d64428f9d5a7d4836ecb87c91feeb432"
+    },
+    "system/lib/libautils.so": {
+      "sha256": "ce7dcd48005dc23cd6af69c2e75aa68ee87efa111fbc224253774e5537c6b37e",
+      "git_blob": "0e2689400ef0f07da1002a2a6b395a05aaf29d91"
+    },
+    "system/lib/libbase.so": {
+      "sha256": "43794b3375b02f2c34f223c19fb6dba10e2eea81ed68d9cac7c7aba7a6326ef2",
+      "git_blob": "9a51f08d4934d68711b4b4f2b4e71af805a8f4aa"
+    },
+    "system/lib/libbattery.so": {
+      "sha256": "0044cafb0a15216bace95a99e24b0c595050a0bdec4ebd93cf3cd3f065b98610",
+      "git_blob": "809d8431e23a4c8a145d49b2778acb35db7897a8"
+    },
+    "system/lib/libbatterystats_aidl.so": {
+      "sha256": "e95d66c73f143327f6448b9d07466b6f228e4f08d25715604e76ae42e826dbf0",
+      "git_blob": "2a5473198befd3fcf4e961fecea31e8c61677479"
+    },
+    "system/lib/libbcinfo.so": {
+      "sha256": "28b3a406e17a24aa63e33c923675d4637b19745a5f79ce9587c0ddd048f4c745",
+      "git_blob": "101d26c09eb7e0b04d1cc05b0b51f7d7526af4ed"
+    },
+    "system/lib/libbinder.so": {
+      "sha256": "57af17b400cd70a5fd634390850e8aba3efa736db5404ba6d8d1fabc904e6687",
+      "git_blob": "9e548d69f4d5645a6e77c4178a0312eb2d1b6c3a"
+    },
+    "system/lib/libbinder_ndk.so": {
+      "sha256": "bb45eb43226a27067aaf5964a2f302dd4c6448fd5d325bd4435ccbf59fcfc803",
+      "git_blob": "c482536d05ca201a5c304a9d0e578fe1d84d07f3"
+    },
+    "system/lib/libbinder_rpc_unstable.so": {
+      "sha256": "483ab7e6d189fdd71f82c6bf45171c71504dd51daae6a55231baa48c4c09d556",
+      "git_blob": "68e56c2a08c89644fd985cb2c5e91cb906391884"
+    },
+    "system/lib/libbinderdebug.so": {
+      "sha256": "007994b46e1a19e83de6aabb087478fa71c7638348ef62f12d0f91429d027b57",
+      "git_blob": "db190d77f9835c2419a01527f3b94c2f8150c81f"
+    },
+    "system/lib/libblas.so": {
+      "sha256": "fb17f8858b35dad36fddd1f2f8a0c1a26c73e351397cddf7678698b544f4e0e3",
+      "git_blob": "5a8f9a37f5dc6c73f78d8f4bb7e59fcfcf1787d7"
+    },
+    "system/lib/libbpf_bcc.so": {
+      "sha256": "7e0c0e5dff9d362296d3cace322b8cdf769aa72a2be18216a4f62cec0c57f263",
+      "git_blob": "03582e0660f1702f65c59698d179ad012b0abb0c"
+    },
+    "system/lib/libbpf_minimal.so": {
+      "sha256": "6d23e92b633301f9b8bd727a30097f75e438bc2ea10418197288311326919601",
+      "git_blob": "96cccb526acb0cef11bcd43173bd86d44ad3771f"
+    },
+    "system/lib/libbrotlicommon.so": {
+      "sha256": "ea362f99d800225297aabd7b387e02872656cd84f71c465b99fe670d8bf2c692",
+      "git_blob": "896a09066f81859870b9c68e17d898fbfbdf9a44"
+    },
+    "system/lib/libbrotlidec.so": {
+      "sha256": "f56e13e955c05232f2b1a321d5b07914715768dc723d2444bc417c6ad29833c3",
+      "git_blob": "212f46b07df474c415fd63319124696318e815f9"
+    },
+    "system/lib/libbrotlienc.so": {
+      "sha256": "2ef8bddae25c68cedb33410152d6e979d003276113560ac0689336ff4eb055a1",
+      "git_blob": "e2b61fa112e69dade2ce70df0fe2a2f4e0531230"
+    },
+    "system/lib/libbufferstats.so": {
+      "sha256": "0f27318d0e28727e8f060e442b4224f6e34ad9359a8a0ee7e89c86bdb41bacd1",
+      "git_blob": "7a02a1f331a96f75fb8ec4550e1dac83690d4404"
+    },
+    "system/lib/libc++.so": {
+      "sha256": "fb0fb4be320b40dd691701c718f39b8f1a4876671cec59e8f4d35ffa67130ef3",
+      "git_blob": "b77e08613559555dcfc9efa6f31082df8c6c8afa"
+    },
+    "system/lib/libc.so": {
+      "symlink": "/apex/com.android.runtime/lib/bionic/libc.so",
+      "git_blob": "52d6279146d24e8d39ad03e9471824e2c3c108bf"
+    },
+    "system/lib/libcallstatemanager.so": {
+      "sha256": "7703129c5c035376f28855591182fc290a296f748caaf0c3fb3f0ab8debc35ff",
+      "git_blob": "d122ba2d76cc7d75a5cc35a4003bb031bbf1e7da"
+    },
+    "system/lib/libcamera2ndk.so": {
+      "sha256": "2aac79c3b63abca185c82487d0d66a7a6d3fc06cb2bffe816d2833dc467f2083",
+      "git_blob": "715743566bb7b3e2d6f4f9cc1a27019623136ddc"
+    },
+    "system/lib/libcamera_client.so": {
+      "sha256": "e019af8d797eef089663378975413b9c4116c649433edc456a4adc74ffa3310e",
+      "git_blob": "3705d39b24668188bbd6c928c412488146bdd985"
+    },
+    "system/lib/libcamera_metadata.so": {
+      "sha256": "f78d07483023bd2209723fdbc91ccb560b3c29869bf798a817f1ffb62320c933",
+      "git_blob": "68c8c3f2b4056989986103932d7ddde6d5479f74"
+    },
+    "system/lib/libcap.so": {
+      "sha256": "20f13f1a70e8d18c0ae50b0b74e05bfacc32bf7f7ad863881d53d8dc2ba0c015",
+      "git_blob": "e807b73ac8235753e7bd717c2a65140fa5286801"
+    },
+    "system/lib/libcfms.ssrm.samsung.so": {
+      "sha256": "374816c00dff42fcce8405775fd7355dab5ff113f5dbc3fb9fc2467bc67ab210",
+      "git_blob": "f03c3dcad73545729ef01a27f9b8b2234655930e"
+    },
+    "system/lib/libcgrouprc.so": {
+      "sha256": "8f14bea1805938617764ecba181006302274c8c8f831bab626e8c9ab31f899cd",
+      "git_blob": "497c2577f160e053e2a5e08f6973d4d53af998e1"
+    },
+    "system/lib/libchrome.so": {
+      "sha256": "41262784b49beb4881b28a9c5d2b7599aed91624de2cac81c4cddc900318dff1",
+      "git_blob": "f1beeeaad9959a6d0a5b04b5306bf91c671c6299"
+    },
+    "system/lib/libclang_rt.asan-arm-android.so": {
+      "sha256": "4a78767b02fb39daeb9def88f07c18138eb007050f1e484b4b80f06658591b75",
+      "git_blob": "23e48f2c0919d25a003e569a95e2c2990a75605b"
+    },
+    "system/lib/libclang_rt.ubsan_standalone-arm-android.so": {
+      "sha256": "31a312c61c7c86bb6bf90e266dbe7fbba7bfa957bf64eaf5b799f16cee3fe853",
+      "git_blob": "9b3367c88b7df79b053809fa0ce02a48e497946d"
+    },
+    "system/lib/libclcore.bc": {
+      "sha256": "22f36ddab71cf26313a29be083bf0857b68f64b94cbefeb8a5083e6be80fc2a2",
+      "git_blob": "ee0429ad1639eb61a40e4a240db2fe0a09a6d839"
+    },
+    "system/lib/libclcore_debug.bc": {
+      "sha256": "7ce7ecaee8d8e0344b0bf3c42daa86f9013f4449d9cca5374fb97d383509d695",
+      "git_blob": "6c6fe331ae9fb04e83dcc7bd8553f18a1419079f"
+    },
+    "system/lib/libclcore_debug_g.bc": {
+      "sha256": "fa997728ed71d4ed5b8f7794c36ba95b25cd2453458970d8a515491193de200d",
+      "git_blob": "8976d9dbda7c497822c2505cc2a5bc99c2b38bf4"
+    },
+    "system/lib/libclcore_g.bc": {
+      "sha256": "545efcc346acb476ecedb1ade95908b630a50c3462fff880cd24e56fb45d2e50",
+      "git_blob": "ff05eab91325ed513878a2bac5467efbe883224a"
+    },
+    "system/lib/libclcore_neon.bc": {
+      "sha256": "1c576b222fb9a16c9d0d94f2353ae6b75afa9ef153e05b70c3607b66562bda5c",
+      "git_blob": "ce3da69387f2e1bbd0d7a388e143e959999adc6f"
+    },
+    "system/lib/libcodec2.so": {
+      "sha256": "b806db47170d9e2c9a661f07d5f34ecdef59c43a958f92224806df843786e53e",
+      "git_blob": "8ed3d28a0f6fc8dd9239efd38333a1dae8476285"
+    },
+    "system/lib/libcodec2_aidl_client.so": {
+      "sha256": "6aa1dd33845daeed8ecfa1698002d9bcbf8dc76f9fd4eec619eb972eabcc91ff",
+      "git_blob": "ac6e74dcd34564e3877f686b991a761f9131328c"
+    },
+    "system/lib/libcodec2_client.so": {
+      "sha256": "11ea361792cb44531abbbe25fcad551708fe67c5aae31844fef6e506755b14f4",
+      "git_blob": "1a791f8edef3f29c9d292454ec857bed240ee361"
+    },
+    "system/lib/libcodec2_hal_common.so": {
+      "sha256": "3b200841b2730d4875328b478a8970e7bd7d0283eef83fba529e992baf4acc1b",
+      "git_blob": "6a3c1312817c3565d985517ae027a92ef81c07cf"
+    },
+    "system/lib/libcodec2_hidl_client@1.0.so": {
+      "sha256": "9c28bf108e6564bb3f9dfe507ab33acae7a903ec1b4a23d0e4dde4d36c87e1bc",
+      "git_blob": "ceb9be4bc33fdddfe31272a4a66c2463e8f60c89"
+    },
+    "system/lib/libcodec2_hidl_client@1.1.so": {
+      "sha256": "950b663de03bee7978d141789944d079610d7e4bf6e90af78bcb7ba5c9b464cb",
+      "git_blob": "0a9e91210acb222e63c0ca241a90c6648bcba195"
+    },
+    "system/lib/libcodec2_hidl_client@1.2.so": {
+      "sha256": "9eb4e8a7d6b45e41d814e8a031793213a9f9b7337e6a3acba65239fddbdd4bad",
+      "git_blob": "8f7e5170201940eee7d53a818007ceed09b4af96"
+    },
+    "system/lib/libcodec2_vndk.so": {
+      "sha256": "9ccec7ff88824220836c437c5169db78edb93610f4edff6c745c9e0723cc699e",
+      "git_blob": "9b923b96e928e95accaa6c7b8f944f308e7ddd7e"
+    },
+    "system/lib/libcodecdatautils.so": {
+      "sha256": "4f9c7dcf0dcab11970964d663d1e6f1b1ad390fe53424fdc7eccc85381885992",
+      "git_blob": "1d8c03a54204df87ada9e759503ed16786f14789"
+    },
+    "system/lib/libcodecsolutionhelper.so": {
+      "sha256": "be9f7aa6522a038a5fa17820994384df8295e6d9fc1cff1bd8967a1bc0048f20",
+      "git_blob": "2dc80118a07aaeef0481c9affde7dd487d8c7c43"
+    },
+    "system/lib/libcommon-jni.vexfwk.samsung.so": {
+      "sha256": "4be03d7c589ec91bb6f3f06b83bce541a786a6ec8de219c04b47ec65bd433d90",
+      "git_blob": "0800661b61ff155aedbde37414d12e71335e1e0d"
+    },
+    "system/lib/libcompiler_rt.so": {
+      "sha256": "c81eaec6014aeb559a199494605dc6497d96b8805dc385cb19d4d3bd623112ca",
+      "git_blob": "03f372176933d1fa3ef554c2ed0bb226036339ad"
+    },
+    "system/lib/libcore2nativeutil.camera.samsung.so": {
+      "sha256": "55b9a328019d00ada0b8c5f6fe5d945fd8496a290d861dc0a265cd3b7c34a17c",
+      "git_blob": "dfe0a5be475acf3ce1167dd334788948f5a7f2b7"
+    },
+    "system/lib/libcrypto.so": {
+      "sha256": "8f782f1ea3d05a7fd0851a97d9b2213f932f0c4c5997224b178a07b13b68df68",
+      "git_blob": "be603f898cddb405f98438c568c9eb08190474ca"
+    },
+    "system/lib/libcups.so": {
+      "sha256": "2b7dceebe3cf03422967a380b3a86afcfa235dcf5da7ba55356044ae0eed7d6e",
+      "git_blob": "ceb4b8f4ae7e45fc173b6a963ed9e7356e307544"
+    },
+    "system/lib/libcurl.so": {
+      "sha256": "ce1a9bc7873df360d198d6406be440bbf46f0763889cbf62fd172e57ccefdec4",
+      "git_blob": "04bb1ef525b2dd60218d9985ac38a966735ec7fe"
+    },
+    "system/lib/libcutils.so": {
+      "sha256": "eea3ae9840d5cbd66cc366a607e9f25d93ebcf3feab754cfeb677ea90524e3e0",
+      "git_blob": "be5f98c68ac98573a9458df7758d789a10a1297a"
+    },
+    "system/lib/libdataloader.so": {
+      "sha256": "ba0dd98ee769fa1cdf8f2a5fcd3210e226fd705b216021796913334bcb11d7db",
+      "git_blob": "03189d0bd70ac4cd80e332c276ae353fc877a098"
+    },
+    "system/lib/libdatasource.so": {
+      "sha256": "b830d3d902669a8d780ac4023bd3682e1bf1b8ddfd222a22aae5876db03fba02",
+      "git_blob": "97cfbad961a7b417f0ad3c5284bd188bc88bda8f"
+    },
+    "system/lib/libdatasource_local_cache.so": {
+      "sha256": "bfb82da06fd8a5f1dcad3a1e74918d47dd6e69f60e5a804e0381f99d3709a8b2",
+      "git_blob": "d592e2e3ffa4344ce43df36747f9b9e0031dd5bc"
+    },
+    "system/lib/libdebuggerd_client.so": {
+      "sha256": "bd0cec8f35217ffc4bba97c1c61e750dc18914558e88e4bfbaa4300fdea05e50",
+      "git_blob": "a9c182703b8136fefcb9d3e2c5aa8dd6032fc960"
+    },
+    "system/lib/libdebugstore_cxx.so": {
+      "sha256": "5a88bc1b86681b34ec0e3c4a6f08563e8f579a55a3d737367eb3ff47c6050001",
+      "git_blob": "722d193aeaaf1885a0316af93a8f5a8abca9d1d5"
+    },
+    "system/lib/libdevicehealth.ssrm.samsung.so": {
+      "sha256": "103e53746f21997e8d3378ef5f3984e457b773d953b947912a36e68cdf6754f4",
+      "git_blob": "ed93bd64ad309778137cba323d63a0baefad8de7"
+    },
+    "system/lib/libdexcon-native-lib.so": {
+      "sha256": "3402af3d60bce4d52f14548b99e846c3b4fb3ab8262522bfe97a56895622e5ad",
+      "git_blob": "713d784fac6acdb9bae5b952a9dd5fc8c625a0f6"
+    },
+    "system/lib/libdk_native_keymint.so": {
+      "sha256": "920d129e823daf9bfb3a8fb13a524aa73bc144488905bbdebeefbce851cf3215",
+      "git_blob": "9a09fbe4fd6465a9421363daebef9df1a1997cc6"
+    },
+    "system/lib/libdl.so": {
+      "symlink": "/apex/com.android.runtime/lib/bionic/libdl.so",
+      "git_blob": "156a632ab7583aba4b99acec8242116a8503c039"
+    },
+    "system/lib/libdl_android.so": {
+      "symlink": "/apex/com.android.runtime/lib/bionic/libdl_android.so",
+      "git_blob": "53e3122c90aa2d0966e2f4e953823309db442424"
+    },
+    "system/lib/libdmabufheap.so": {
+      "sha256": "a5fa84b21b732ef68c48bbf768c113f0ff39300f7924ef7a6f7c0d9beb3f015c",
+      "git_blob": "895420268be6c77c3899013ba76489174a6615fc"
+    },
+    "system/lib/libdng_sdk.so": {
+      "sha256": "8d18eaab79abf1b4e94a83f7bd24f7de640af97b592d3d7208a9e4292e72f1be",
+      "git_blob": "a339206097f57c8d91621ad4f3fec1aaa9fd419f"
+    },
+    "system/lib/libdrm.so": {
+      "sha256": "45de1b5d7cf846690ad9b546f3bd7dc21a673e3129fee383ef14e5cee6c9174e",
+      "git_blob": "29a6290e0bd8d19d07aee809be2b7967257cbb7b"
+    },
+    "system/lib/libdrmframework.so": {
+      "sha256": "e7330145f31ba4725fea19af994cd32687acdbea342708f1f79f03afcfcd3340",
+      "git_blob": "e86cb8e282501dad2b4125723ffa50d8ca07ed33"
+    },
+    "system/lib/libdrmframework_jni.so": {
+      "sha256": "a16e41bfaad99f9368299b9e942524518e1b62f135535f1929881f493bc12844",
+      "git_blob": "cf006ed47ed667dfac95d9a42ac8f31e5c57dcf9"
+    },
+    "system/lib/libdrmframeworkcommon.so": {
+      "sha256": "71046288c8eefb6a38483e028fbcc35edd4fbaabbdfe4d091f88351f39260e64",
+      "git_blob": "e591179ca4f41bbe4828419886ae5278a2315417"
+    },
+    "system/lib/libdualdar.so": {
+      "sha256": "06b69902c4188f7aa1cc4a26f21b3e46993e3d008f9de0cac81aae99c95c878f",
+      "git_blob": "913e595fb59610bdc083fe82f9a000f6a87c8461"
+    },
+    "system/lib/libeden_nn_on_system.so": {
+      "sha256": "4b6efb115534702c96fc7bf67cc61b5a5d0782eba174422e7cbcc492e4f29819",
+      "git_blob": "cfc1824811b6ca440c5b302a99037e551a8df022"
+    },
+    "system/lib/libeden_rt_stub.edensdk.samsung.so": {
+      "sha256": "febc0e9ef257eddb53bb6b946694719011b3ea5f7c0bccb9be3deac3c83932cc",
+      "git_blob": "899ff47bb75c095a45097a9301e2827e29b40469"
+    },
+    "system/lib/libedmnativehelper.so": {
+      "sha256": "8c4f70f0c78b47b3f432c3bd9854825ee9a54f8019907e3ad5988055bba3ab6d",
+      "git_blob": "161edab7e82a25fcc2a3a981ddaf2d1e5eb0cd26"
+    },
+    "system/lib/libedmnativehelperservice.so": {
+      "sha256": "a76a392808a6f8b5fe6fb54552904aa61471bed0793ad76afa6bbb14f6c2097a",
+      "git_blob": "e63e5ab7c87eb5cb6273bccad6e331c5e0c23003"
+    },
+    "system/lib/libeffectsconfig.so": {
+      "sha256": "4112395e57455a71a838df0b227009f2b92f117ca6db5b5b80963cfae538538a",
+      "git_blob": "042c537824fe5a0332025161365d29ff63153e5f"
+    },
+    "system/lib/libepm.so": {
+      "sha256": "c49674d8cc4140197a908a2a88ebe2d666f59954b64696574d929af83199e7d2",
+      "git_blob": "c91e29cc37770f58311d78589095408fd987c83c"
+    },
+    "system/lib/libevent.so": {
+      "sha256": "2fa9901e141ea68f007641e4d08f63c22963f18adcfe8f95ca07cdc21ed0b824",
+      "git_blob": "4b30ef8a3a0e98aec3a8ca01b498e993bf7ee3a0"
+    },
+    "system/lib/libexfat_utils.so": {
+      "sha256": "58fe2fb381ee0a7d443206ab22baf4e0022bfd9191bc525595fe9858a0595b36",
+      "git_blob": "28ffbc8d2173802e056e91c230c66aac39c30a35"
+    },
+    "system/lib/libexifa.camera.samsung.so": {
+      "sha256": "3a70bdbe00867842fa22f3e78538492764f782660f13941d96136c0c4fe5d596",
+      "git_blob": "341da9bf4aa922c8cc5e208e641f98c310574125"
+    },
+    "system/lib/libexpat.so": {
+      "sha256": "3ca775aa917c07d68df232e40eaa9146a741ef550b45f3402daa15f31af77259",
+      "git_blob": "6cea1f9f9266d475da8e4ed266c71ebd54ef194c"
+    },
+    "system/lib/libexpresslog.so": {
+      "sha256": "3fd3a55fb3871f7bc58a861cf71bf3827574c0b1ca6c2f1f5612dcb71ab10f09",
+      "git_blob": "968be91c46d61baa08fb697a337f7a97ca190147"
+    },
+    "system/lib/libext2_uuid.so": {
+      "sha256": "9a64e26dcc6f4f52d534cd6184f55d0de5849d4889a99bc593fb7dd8a28c00d2",
+      "git_blob": "7e3916b3712446cbf44d9c653aca473ffa9295a1"
+    },
+    "system/lib/libface_landmark.arcsoft.so": {
+      "sha256": "b653219b9dc80d5ab4c5fdf5c1907c1dfb59c36f95548d7b54f4b6b3e639e031",
+      "git_blob": "bfc908786f5aaae2bca6f5c1db80b122bf589dda"
+    },
+    "system/lib/libfdtrack.so": {
+      "sha256": "d97fe3450f48400367468e893718353e4a5093d61f57b9dc3f657463cac694e4",
+      "git_blob": "78e81e67dab3282dfa8cc5bf39724fe1cb6a7b51"
+    },
+    "system/lib/libfilterfw.so": {
+      "sha256": "6db533e1c97a91b4f9d41a54a938f1edc071cc6b632a0399655b928d5d9be0e6",
+      "git_blob": "cf33de31dab45ac17012f639587f3622aff6db54"
+    },
+    "system/lib/libfilterpack_imageproc.so": {
+      "sha256": "f765383c025875e59a6e4b5494eeea31520b42160e164c36a144deb2cd09d70b",
+      "git_blob": "ffd3880f2ecde20d35b37ece2bbc0726b380cb2a"
+    },
+    "system/lib/libfloatingfeature.so": {
+      "sha256": "aa6cc9f2819f053686e81f37ded16c60d44939e1cccbc8efbf3fcaa6c147760b",
+      "git_blob": "4c5431f8f759f101835340530c93b688b396eaaf"
+    },
+    "system/lib/libfmq.so": {
+      "sha256": "ee5fc29ccecaf04d0e520fe7f4e3921f16d53164ee3b65563fc731155ae04dbd",
+      "git_blob": "de7944ec8dceaa068eb86904101769b631c8c066"
+    },
+    "system/lib/libframecaptureutils.so": {
+      "sha256": "20e6f63d7d69195030a1ed791b734ebba6d493d029944b7b37a2b98a907886fd",
+      "git_blob": "cb75851e30e68433e7bcff3046efbe8a847f0cc3"
+    },
+    "system/lib/libfrpunlock.so": {
+      "sha256": "abbbcb1ec4d636e3f2e65a5cdec5fa2eb41d0f14013c031e28bfa4e6d087619f",
+      "git_blob": "6000176eddf92afbb65593a73044ece3994f69a6"
+    },
+    "system/lib/libft2.so": {
+      "sha256": "ea67e9b31f887c59350a5e201cb3cf86caade8b594804255166b6237392d9f2f",
+      "git_blob": "0a92f16e6b61c33fd4efcae55cb4656d550a68f2"
+    },
+    "system/lib/libgatekeeper.so": {
+      "sha256": "39c52522907de259146c90e49139675b4a5b56783af58ba2409ae702db490382",
+      "git_blob": "adac4a61d46a677f44b94b5f7f4c16023723fce6"
+    },
+    "system/lib/libgfxgrab.gpuwatchapp.samsung.so": {
+      "sha256": "fae465e720254bf545e0f1b9062727e84b524a7f7b9d5dd7a3402c1fd7123bd4",
+      "git_blob": "0c305839fc53cd9d9436e790a857e6925449d91f"
+    },
+    "system/lib/libgfxgrab.so": {
+      "sha256": "9c372a6b79cf8c2778e5d7fd66764160dc4046183e68eb896a35df829b23f3ae",
+      "git_blob": "1a587171bf0848d13b79c52b53c4ee7ad94d326e"
+    },
+    "system/lib/libgpustat.gpuwatchapp.samsung.so": {
+      "sha256": "91b50cd83abe4911255e4572f5fd768f74f78c7f24e4977c2025eda584abef5f",
+      "git_blob": "2714537005d3ce8969461ff5b7e483f03ae6760f"
+    },
+    "system/lib/libgralloctypes.so": {
+      "sha256": "13036e8ec5b9c8327134901ab945906a53375fc86666bef7d976d28b8c9f453b",
+      "git_blob": "9066523b502d2145e6994047b7e64f1531245619"
+    },
+    "system/lib/libgraphics.so": {
+      "sha256": "2b36f3a0ced1f50523b486389e03b8f245814d24fa17f65c278911b6cc75034c",
+      "git_blob": "69810ac0271dabbfb0b1d5c4699bff199ca015dc"
+    },
+    "system/lib/libgraphicsenv.so": {
+      "sha256": "31483a3372649943dcd31ec564aceade0081d91d07dbfe56d7c71343b8492b10",
+      "git_blob": "c1e144e7c5696f05f0d9a6ac5bbcd2f1850a63d8"
+    },
+    "system/lib/libgui.so": {
+      "sha256": "a57f5ce1721df4a7647d411fd1d383e9cb7de6b4288a000f01dd3caa4ddf357e",
+      "git_blob": "33261daa18604c1233efc5f170ab8725a2705b2d"
+    },
+    "system/lib/libhal.wsm.samsung.so": {
+      "sha256": "3d2b7a9bf7878891423d71543d1b66e47b65b7bf6778cc927fbbf708e0470489",
+      "git_blob": "f0ad9d2bdcec3fd544096374e3b8dbfc85bab1b9"
+    },
+    "system/lib/libhardware.so": {
+      "sha256": "993bac925a324eb53cee160b11937ffb2a7ed9b7e44a9a3db5d4f085891949ee",
+      "git_blob": "53d94b33309e713f3f818362e3f3057c30a0bbc2"
+    },
+    "system/lib/libhardware_legacy.so": {
+      "sha256": "186b78ae1a578eb8b7ab0aa7ee8c2a160d79cddbb554929d9fbbfd0831efa13c",
+      "git_blob": "9d7e4855aafbc3270c21ae66098c70870a632d09"
+    },
+    "system/lib/libharfbuzz_ng.so": {
+      "sha256": "868c7f804485f6266d8175d2abfe3bae5b804c436be8403631467f23bfcc629c",
+      "git_blob": "13907abb3b75fb164999c4a4268ac546f814d212"
+    },
+    "system/lib/libharfbuzz_subset.so": {
+      "sha256": "20b5144ff97c1bc80868fd24ee2c175c6296e97f44db25233ff3bf43a66ebd4d",
+      "git_blob": "bba60bfb8c18f3f92f65a98c9d8c63e85ddbae8f"
+    },
+    "system/lib/libhdrsolutionhelper.so": {
+      "sha256": "5717280bcf218848d774b8f22d600207b0c1f72a517ac4f750f10ce7e2ea3723",
+      "git_blob": "2457d88fd423fb5009e4215292600bbbd20a501c"
+    },
+    "system/lib/libheif.so": {
+      "sha256": "ffd6e04f8ea666b92d4fdd612f3b6ffb7662aaed83b121b35166a0b692a532d9",
+      "git_blob": "cb4e7175c4d68b1b6a01846f6c139762e0f62726"
+    },
+    "system/lib/libheifcapture.so": {
+      "sha256": "725f0bd5f4edda51c7a86ceca802c7888ccc162c2f3e7589df99d0e876efa367",
+      "git_blob": "1c0a986dfab2636614a0a2d5f63431602b245ee9"
+    },
+    "system/lib/libheifcapture_jni.media.samsung.so": {
+      "sha256": "9b99c959ef73e962f427892cfb3d017acbd13eb2a0b74eccd908f323978362cd",
+      "git_blob": "c1d1e3578e674e5a163a6ce2e864434cfd7c6726"
+    },
+    "system/lib/libheifcodec_jni.so": {
+      "sha256": "a132f441317cc75003a4ea1826a315a983fcbf7aa87dd2e8e107ace6b1f86f7c",
+      "git_blob": "19caaa903c2642f6b554dd1e870aba3c63a4703e"
+    },
+    "system/lib/libheifregiondec_jni.so": {
+      "sha256": "8d8fcc5b551a89bdee9f6951c241575458a438941576e3128d458057a91b008f",
+      "git_blob": "d23ecc0e2e3fa8282055e31a6c68df0b6c6d3c7c"
+    },
+    "system/lib/libhermes_cred.so": {
+      "sha256": "f73d520840708003a11528eb40d68cd7c41b1d56a592620e8e1722c180f2d5cb",
+      "git_blob": "86b5024328c9c19a838b67aa69a0d0924e117f11"
+    },
+    "system/lib/libhevc_csdhandler.so": {
+      "sha256": "ee9086d35f882acca58bcedae61e6740ad93391d162f082da1c51bc22cdb6eb4",
+      "git_blob": "dee131a260d571bb5a80009fdc5a46c205da31c8"
+    },
+    "system/lib/libhidcommand_jni.so": {
+      "sha256": "b66d82f9993b38f18a1257eb455099833d4af68057fd1d2a76913c39c43e8d5b",
+      "git_blob": "435b5ad82a35b2c0ff23ed38cf05c8dcb11a9a52"
+    },
+    "system/lib/libhidl_comm_mpos_tui_client.so": {
+      "sha256": "3af25baa4d4804ea78a186fd722050816ecd54d81c987b01b20a3437ad809746",
+      "git_blob": "b7cfd6544bebca3a0dbd831ce32acf066830b6de"
+    },
+    "system/lib/libhidlallocatorutils.so": {
+      "sha256": "b191ade4e3c2e584f0ee5da4354f65b22db6be51984a9c11d638cf590fdfd75d",
+      "git_blob": "6edab660d6b767cd2f07ff43c6a67e7e8542edd2"
+    },
+    "system/lib/libhidlbase.so": {
+      "sha256": "f09efeea789fad4a316fecf569f1a867fce3a4b723f2dbb39ba62526a27ab46b",
+      "git_blob": "45e710e48cec92da628fbc7606f521809d32cc73"
+    },
+    "system/lib/libhidlmemory.so": {
+      "sha256": "223caa20651aaae69c48fdcb2eca33e5db1450e50afd2b74de088e1195c10339",
+      "git_blob": "0873c2e6faf5be52f18d8b1309889b67226c4cd6"
+    },
+    "system/lib/libhidltransport.so": {
+      "sha256": "ca9d145d8385b35e06327c28713e4b21a7bcdd923ac609ffd7d0563684ee0e60",
+      "git_blob": "93651a1ad072e68565448b7907a350082b86d770"
+    },
+    "system/lib/libhwbinder.so": {
+      "sha256": "612f4aca0a933c73ab42975e11145758aba9b7c38410f90cf5ea5b16b4e8d5a6",
+      "git_blob": "9195724f662af217fe467de5f2bce08541201223"
+    },
+    "system/lib/libhwui.so": {
+      "sha256": "50b7c34352aef274f08d9a2a95e48c59ad1dbcc917e5445e131a70cec19fa5b0",
+      "git_blob": "a30cfba1b34d829fd5733fdaf12bb88edb3877c2"
+    },
+    "system/lib/libhyperintf.so": {
+      "sha256": "56de8dfc6b718b7f7a8a0ce2e01bf28d7118b858fdbdf9889b04ddc22e5c02bf",
+      "git_blob": "2de8e2c9f0355d463b5d66229108732f50d6b923"
+    },
+    "system/lib/libhypervintf.so": {
+      "sha256": "d4e7ec63fcb6593f99ab459a30bb3032e99700245e05f0315c272b7525f19dc8",
+      "git_blob": "593e8a491845e93e2b5717a8b4868e8595cf2a79"
+    },
+    "system/lib/libidmap2.so": {
+      "sha256": "70d6d9d8d4df695919e0d345c835898851bf37ff6d480aa0ae46548d2b1272da",
+      "git_blob": "ba0a481ae5fecc3dabbe302b41e70b65df170215"
+    },
+    "system/lib/libimage_io.so": {
+      "sha256": "b4746cbfdf72b557a908d5b839999ae9561820e3f5d6fc91f960443df83d09a0",
+      "git_blob": "9614e473bc7eaa7cd3a6f01c04f810d3f5a1df0d"
+    },
+    "system/lib/libimagecodec.quram.so": {
+      "sha256": "4faa826543d56e52a962612e54e264b2d5ada8325ddc0a30d2b1202e4622cbd7",
+      "git_blob": "8ac10d5688247d8144104f6a865b0201513376ce"
+    },
+    "system/lib/libimageconverter.so": {
+      "sha256": "8ca1a062bc342257df8483c93b186afd02bafd40f390b9c541b9a165e7561f13",
+      "git_blob": "121fc216a39c38e6a4bbe33ee2106a3fc7a9047f"
+    },
+    "system/lib/libimg_utils.so": {
+      "sha256": "a1e47efd157382f693a607697f50f1b8f467234223309276502fe9042eea4d7d",
+      "git_blob": "ce7fd8083d1c22a2c7005c0ccf2b4ec5f42f09cc"
+    },
+    "system/lib/libincfs.so": {
+      "sha256": "6a38ee25a041fd1b7946220f87d9a94ba90364f8d8b9bfd0503ac41be634db75",
+      "git_blob": "78bd7f7da679cb7d272fedd358a3833eb0559096"
+    },
+    "system/lib/libincident.so": {
+      "sha256": "d077d17a66dc06e570526ef37bf2cc0ad1500127a5bc057ab85ecc1b86547917",
+      "git_blob": "a2b1fb1131e94b5e362bce08fc39c1d53cb5e5a8"
+    },
+    "system/lib/libincidentpriv.so": {
+      "sha256": "76786a6ba56134900ee25e9d480f7066d521a59c06b62ef1498947b24345f6fd",
+      "git_blob": "b1bbf9bfcfb0d0807e42953fd3d3c8ea788ce629"
+    },
+    "system/lib/libinput.so": {
+      "sha256": "4435055e6024c4a63f68dd8f1fce95b54d96100a18da1567e38b08c5a177b170",
+      "git_blob": "e735c6e8b16741d81f30119bf63281a5dc5120f1"
+    },
+    "system/lib/libinputflinger.so": {
+      "sha256": "91c354787fd4881a4f7fc9e604bc45199c0788eabb9902517d2a579892281c81",
+      "git_blob": "4393d347fb364b4e1743414cac98b78dd90d765f"
+    },
+    "system/lib/libinputflinger_base.so": {
+      "sha256": "0bf99bbbb94dd51daedd400ebbcf0695d55ef7447ca4da1c2b5fdcc791a01863",
+      "git_blob": "86edb16967f56bb5446a5bb582977444e00c8c24"
+    },
+    "system/lib/libinputreader.so": {
+      "sha256": "b763f3210cdf63765e16b9f1fe5252facab5c34f5d098ea9c9aab66d893312ae",
+      "git_blob": "1f1e654b86d7f7c53402a8e7c0cea914165ba7fa"
+    },
+    "system/lib/libinputreporter.so": {
+      "sha256": "057b9149d7044faf15d4ef69ef4b9fb952058d2e5259d7fdfd77414e57146d87",
+      "git_blob": "12bbf23c345d9810611c4a4cf7f694665fe35a25"
+    },
+    "system/lib/libinputservice.so": {
+      "sha256": "dbf4ce0a007b2212a1fcaa66f037550d9206757e45173077779938d284e59b74",
+      "git_blob": "f34e4beb8b9aaf334cb778e1b5f56a4826384d1a"
+    },
+    "system/lib/libion.so": {
+      "sha256": "c757ec39294ded57317410f713d04a39355a816e8bd91f2159da08c571685246",
+      "git_blob": "2e053d9dcf0afe0f775583366d5e74e8b100f56f"
+    },
+    "system/lib/libiprouteutil.so": {
+      "sha256": "38a38f722eae668f66882e2ba514f550a34eb9d05c959e50e4ab88adac92dd86",
+      "git_blob": "64f2703534e89f2fcb7538baad258979471b3841"
+    },
+    "system/lib/libjni_knoxnwfilterparser.so": {
+      "sha256": "9649a07bed90d4352e277b6cd571499c70321183548b9b7c79b377cb76e22ada",
+      "git_blob": "180401a606437e3e5d6a2818cd01601252499112"
+    },
+    "system/lib/libjnigraphics.so": {
+      "sha256": "98d5cb4375c8da2a789d0dd0b6fc8bdab461500cb5a0dd128273ff8a2272ea86",
+      "git_blob": "6c01f7f50a3737bdd9697e16c81455a2c6c7fcd2"
+    },
+    "system/lib/libjpeg.so": {
+      "sha256": "47114b86f91733431f923cc267e1682047fd0b7ae8ec7b177598fc203ff1e297",
+      "git_blob": "92d9f7858370f9ad92f7055c11d6f52c680e5d77"
+    },
+    "system/lib/libjpega.camera.samsung.so": {
+      "sha256": "7b4bee449831d46cd4d4b07ff96679610d121c9947d5615a8cc4d941aa658d5e",
+      "git_blob": "5d1fc55556194f49a29073b899b9a533c4e1c249"
+    },
+    "system/lib/libjpegdecoder.so": {
+      "sha256": "f97749635d2111c5f8b91a44253c1b2a5ec3647605a7422a85ce30cf64f415f8",
+      "git_blob": "cf869a1aa59847c5f3c2db81e6694c1b0be9726c"
+    },
+    "system/lib/libjpegencoder.so": {
+      "sha256": "d73ed25c3500c9d009ef1354dfe69ca6603782d9531df406362c269057131788",
+      "git_blob": "ee723c000816a0953fbfeba11c80baecc0e3897d"
+    },
+    "system/lib/libjpegsq.media.samsung.so": {
+      "sha256": "bc6e6e59763fa00c310a05eb8b3bae9493eed950a06bce1d04b84eaac29400a2",
+      "git_blob": "a448518d408f7f6520feed24b0b90e2f3f2efea4"
+    },
+    "system/lib/libjsoncpp.so": {
+      "sha256": "e4f824c5353f7dc64c14203ddc510f8d35028abfb56e0dc734bfa6d668934b62",
+      "git_blob": "5652daeccc780e767abe84b3ca9da5879e1b4107"
+    },
+    "system/lib/libjxl.so": {
+      "sha256": "925182a1112987f51eeb364800b66e654ce7a96936bd140cb0ce83a1142b9119",
+      "git_blob": "5a07f56586d26d668294f37178cd873f9203868d"
+    },
+    "system/lib/libjxl_cms.so": {
+      "sha256": "2e0ad80c4dc7accc8a0e9266bca1d3a22641812f7187bd09ee5171e00a946c79",
+      "git_blob": "61adb53709cf3f572ccc37ede72d6b2b989cc30d"
+    },
+    "system/lib/libjxl_threads.so": {
+      "sha256": "fad25f8d68282e1c5829bda172ad4b4610fcd142b52f01a94586bce0c494dc6a",
+      "git_blob": "ef6cc58ee5dc6641e400b3e521d45112b42ac3d5"
+    },
+    "system/lib/libkeyutils.so": {
+      "sha256": "e3550025df4daba52e8c5f9c9685b9637c98c300b19cbfb47d1d78407f5c0920",
+      "git_blob": "a5a661b49915ae2de9ff3b2386a72dc8b9d080b2"
+    },
+    "system/lib/libkll.so": {
+      "sha256": "871edd76526bedf0126c828bc41e8d3f2bc57ae3cfc5d6dc0a8ce7498973c1b9",
+      "git_blob": "319cda61fa121e225f0fd06f94e1522b0ef69927"
+    },
+    "system/lib/libknox_filemanager.so": {
+      "sha256": "5188ca3da0a17c5b5d44bdabb46f2fd22e6404abbf2e11719ac6224b78d74c5b",
+      "git_blob": "f9a7a7ca5fd603fb14ef7106c1dc141c807711a7"
+    },
+    "system/lib/libknox_remotedesktopclient.knox.samsung.so": {
+      "sha256": "2edbfb5a9e34d2b99c7b62064710b0b3b0a85b879af18b9b922adb1aaaaa5a6f",
+      "git_blob": "03a4dcccc0cb6de0443194479034d5e46c2362a3"
+    },
+    "system/lib/libknoxnative_shared.so": {
+      "sha256": "4eb2c8f2dd53650a4fc80a4284106351e481eeb574b96abb07fdd8068e02eabc",
+      "git_blob": "e5d958a682842b418597390cec151c6e125c8bf7"
+    },
+    "system/lib/liblog.so": {
+      "sha256": "5dcff248299d76e9c0d8fa7e8c0ba4d0698ae202f82c21b544623637e8a8beca",
+      "git_blob": "46a85545037271aedad9e2d30497636935bd8040"
+    },
+    "system/lib/liblogwrap.so": {
+      "sha256": "2bcf648b562287a4321eef3c1ab73d4e8ca01f5d1fed86f6b7f7d6bee3fb1aef",
+      "git_blob": "6eafe3956f94b90b2d1e6efa76ccb1c326f43b4f"
+    },
+    "system/lib/liblz4.so": {
+      "sha256": "eb9cfe3b6191f06ab09e4dfc34c6caf7d37c096e863f29ccf024b2d223f370da",
+      "git_blob": "1e63772049cac494377e1860dbd0bc0bc6a21e38"
+    },
+    "system/lib/liblzma.so": {
+      "sha256": "6adfb23ac06c73b440fc178616bd4de781454edaf5d6be9de26663e885e4e543",
+      "git_blob": "08d0fb66f7fe105b82b9bb04cd2f2e70088aa9df"
+    },
+    "system/lib/libm.so": {
+      "symlink": "/apex/com.android.runtime/lib/bionic/libm.so",
+      "git_blob": "c76012b600e3725a60e2edf963d3df2e8b8a3f45"
+    },
+    "system/lib/libmdf.so": {
+      "sha256": "9ac06259452a066f28431d38f2de4ff47571ef11d32a528e50f0450ca795d139",
+      "git_blob": "056e8584006f914daa516c51cef9211da5e8fd4d"
+    },
+    "system/lib/libmedia.so": {
+      "sha256": "7c06ca3c9d54bb835ef783d38a7dd853c5c4825220cf82f4a882396d94faab41",
+      "git_blob": "8f59e67b207df3eae6923d76a25764a1772c694c"
+    },
+    "system/lib/libmedia_codeclist.so": {
+      "sha256": "c5adcd6b02e13414f7aa9177b02b232cc9d0809a9972a591296968c9fe4f0efa",
+      "git_blob": "2720ebfb2090c20aef9c84f90c0c8881a2d156e9"
+    },
+    "system/lib/libmedia_helper.so": {
+      "sha256": "f8f122094c6a80c5cf4c7c0e63378e13dc4a56687f3267e764989f3a37a04f0c",
+      "git_blob": "d4a3791dbba10397e8b51532817ca91f83972818"
+    },
+    "system/lib/libmedia_jni.so": {
+      "sha256": "a287ca7aeca23d44373ae213f0b0e2490080bf17751d4a7ba7f018c182ea0cd9",
+      "git_blob": "4941a5067c9aa4efe4ec0bd06c31f14a6f01b145"
+    },
+    "system/lib/libmedia_jni_utils.so": {
+      "sha256": "dfb32c618bcec47df9acab5c0470ae0ca64c04b2f2fe12430dfa6646777c3cec",
+      "git_blob": "d3d4ad4111b6e0c89d59f9e1d84e279610b39339"
+    },
+    "system/lib/libmedia_omx.so": {
+      "sha256": "acd100701a80579bedfdfce2c8d30f7f69cb60729788ee7e4e6400fd35abc41f",
+      "git_blob": "32059ccaa59c658accf31acdc328ecb99b82713a"
+    },
+    "system/lib/libmedia_omx_client.so": {
+      "sha256": "380842c9d3269db9820c5fcba3d41f8b6be0aabfeaee255a9ae5ff6e3e78a516",
+      "git_blob": "cae815a2ed35f6c2ed057a5dad515c4b46bdec67"
+    },
+    "system/lib/libmediacapture.so": {
+      "sha256": "8ac4da3f0b349f33720d6dff16f107dbbc5f01baf72f597c205cdbe5ca540782",
+      "git_blob": "e17b038fb4d9c6a1cee2be3ec58bf34a2d572176"
+    },
+    "system/lib/libmediacapture_jni.so": {
+      "sha256": "810275f9cc6ad51ee7a76e419c9243f681d64a8a705f0a75f661389c7551e661",
+      "git_blob": "7938c7369bb49fde3c0f799f5199e3f9b5e6bad8"
+    },
+    "system/lib/libmediadrm.so": {
+      "sha256": "99d6ff62b1d46c5d998f19149d36a33be9344001e6ee9c2143bfcd3be39cd13d",
+      "git_blob": "f4e6ed8f3fc1ec13bc905290e45e8819847e5c78"
+    },
+    "system/lib/libmediadrmmetrics_consumer.so": {
+      "sha256": "2ff8014ef13567f377ce8a4e9004ca621881af580e289b4961f99ae5c1cbf9f3",
+      "git_blob": "c860b014be08eb69c61b4eefed62a4e2464b56f9"
+    },
+    "system/lib/libmediadrmmetrics_full.so": {
+      "sha256": "5ca3c1c6bcc14b153caf2a03c86546d38ecc7357e0e63bf3f3d751b4ce59002d",
+      "git_blob": "d60ca9a09d855e1ace6190fd538615010b62cb36"
+    },
+    "system/lib/libmediadrmmetrics_lite.so": {
+      "sha256": "37b46bfea7eb5aa8c8300ec5579310d01e4f451d2f0ce2131086c059f5641dfa",
+      "git_blob": "ff4824944c865d0d618335aaf05bd76a5033d965"
+    },
+    "system/lib/libmediametrics.so": {
+      "sha256": "39e488b26ea682d493fcc0cdfb023cf251860de5e3f14d095bccc44d5be370d0",
+      "git_blob": "d3e661b90d7e16818b4ad5410cf5bce8b9e97ff2"
+    },
+    "system/lib/libmediandk.so": {
+      "sha256": "97138c834502ec2cbdd849fbb815947b4a30e3d4e04121112ab254f061814a89",
+      "git_blob": "d9df4d80e8ff73eaefc3af96eeba21cdaf7c590f"
+    },
+    "system/lib/libmediandk_utils.so": {
+      "sha256": "03da0d0877b007259adec1b21da8af52204dbb3ec2871b86d7b1aa83f3324383",
+      "git_blob": "43041989adef4ab7d01bfae1f96c8480b0279647"
+    },
+    "system/lib/libmediaresourcehelper.so": {
+      "sha256": "56eaafd087fb2445138aa0e86a73a57a3a13f5ee7e7cbb0d6a98f1ab10dde5cb",
+      "git_blob": "cf12035f24f389ef51bd6616584eabcde8a31a02"
+    },
+    "system/lib/libmediasndk.mediacore.samsung.so": {
+      "sha256": "e063559009f9d92dd5f7a0cf56b8e57100b71f66ea3deb9b5ed021d1a51ed8d4",
+      "git_blob": "0921a8145081526ea64448a9d63a4b7410650e5f"
+    },
+    "system/lib/libmediasndk.so": {
+      "sha256": "64d2d6e2c646877f115a3902cc6159bf1ff407c56178e54bf9e0c18f63b9e498",
+      "git_blob": "cdfada45b5234af03cd26e1996a0b3b30f29a068"
+    },
+    "system/lib/libmediautils.so": {
+      "sha256": "6461be8ff632c42893d6ae89979e3c38a9b1f13c7b1007aa2deb669b5a61e428",
+      "git_blob": "b4c4b1d6ba461af90c7b7adf14bf73094591543d"
+    },
+    "system/lib/libmediautils_delayed.so": {
+      "sha256": "490d04b2dd6902c7c78022a304d8c4a5799a7a33faf8fd3eb5b994c2a9db0830",
+      "git_blob": "46b43043ff9ffb5e3cb7fe56c7ffed1e99cfa850"
+    },
+    "system/lib/libmemevents.so": {
+      "sha256": "3a7c2dab4520fa91bf0d54e7cee3b237fdf7389c0f2a79b0049e9819e66f4157",
+      "git_blob": "bd2c046e1644d362d4a0dd3e72e8be067f62b772"
+    },
+    "system/lib/libmeminfo.so": {
+      "sha256": "ca96eabb23bd89e085afb3f874f390ee51ce9c9aa3e48b4ffa26b5d229f5ddad",
+      "git_blob": "a6c7786afc19e76eb15a5ed092be4131a246868e"
+    },
+    "system/lib/libmemtrack.so": {
+      "sha256": "c45277343a63704d9719e5439b34daffd089007ce07eb8f68dbb9ce249856830",
+      "git_blob": "cf38c0c9d8a70401838d979e9790e67fa58cce15"
+    },
+    "system/lib/libmemtrackproxy.so": {
+      "sha256": "f5f5942661e6655382583c47ccf730e826dbfbd2844293767e124386178da73a",
+      "git_blob": "ee6c86b10bfd804e89e2cd6c16f060bd61159048"
+    },
+    "system/lib/libmemunreachable.so": {
+      "sha256": "f449a2b4363e6c2796ed690c071fd5a7def1277cf90e1da369186393edb9b955",
+      "git_blob": "b0560fcb360f16cae6638d8801482c46d05aa081"
+    },
+    "system/lib/libmetadata.vexfwk.samsung.so": {
+      "sha256": "40e0a532c42ec7bb5e275bc4587f4b450bcf0067295c67e309f0f81fc044323b",
+      "git_blob": "f0dd44fe75b8505801e0c279c386475b563b2f41"
+    },
+    "system/lib/libminikin.so": {
+      "sha256": "5577f2876126865582c11674fb3ba1e1e42b1b822f8c18e68fef3128c009bdef",
+      "git_blob": "7a383ffd4447c2e82b9f247f89e5ddc12d8e7aef"
+    },
+    "system/lib/libminui.so": {
+      "sha256": "4a8cecdc1e6ffeed81f99d95974d340bddd4219af9f22d58a7ec710da82915b7",
+      "git_blob": "8921afde9b060a9494ed8e449c5c4c9291237126"
+    },
+    "system/lib/libmpbase.so": {
+      "sha256": "818c68bd4523ef8f5ca1b86cabd715070a52a4357eebfbe0a71a4b8d971c78bf",
+      "git_blob": "6dfa3458dbceacbd46a8a703fc0fc850a4f925c6"
+    },
+    "system/lib/libmpp.so": {
+      "sha256": "8208605b4b7709d941c92426e80ffaf246119ea690e3570f6df4563ea7b354bd",
+      "git_blob": "09decaa5eb7146df167d2c141b6a39b511592e01"
+    },
+    "system/lib/libmpp_common.so": {
+      "sha256": "b0b567248f90712684db420470a4e50ca11806e9f938658599a4028142333379",
+      "git_blob": "20df0acbcdbf57e888f58d1ec614448eecb61b85"
+    },
+    "system/lib/libmppclient.so": {
+      "sha256": "dbf14c85da51fcb457832780eea3afd8537f4f94d8d4dc936b272a69ba078f81",
+      "git_blob": "05581c63fb5e3f966b2c36dab395265a21d76bb8"
+    },
+    "system/lib/libmppfilter.so": {
+      "sha256": "d38f41956875e3b8f6d9bd74f72fd8edfbb8e948cea7a0bf3382897cba8bcd98",
+      "git_blob": "648b7e64bd0993609e1e015ac113a17b24fe8352"
+    },
+    "system/lib/libmtp.so": {
+      "sha256": "2f7ae3f99390b2032da54f6b6648a452afa8d4b40dc4a8062df1030eefd61986",
+      "git_blob": "613e052382e52ad8879b4a29968ec39965014eb2"
+    },
+    "system/lib/libnativebridge_lazy.so": {
+      "sha256": "af6b6485c7887c4894ecce79ac546fb7af5be7fc91743cc92f00857b019a8f28",
+      "git_blob": "055d32a8c3681b52df97196bc6b658e710e5a043"
+    },
+    "system/lib/libnativecfms.so": {
+      "sha256": "3d20c650ed8a6e22e00cc613aeb08187bbf9f63856786f0acf78bb90109dcf4d",
+      "git_blob": "7cfed565d929a5672af942efcbf0ee64b5a5fafd"
+    },
+    "system/lib/libnativedisplay.so": {
+      "sha256": "4684ef384b1a9b7e725e32b7e951cf6a07cd8fa0999e1670bd0adaff2221eafe",
+      "git_blob": "9299c6458c3d331e57e937aeddf17c2252f189a7"
+    },
+    "system/lib/libnativeloader_lazy.so": {
+      "sha256": "72db0179ed4275a79eba2685e322b8a52cc1a89845c43708d171a6a6ab71a6b1",
+      "git_blob": "82e6fcece91164aa2bf8e79fb13fa259f3216f5c"
+    },
+    "system/lib/libnativewindow.so": {
+      "sha256": "244a0f7455e95a4a2b1e66954c5ce76650f260a74e6141734eebc45385fb3926",
+      "git_blob": "bf68262a8041c32509cf13b8b4e956d820b0f462"
+    },
+    "system/lib/libnblog.so": {
+      "sha256": "aacfa88b83931c600adc002aecb08e894e03f43af0487606ace0e54344557e0d",
+      "git_blob": "e3ec14a8ec4dffdd13561c3dcd8a909d69a6b57d"
+    },
+    "system/lib/libnetd_client.so": {
+      "sha256": "e3223aa95e58e5714bd5446acb65de39299747eea2cbb7e0c2712313fa69c722",
+      "git_blob": "6044b012742b9f895dac32dd17e8707bc1c39744"
+    },
+    "system/lib/libnetdutils.so": {
+      "sha256": "b89afc739b89dcc892a39ad535daf5483941315ba298372a9f5588e54eb6d7d4",
+      "git_blob": "45e377d0131e149849ad9249ae982b01b1f6dd76"
+    },
+    "system/lib/libnetlink.so": {
+      "sha256": "f8d62c0f641a7a37075ba10023f087ffd5ade5e4b6c3b8182e153585bf27e318",
+      "git_blob": "878268a7f977679eea41ce3c4bb87a99ed6355ed"
+    },
+    "system/lib/libnetutils.so": {
+      "sha256": "aebd4a6228344267d0cd0ea6c7835e3e3166daeb8066238f6deb5c620304db60",
+      "git_blob": "86d6ffa3ab7d4b57f45c7a519114fa4ae21cebdd"
+    },
+    "system/lib/libneuralnetworks_packageinfo.so": {
+      "sha256": "1b7ae0966bf86af68ffb5de7d3c352dd9cbedffe09e5f06eabc987144875270c",
+      "git_blob": "d9d912111d6d85d025a907e552d4a65be4a620ed"
+    },
+    "system/lib/libnfc-nci_flags.so": {
+      "sha256": "8a2c43f9c130a208841b305c4947ab0b59261e9c9466c18fe4736867fe1bd8d7",
+      "git_blob": "a43b526b3bdec991d4e795c3c6bfaf3624f92062"
+    },
+    "system/lib/libnfc-sec.so": {
+      "sha256": "63c7395a4d7ac35a2f1df4058bf3f10e67e77c3120f8bda85327d130e521c62f",
+      "git_blob": "b12e6cf0e98b18e71ad82a94e14364621d13848a"
+    },
+    "system/lib/libnfc_sec_jni.so": {
+      "sha256": "bff670015c752a516728e7f97c4c2830ccc0bc9c07594f0ab71ec8b01d8910e6",
+      "git_blob": "d2548e5e2e28c4924b2bdab6c282f63fc92165e8"
+    },
+    "system/lib/libnl.so": {
+      "sha256": "468a2665d259b71bc593ed199730060005b50f65a8ecc7af397a8f1c222a7ea5",
+      "git_blob": "966f2754b29a86b4f7b1e45115ebb2529750ff55"
+    },
+    "system/lib/libnvaccessor_fb.so": {
+      "sha256": "a0095d3b27d6e37fc77a77fe49c1bf7661064da6171920c02579f4887e31f1be",
+      "git_blob": "5a876370a8741ddb113233e413a0eaf08c5d9f8f"
+    },
+    "system/lib/libomafldrm.so": {
+      "sha256": "ad7090887584eeca141b5cab55ad518abd275acea79afe18b097b02d3d158cd7",
+      "git_blob": "c7394cf4bd357f127bb988ff34fb1d712355b0dc"
+    },
+    "system/lib/libomission_avoidance.so": {
+      "sha256": "a0c3ff0c144d758b35475a2b1b3ebcd551951673cd4b36637baaec51fe37c697",
+      "git_blob": "3cf709b94208bc562dd988684705da4296383c2a"
+    },
+    "system/lib/libpackagelistparser.so": {
+      "sha256": "70790dbda2fbaca5e92236efb0b2ec7c85c1483357079dd52db436979880e88c",
+      "git_blob": "d42860dd95fff1ec27a6509670e7a46a8c77348c"
+    },
+    "system/lib/libpadm.so": {
+      "sha256": "b600784e959a2c8beb97ee337b3f503db255c31ee8519d5b8c389d90761240c4",
+      "git_blob": "1656516d6f708aabe22d4833cad7913c3d425c2c"
+    },
+    "system/lib/libparameter.so": {
+      "sha256": "41739cafc018751d0ece88b042c134c9114379281ceaebf7e8e6010b6034fbb3",
+      "git_blob": "c887823ccad29bdf1e62d85a0c69bfd9f4e81c57"
+    },
+    "system/lib/libpcre2.so": {
+      "sha256": "0d40ed4fe08576f1efb3ee9eca8b92c9c7a61d224344fe76bcf90ab07f857d8e",
+      "git_blob": "791f5391a0caced966de6c6b8d66ffb915a20127"
+    },
+    "system/lib/libpdfium.so": {
+      "sha256": "34bf9201d29a6761100fc403801966d26cbfec108f53e0d3e04bc66d64fc62fa",
+      "git_blob": "5d11d2276a0b9c4af0512b32acfef0acca9609f7"
+    },
+    "system/lib/libperfetto.so": {
+      "sha256": "f1d106a5c1b0786d28f657becc3257746d2b87ebfdd5ff22b85396c6683324e8",
+      "git_blob": "af6ed6a908c43116005f7c070932a4d90a563c89"
+    },
+    "system/lib/libperfetto_android_internal.so": {
+      "sha256": "ef973e0257781e31cc3d35abbbe9186b5c6eb8414718771a873e4fd71a5c2f54",
+      "git_blob": "e405849968445178e5511b41959b0263ab76dd96"
+    },
+    "system/lib/libperfetto_c.so": {
+      "sha256": "9aebc555ce7fbecab580f9097b071f112d6b250faea32f0d6a1ec8ad4043b493",
+      "git_blob": "61be5526afcc769dbc4067628b8c8875c7728e29"
+    },
+    "system/lib/libperflog.so": {
+      "sha256": "a377b7b708ec63f3d41cb068e97caf1a3d4b0a8c6d39659db8aec5c18cd053e6",
+      "git_blob": "fe7e7be2c17205b8b08e3c8d226fe9c4bd594ab8"
+    },
+    "system/lib/libperfsdk.performance.samsung.so": {
+      "sha256": "ce09e89fba1188ea008edf1c599473cf063bb2776a1c196c19f14b207e304ef7",
+      "git_blob": "f7fa3026edf746f883b7a762a4dfddb8572942fc"
+    },
+    "system/lib/libpermission.so": {
+      "sha256": "87a9656e180dd47e4a2f994eeb4edae9d0f2aca6ebc3723f66a8b16ce99c0815",
+      "git_blob": "936fe4351bdb6d9980c6bf856252aceb242e74ad"
+    },
+    "system/lib/libpersona.so": {
+      "sha256": "7ee752e7f555a57e832581ce00239029722b07c0fe2d4c2db7fa337f7232e9bb",
+      "git_blob": "f61a8c3a0edfdef7f8d1e878cb15dc67291844e6"
+    },
+    "system/lib/libpiex.so": {
+      "sha256": "393cf94ef79a0cd8f4ff92ce993cd05677b1e6a4c3c9dff768d8f1c31968b11d",
+      "git_blob": "6682f2166fb6d9270ca1b4f32ab957e9e36671a3"
+    },
+    "system/lib/libpng.so": {
+      "sha256": "f1175f14a4729b3f75c82fbc30e815dd1286f6707381f8f8278c9e4fa702ec0a",
+      "git_blob": "660712c688d19f81553c2412276a9f5f0eca7167"
+    },
+    "system/lib/libpolicy-subsystem.so": {
+      "sha256": "10abfd2b098b48d6d16992a657ef771bdb7bbfefba0fff53c50e82070dbdcb9f",
+      "git_blob": "c8a816838f871e6bbdf887a807ab26e4675043a3"
+    },
+    "system/lib/libpower.so": {
+      "sha256": "b492411eef274daae38acd9549109a86ddaf2faeb529b6b34f822414aa56e976",
+      "git_blob": "e16c23905afb97df9f04254fc7f2f7ac20de0247"
+    },
+    "system/lib/libpowermanager.so": {
+      "sha256": "0dacf8da1ec7f4f06eb5250f8b6ed1333c60933546b4a98dee245b356a2f35f7",
+      "git_blob": "4fad2239aa75cef425e12b39c2ee670b99493d5e"
+    },
+    "system/lib/libprintspooler_jni.so": {
+      "sha256": "89051b5056328ada8db8d7b7a061a9bb866aa82e4fb5a0c2a8d9055b42052dcd",
+      "git_blob": "649f37d2262c42bc139d4b618571b16f4da1ca30"
+    },
+    "system/lib/libprocessgroup.so": {
+      "sha256": "8aeb216bed05e852ea34a97aeb67975502198794579a4fa01374c1e7546f2149",
+      "git_blob": "230a17bb8bce324fa6b98be6874141fa076c5f45"
+    },
+    "system/lib/libprocinfo.so": {
+      "sha256": "84b0940b5b02b645998d630a5dfa0f69a93cad6441f3e26da660962b730b9f1b",
+      "git_blob": "ecdc48a1733f9f7fccc81a93d05b9beb216a6605"
+    },
+    "system/lib/libprofileparamstorage.so": {
+      "sha256": "22ade2078f56aa35a4f05f60731d7124c981eb11e8a967d172f57eb0b80b7fd8",
+      "git_blob": "ba039d0ece59ae321b5d18e5ff12b3bb45d6d160"
+    },
+    "system/lib/libprotobuf-cpp-full.so": {
+      "sha256": "89e9d5e481f06f6691daf04e541fc558830dcb73bbfd7d75e91c90672ddd3721",
+      "git_blob": "12eb012afe155ac396802d791d722e44a97f22bd"
+    },
+    "system/lib/libprotobuf-cpp-lite.so": {
+      "sha256": "5b5b8bc57fd4b53405f2f8d68a6ef78db15dafecf27862d68417b8c1214deaf2",
+      "git_blob": "ecd7f358aa14d347fa9284efc82052c7c125f85c"
+    },
+    "system/lib/libprotoutil.so": {
+      "sha256": "634f7e8797469c7bd9f86dfb91ccf2c5e8d34150469f524f6ea7549200b6e696",
+      "git_blob": "e31ff8f24ed4928fd4092a01d7ddf9992c6090e9"
+    },
+    "system/lib/libpsi.so": {
+      "sha256": "d87d04f8afd05cfe9a8547ca5f677eb2708bf41ac6ee537e3e24d63d1f7fd059",
+      "git_blob": "5855ec3333e490fdd6227d18825aa04888531892"
+    },
+    "system/lib/libradio_metadata.so": {
+      "sha256": "6160670816095816c1cfd098e3554c9e3eed7c6e33b8e4809b3d973a6f89137d",
+      "git_blob": "42720aa9d02fc7bca4d0f7ae18681e8e69200f1f"
+    },
+    "system/lib/libremote-processor.so": {
+      "sha256": "01f2f640636d32f03140b5e34478395aaa929f028714f5ab3c7761d59bd8a07d",
+      "git_blob": "cc5231ca2b08acd7b374636ddb39142cd462fa70"
+    },
+    "system/lib/libremotedesktopservice.so": {
+      "sha256": "e69fb0c6f1609d073fc83ddb746adad44a59c9452a7b908b451ce2944d49ad4d",
+      "git_blob": "b4871b1d16cdd815ba199cfc490b3ac0a3ed9365"
+    },
+    "system/lib/libremotedisplay.so": {
+      "sha256": "33316fd62cd0df7caf58091b060332652ce6fda5a965687669ffd83e8d182031",
+      "git_blob": "8c5760c271d22b9b80340f641a05ccd82918f19f"
+    },
+    "system/lib/libresourcemanagerservice.so": {
+      "sha256": "a5c1c1165fe09cdd0a68f81ae96d5d6b879112cc55ee23ccf739c32fb13d03ab",
+      "git_blob": "aae94c52c6c48890268353e9e8ead30d9efa71b2"
+    },
+    "system/lib/librildump_jni.so": {
+      "sha256": "57561d4de5476f9221dabbe1724cf8d5dfcee7d1f8e8dc5476393413bb555a91",
+      "git_blob": "ba64cf8c1c3a91d9096799c8f8d9ad30ad99752a"
+    },
+    "system/lib/librs_jni.so": {
+      "sha256": "048f45ae6f00fe28914df470437b9bb615e6da0827eb1bad067fcb27c9b7f62f",
+      "git_blob": "9d807b804915b2582f20c66eb79a43bdd31de7da"
+    },
+    "system/lib/librtp_jni.so": {
+      "sha256": "0ff81e749da1754440fa31323f73c1f017840b0f2bee754e39ecbfa34997f1d2",
+      "git_blob": "84e655b86ea02a30a1a45646f985cb865a6ebc51"
+    },
+    "system/lib/libruntime.vexfwk.samsung.so": {
+      "sha256": "937f67499c2629520e89729f3e6b8e142e601cd3a2d76a6089b179701a598259",
+      "git_blob": "0e1cd8c97052a276e8cd928f5086b134a5ed2442"
+    },
+    "system/lib/libruntimeproperty.so": {
+      "sha256": "de956e2ad4df68634e65fc68706c6ce959556c69c2cc43d57c68872856a0d551",
+      "git_blob": "540b56f1a31d1d4f63a8b222548152eb19092eca"
+    },
+    "system/lib/libsamsungSoundbooster_plus_legacy.so": {
+      "sha256": "a683c0258ff0c7e8717145da538021c09ebfef3a530d41542bc16be1e0ab8896",
+      "git_blob": "e31f93e927ad18f4603cdfc45d3afe043c40de7d"
+    },
+    "system/lib/libsavsac.so": {
+      "sha256": "c2b7ef36bfb359f5c67f7ee38db1368f16158f4bfcb623d508e3d3f88ecb264b",
+      "git_blob": "036973113fd0c8bac2cb860cd357435eab6a4792"
+    },
+    "system/lib/libsavscmn.so": {
+      "sha256": "006fc5247f003988b69add5f95f369a314137188a4e27207b25cd6fdebbc1b1e",
+      "git_blob": "1e1b6d9e0e27b4408610163cf08077dcca709390"
+    },
+    "system/lib/libsavsvc.so": {
+      "sha256": "6b0efe2779b273b87926ad33f90a2ef6d8786ae125ff47756fea213df88632e7",
+      "git_blob": "99da2441f91a62b44d1e453a917cc44bef0a08e5"
+    },
+    "system/lib/libsbwcdecomp.so": {
+      "sha256": "03aca822f81512be128c9b48c1e84eb3dbd230749b94fc2f0e80425dda3587ae",
+      "git_blob": "10818fc0a46763400db422f5022ae8cb6cc55a86"
+    },
+    "system/lib/libsccore.so": {
+      "sha256": "6b3b9d342430b881e220a9f03b10db9f00de8059312e519b88355fb3a509f8cf",
+      "git_blob": "a4d2866e4945267fac79467e4ded794745982d57"
+    },
+    "system/lib/libsce_v1.crypto.samsung.so": {
+      "sha256": "17421165a781c2ca6d0dd9e863a337228e2f7505d7f5692be9c42c0cd2447091",
+      "git_blob": "8678d4700e3e4255de2078d6512b010c7beffea2"
+    },
+    "system/lib/libschedulerservicehidl.so": {
+      "sha256": "d47a074c2d76c7ddcfb71b92ab3e3904ca5ed15d44fe75cff853e2e5563846cb",
+      "git_blob": "585947b339583970152bfdc799df4328e6719def"
+    },
+    "system/lib/libsdk-v2-jni.vexfwk.samsung.so": {
+      "sha256": "e3b2b40be960785f930cc4b6c60bc09dc3e7fb903c0de62ade8c01935d903f52",
+      "git_blob": "acb1703711cc70ae13a86c826bb1f714aa09392c"
+    },
+    "system/lib/libsec-ims.so": {
+      "sha256": "71508c43719cd2f040ac41db2d7719bfb70f51e654b4eb854b96a37fe7572e20",
+      "git_blob": "d1caa085e2c0fb62b6a2f7a54643c90cf3360259"
+    },
+    "system/lib/libsec_camerax_util_jni.camera.samsung.so": {
+      "sha256": "2db69f02c0002887623a0e16bd5849c50f4939b3d2334bf1d34decc2f896fd7c",
+      "git_blob": "9219562572f7b5e515eda886329e23b15a7661b7"
+    },
+    "system/lib/libsec_sem.so": {
+      "sha256": "ada1c3e3ae11c0424102b6089590039a83592e16ee55b8233a2064e35a8284f6",
+      "git_blob": "fd054223803b522a4675c133af13f0c8ceb36b7e"
+    },
+    "system/lib/libsec_semHal.so": {
+      "sha256": "23878bcc9a481a2e79835308682b12888b111e3febfb4c2d8f7660fbc7e735ef",
+      "git_blob": "58dd373c233ab6805e21a0121e00879f500775f7"
+    },
+    "system/lib/libsec_semRil.so": {
+      "sha256": "8de83bc1b57b5e693177e2ceea20ca0bd0de7f168a204d66bdfcd7bbb6114b63",
+      "git_blob": "6efb3e60141130e8fc3aa545fb6b3987cc6d4191"
+    },
+    "system/lib/libsec_semTlc.so": {
+      "sha256": "20fec2fad7c26ce4f0d3c81c281a345f0253082ab51846d3f236aa3125a314b5",
+      "git_blob": "74f4bd38d0b87a80d85d2ffa3cb542f79ec52126"
+    },
+    "system/lib/libsec_skpm.so": {
+      "sha256": "020c0237a29074a4c8458ec9a18f9ea9234dba1bcd910c3ff3fef50c75b1fa03",
+      "git_blob": "0a035f97483f7b85dec0b20e055674222e86a0a3"
+    },
+    "system/lib/libsec_skpmHal.so": {
+      "sha256": "521791653cfad85d8e96168c2c343b0e1eea63a959de177eac7e6269cdff22e5",
+      "git_blob": "7b9f0c26f5ed0679e4c69661f1fac59ab120b6ea"
+    },
+    "system/lib/libsec_skpmTlc.so": {
+      "sha256": "df3cced1a946f91a46a4c8f423d841133a058092d09cec0571e5941d52e16243",
+      "git_blob": "c14bbbb2ec15373904784aae21be4311c9827519"
+    },
+    "system/lib/libsec_wvkprov_serverHal.so": {
+      "sha256": "6e19021122b2dc42372a55f51bfbd47287e92d7cb371d726e764b89ee04fc827",
+      "git_blob": "999287a4c892b2df5bb3c6b1b2f5df932da34eb3"
+    },
+    "system/lib/libsecaudiocoreutils.so": {
+      "sha256": "1919654b07b061ba8c70d41187621cd05fd1b4abbd42e9606eda0a5fdb5dd640",
+      "git_blob": "a7d0e4aa4d1885736d4557c55aa7739c7695a00a"
+    },
+    "system/lib/libsecaudiohal.so": {
+      "sha256": "c3bb4d7d5f01dfe63b50ce9b2f91520cb8da272216566b7336b5a87613976c1a",
+      "git_blob": "0a0969abd46f5890ad68f7bfb07e9a44a46f547f"
+    },
+    "system/lib/libsecaudiohal@1.0.so": {
+      "sha256": "7171b8f8fe03bb02fff93dfa26ad7f065f7145d613a8063a4f9e0212122819b0",
+      "git_blob": "0a3c4a0a2440e9213233aa848591b7a1dc29bb0d"
+    },
+    "system/lib/libsecaudioinfo.so": {
+      "sha256": "a2b30e482639003491ba6004b91e95cd9a0e8bc17808eec48a2f1a7b187ecf43",
+      "git_blob": "21cf3a69f1ad80ae56cc37451863efc2677222ea"
+    },
+    "system/lib/libsecaudiotestutils.so": {
+      "sha256": "32e95658426cbfbeb23c96d1f91e6c9ab2b033307147b1c190564f3526b9080b",
+      "git_blob": "ccd7d06773adeddb3eb12266331a701c2465c049"
+    },
+    "system/lib/libseccameracore2.so": {
+      "sha256": "2a903e7da7c5129baa6bfa32a16e3cad14093386b648ecf34b5fa6cf23da11f3",
+      "git_blob": "0931635920e36cd7271815b5657988d8a9e3ac53"
+    },
+    "system/lib/libsecjpeginterface.camera.samsung.so": {
+      "sha256": "f229cf1affeb5ee9d798ba8cc0f7f9c7821322f1727a1a8b068637df95505c55",
+      "git_blob": "c5732b0e1704abcc667021c9b4eefecca837a85e"
+    },
+    "system/lib/libsecnativefeature.so": {
+      "sha256": "4ef8a1bb8a72e3a8ea1d821b6d1f4d729e35abc6cdb3f7cb3be9d307d6ec3acd",
+      "git_blob": "14f54d8ebd12bd34b31d1b9017e59eaa67573807"
+    },
+    "system/lib/libsecrecorder.so": {
+      "sha256": "10acd518bd0f2a6c9cc6099f0d000b3d29f2dbb907675c8504154e7b11c204ae",
+      "git_blob": "1f5ab67f26007facc01784903e234ea265a81025"
+    },
+    "system/lib/libsecrecorder_jni.so": {
+      "sha256": "a2fbb1b8c7d3acf6f1e0181d63807090471698c0941ee614ceb5307c528dbd8f",
+      "git_blob": "0472533c310323eb3fbfeb41b031fc62581660ed"
+    },
+    "system/lib/libsecril-client.so": {
+      "sha256": "7b306ac288b0c7411370c01ee18bf5f1f7251b198767b68dae0f60c4f9f23fba",
+      "git_blob": "a5d4982c381ce3857f192c46ea68bb9ba75ceaeb"
+    },
+    "system/lib/libsefinfoutils.so": {
+      "sha256": "62bfd01f28ed1c4bbbc99ad2151c877829834cef28838d69b8c25b524ba3c5cb",
+      "git_blob": "86c0647927b811d660d7d73c8de416e7ed998af5"
+    },
+    "system/lib/libselinux.so": {
+      "sha256": "d5dac903299f50ab255a3efe508caf758bca589cf9f1c65404d9bffa97ba8320",
+      "git_blob": "9bfd835b4a8780ec38cce5ec5e6fd29ce8264591"
+    },
+    "system/lib/libselinux_ext.so": {
+      "sha256": "984aba15a2100aed39b38224bc14965807f12513bccc4ff9471cf764c613498b",
+      "git_blob": "2b513f28faf72344ddbee83e9ebd4d8c92efb6a9"
+    },
+    "system/lib/libsem_jni.so": {
+      "sha256": "aa4c98ac8b2ad10813d653f04349462042157a5fb32746f8cf3f1ccb0bdb79c3",
+      "git_blob": "59bda97a0a65b523c4dc271f4b28738079c286b2"
+    },
+    "system/lib/libsembitmapcolorspace.so": {
+      "sha256": "041f8df652dd1b56e0093d2add8be8d947c3bb55485b1b0d3a1d77402cb035ed",
+      "git_blob": "e2006f752b152fe52e65ffded60e720b325db07c"
+    },
+    "system/lib/libsembitmapfactory_jni.so": {
+      "sha256": "0cb88c7803cfd5e8b384b441a893c47017e23711ab5e7527d8c8e12d85d30e7e",
+      "git_blob": "7630e016dc428ab6a55eb5f41fd5679ef265f73a"
+    },
+    "system/lib/libsembitmapregiondec_jni.so": {
+      "sha256": "41a6463524ae50f8147c119b0a7d960d0e55cba7d8a58dacb3e6a1053bf43f0d",
+      "git_blob": "477e7b47e86e6059b5eb935a1ee0d771585d3883"
+    },
+    "system/lib/libsemimagecrop.so": {
+      "sha256": "1c80e72bc4b9464c885649e6659cfdb6f75a5926d38207213f16314dbd49d260",
+      "git_blob": "6a98d773cc2d7f2e0a6069882aacaab75709d55e"
+    },
+    "system/lib/libsemimagecrop_jni.media.samsung.so": {
+      "sha256": "464a69a1c10582ccd5d74783faf32395950a0ca62ff6883ac66b94ef1ea55d22",
+      "git_blob": "d0d4231d9928fe9e8b4640ec36f7d2add7da94ba"
+    },
+    "system/lib/libsemmediaplayer_jni.so": {
+      "sha256": "256fb93d6869e41e06ebc9eac0f569d4feedc1b5e47a5abdc397360c78b22730",
+      "git_blob": "6d3e754db61d7a8fe7e7128b51241b807ec94b3d"
+    },
+    "system/lib/libsemmediapostprocessor_jni.so": {
+      "sha256": "e37d5b9d7ebe412187340461dd09a131e67808e08a31b44716d9bc25a84df62f",
+      "git_blob": "7e56497865354fc3567f4ca4b666e80107d9f5da"
+    },
+    "system/lib/libsemnativecarrierfeature.so": {
+      "sha256": "87e8c4eaaef5a3b9f4c70179ad6c6d43f59c4e99d7d76e6122368a0bc6c9c9a0",
+      "git_blob": "6d37234e032840b33fe62bfce54a1fab782dd2fb"
+    },
+    "system/lib/libsemstreameventcallback_jni.so": {
+      "sha256": "e6f52c41b9d279ba7f32f7cb893445c69c1df839117748ba74abfd3475adee5c",
+      "git_blob": "c7f422b857e8167930c0dce40565e65ff1ec9f15"
+    },
+    "system/lib/libsensor.so": {
+      "sha256": "5b5268d57638373f272e7da63d910bc91cd4b2972e3069102b6bde5b66458f35",
+      "git_blob": "b8afe7fbdb74f99f4eb622ef7482984b49a63b58"
+    },
+    "system/lib/libsensorprivacy.so": {
+      "sha256": "c0179a19626a9f653b82cd8f6e11fb83fdf59f38d2695cc62d53a1c871914e40",
+      "git_blob": "832d4c9d85c0049c84f71bbf73719f70a75c970e"
+    },
+    "system/lib/libsensorservice.so": {
+      "sha256": "30fef53cf50cd3bab11266f0306f574f6f9dae66b65fd0485576de2f6969b14e",
+      "git_blob": "ab77d2e6fd36e93a834e4e2f7ea31cc62eeb457f"
+    },
+    "system/lib/libsensorserviceaidl.so": {
+      "sha256": "c677414d5366a08f60fcdf4c769f0873a2aa42a9892ea37b3befb821365cdca1",
+      "git_blob": "097a0bf31fab192b8a05790e787bdf8824c08375"
+    },
+    "system/lib/libsensorservicehidl.so": {
+      "sha256": "df017af39e137d2b74102334872815134b1c49ea79be15da40a6bc8313b9a87f",
+      "git_blob": "ea9d32a99c3af5b0e1bd3becb1ba8a0193bda729"
+    },
+    "system/lib/libservices.core-gnss.so": {
+      "sha256": "b7c9f266f5e10b47699dcc832b6fd35410f4f75f6d61d00a220f19643ad7dc7f",
+      "git_blob": "6d3f2dbfd36546381c6d4d47edbcedf2887772b3"
+    },
+    "system/lib/libservices.so": {
+      "sha256": "176c76ea550cb5c738545122226ed91067c86e19459518dd1a45c1a037f53ac1",
+      "git_blob": "a013971d09d807a02332f0d6276706201d59e11e"
+    },
+    "system/lib/libsextractorcmn.so": {
+      "sha256": "2628819961a4484642552bbc7df2b202795be7cdd005a4d9abb685e4107c97ac",
+      "git_blob": "dc7ab16f457f5077271f8abb011db9d289e391a1"
+    },
+    "system/lib/libsfextcp.so": {
+      "sha256": "c72a64ebb07980cadcbf88f46f59c19571f76fa2038bf71427228df3e7669c9c",
+      "git_blob": "25dff04c59fb8b2943f0ce2a16cce5a3d7a22a44"
+    },
+    "system/lib/libsfplugin_ccodec.so": {
+      "sha256": "77692571764e0f197b99f61b7635e1d4e24fcdaecf4469b88c0014c2773850ec",
+      "git_blob": "0d5be620694a0840e2f007084b031962f6e3d6e4"
+    },
+    "system/lib/libsfplugin_ccodec_utils.so": {
+      "sha256": "9fdf0123d11f7d65289c98baca7130e26ec20cdb49e7686994258ca82620fc6d",
+      "git_blob": "5d606822c65d47cf076e23d1eef1eaa6e630da79"
+    },
+    "system/lib/libsheifdecadapter.so": {
+      "sha256": "ea89db5e8cecd15962f8ee3e341b33549f0cf2d66dabacc5b9e90bea9e4a7dd7",
+      "git_blob": "afc36c444733083e5d52f5d2520a2eb133809be9"
+    },
+    "system/lib/libshmemcompat.so": {
+      "sha256": "c062a014c61d261e3eaa5cb8b465ea48f46f2c59fdd0e3b075fee19fb586a150",
+      "git_blob": "2a6208aeae92c90bf762faab065347dfe1e2f124"
+    },
+    "system/lib/libshmemutil.so": {
+      "sha256": "04b5bc68cd1d4f45b67465b19ed70796c3b9867e04eb93e8724b2d7d25ab01b5",
+      "git_blob": "9b8ee957fcf0d834e1aad6b072fc689bca6c55f2"
+    },
+    "system/lib/libsimba.media.samsung.so": {
+      "sha256": "3e0434fab28e3e0987411a670f2eb18b15880d4224d789227814c470670b1433",
+      "git_blob": "70d7bb086ccc820400c77058c51a49a57cc9a366"
+    },
+    "system/lib/libsjpegxl.media.samsung.so": {
+      "sha256": "ba6d3839224cd0d4c97c64b37252bc1818ad838d23de8f25c383cbdc59c9d91d",
+      "git_blob": "831015f59f4be2b9e5ddafcd4b38fd2041a57156"
+    },
+    "system/lib/libskandroidcodec.so": {
+      "sha256": "955c70a77376aba14ca276b2ef48c932331b9dcec2fa4bf80d6269197ea9ac56",
+      "git_blob": "8be6fa67438d1a4f0694526e59bbc0b10f54331e"
+    },
+    "system/lib/libskcodec.so": {
+      "sha256": "bceb5eb815b024a25e00f2bcab35aca1de101c21453c515a440955cb6e4c154a",
+      "git_blob": "0e8ba175d7a293e93a8adc7b0429d75a686c9d26"
+    },
+    "system/lib/libskpngchunkreader.so": {
+      "sha256": "21e9a14bd97674ddefade32ca519d1c537b5415eb7b5c37f883a8f0624759014",
+      "git_blob": "da6b5b50e9b73273615834b5e64476f5cf3b166b"
+    },
+    "system/lib/libskstream.so": {
+      "sha256": "3420c43c8b1c167e12e3d928a6162fc2e6e0f24bf67dd4612a41f987e1c28e24",
+      "git_blob": "903e31c248054b842479cb47dabf1102450e2ff2"
+    },
+    "system/lib/libslljpeg.media.samsung.so": {
+      "sha256": "abb8e58bf1d03ebcbf2eba643666a14f87654091bb8c74e5e5d4732e98e52ea2",
+      "git_blob": "08aa665687d35121cd399ef244d4eeedc2e3eeb9"
+    },
+    "system/lib/libsmartviewmanager.so": {
+      "sha256": "fde7c333e1e934cadcd96e2b0fa0ffdb56f2682104fe6aa723e6f9d9326b0aa4",
+      "git_blob": "ed0b8edaa27ef7fb0b712a0873dc22c239c47c9a"
+    },
+    "system/lib/libsmat.so": {
+      "sha256": "06df6555f829b7ffb3c3e136a642e35c0e50041546a37ab4188e9417964b9f72",
+      "git_blob": "13a6eb45b4015789e765e56a6789f7b0832a27a1"
+    },
+    "system/lib/libsmsd.so": {
+      "sha256": "8522835714e00d0dfa0eb23ea0802d35d0012ee6e6c8ab5e8efd10174efb64c8",
+      "git_blob": "fe87e16ebc67904c3fd1cee449018f986bfc80c1"
+    },
+    "system/lib/libsnaace.so": {
+      "sha256": "251c29c8053cf76083b463a87bd9138d4ad05e02206d3c453bddb01aca5da533",
+      "git_blob": "67e6be1cff7793b4d5c2b9edbe863e8367fb9efb"
+    },
+    "system/lib/libsonic.so": {
+      "sha256": "8667c233387baacaeffe5ac93b542298bd2d4cd67a227ff4cf84d21fa4e00645",
+      "git_blob": "a951951f6e2c5b31a73f87b3dd32e599001e2b92"
+    },
+    "system/lib/libsonivox.so": {
+      "sha256": "0eef884433d4b277e9268149a9f84c676aeb7e0ba2bdf965548ed43b2fc402fa",
+      "git_blob": "46007b966ad373bc03ff4da1a1e5fedeb1f6b5da"
+    },
+    "system/lib/libsoundboostereq_legacy.so": {
+      "sha256": "42bd21ce588e788e67ff7bcab0b99febc421179abcc86412dd984f355bc98922",
+      "git_blob": "3d06fc8875bed9cfa19e7f1cd52f825ddc80ff03"
+    },
+    "system/lib/libsoundextractor.so": {
+      "sha256": "3836a7cb05136463b7fbea274875dff0d9d649307516ad001383fc0ed27853ba",
+      "git_blob": "3d3388cfd99456b0a0451478ddd1b3fcaaa0eb2d"
+    },
+    "system/lib/libsoundpool.so": {
+      "sha256": "5251b2586393a33525ccd9191a98d4fa9ecdbd5de2b626dfb0efc13ae57c3aff",
+      "git_blob": "4a608f5c2bd160a226c19565ca77a7a79be5f09a"
+    },
+    "system/lib/libspatializerparamstorage.so": {
+      "sha256": "798742663e58d0863f8c62b6b159a6697e86b9d441a33f6608dd4ac75ea1276c",
+      "git_blob": "de4888a4439c51898eb3288e6b0712086bd1730c"
+    },
+    "system/lib/libspeexresampler.so": {
+      "sha256": "2ba97e6ceef1a5a30f8b16e926e8db143229761a398c747fbb06e8cd301d0a20",
+      "git_blob": "e197556e53411d03df3ec02a325428a40fdaac11"
+    },
+    "system/lib/libspeg.so": {
+      "sha256": "f91a935d3f8a30bc8dc2932affe9e5ea23e97339d1385e9afe72e54791ea7174",
+      "git_blob": "e1d5b247ac77de8c7b74807460ca2ffbb13777ed"
+    },
+    "system/lib/libspictrl.so": {
+      "sha256": "035af6ae41524cd02ffb27252fc99634d3d01384779e7c3ef071f1d1a300211b",
+      "git_blob": "16ba7ac0a15bc38656e6dc73d2b124fd3d235ce0"
+    },
+    "system/lib/libsqlite.so": {
+      "sha256": "fa5408d555c0ef814687a27a1b1663f711e773843bdb8f7500c6f35d52bb9d94",
+      "git_blob": "f0e0d6a5051e019a0e08e2ef92d09ce21b94ec66"
+    },
+    "system/lib/libsqlite3_expert.so": {
+      "sha256": "2e1a0ab94f0d8627eae1bb12cecd3fdb6a9261ea4d09805e0f29d8c7b1185de3",
+      "git_blob": "4a65e0672355f02affe0094e88d0ee5f64dd7297"
+    },
+    "system/lib/libsqlite3_udr.so": {
+      "sha256": "800387387a960dcf2298984696199863929b05a222e4d455eada26443c4f0988",
+      "git_blob": "57a586e5fed7b6b147f9d19397e77018ed0c3a3a"
+    },
+    "system/lib/libssl.so": {
+      "sha256": "14488bf64e228b7c76f99f9b7b5c206ca735fa166d1af09478149e715cb1c6be",
+      "git_blob": "1d37119b9a8bedaf61be9576b481a2dc03ca8c06"
+    },
+    "system/lib/libstagefright.so": {
+      "sha256": "290313f7a58103e17eb5a6c9f2fe9e5c376b1dbe985f9dc1da7fa5968691e6cd",
+      "git_blob": "fc22189395b45de5c409e9f36ec044cce13c6fe8"
+    },
+    "system/lib/libstagefright_aidl_bufferpool2.so": {
+      "sha256": "411948bcd85e979b13a0d68f73ebcce7cb167d9f8ce7bb00cf015e2f9a04b41c",
+      "git_blob": "70cf9e54a54ae36fd5c7b6c1de3f895dc5f8ad1c"
+    },
+    "system/lib/libstagefright_amrnb_common.so": {
+      "sha256": "f47c53ca47e06098f3d9ade1071719b80e68b83a442f5086af9bb1e9c3fc9c50",
+      "git_blob": "d039e0c2476dc783afcdeaab7916f833b259c5f0"
+    },
+    "system/lib/libstagefright_bufferpool@2.0.1.so": {
+      "sha256": "5d59f1a47d9c6df78bad64954e735ee44e57dbde56debbb7f7ba4dc9b5de2ce1",
+      "git_blob": "0ceacfbf67db983396c73ec4f9e57e8ccfb42162"
+    },
+    "system/lib/libstagefright_bufferqueue_helper.so": {
+      "sha256": "c4da6b8d5438494f61de906aefc478b68f9035344173e5e53ad1e9232445f06c",
+      "git_blob": "92e7ae42a2ce5a7463aa7eebb3caead3aefd193c"
+    },
+    "system/lib/libstagefright_codecbase.so": {
+      "sha256": "e676af90d32cc6ca85dc7f789d7bfd29e22e67ef4a534e47c404bfc8bb6f837c",
+      "git_blob": "f5c6514189e8cebd3e1735b1ef6e32ac2c50460e"
+    },
+    "system/lib/libstagefright_foundation.so": {
+      "sha256": "d46aec0c0fb179449bf592f21c488b2937548380a265c53860ea4c7160402022",
+      "git_blob": "ca2b8e285cc9e753a531825cc18943cc0bfb1bd5"
+    },
+    "system/lib/libstagefright_framecapture_utils.so": {
+      "sha256": "9566fa10352b7d75c69660939e5c12687ee4b9e254e141242f47ad8ab9cb53d3",
+      "git_blob": "f113a8e6118b5244c288bbda2c98b4821c1d8cb6"
+    },
+    "system/lib/libstagefright_graphicbuffersource_aidl.so": {
+      "sha256": "9b6c28946e44c970909fabde6949e2de5d147fc21a53ca5619555561dfa7f10b",
+      "git_blob": "84f8d0f019ba0f35ce3e1b39c0fe56b4af69e296"
+    },
+    "system/lib/libstagefright_http_support.so": {
+      "sha256": "6af0b4377c3ab033566ac34a60988d8375e220ae1c043056cf26aabf5d364c2b",
+      "git_blob": "5d51dba851d4efb3a3915b0e803b08e5d8ed440a"
+    },
+    "system/lib/libstagefright_omx.so": {
+      "sha256": "f24bf0e5ffbf58bc6ce3e40eb26b06ecabba24526591990dc981393ed8eab7f6",
+      "git_blob": "d8a3c8424395e6836ccac239718b96d20c813da0"
+    },
+    "system/lib/libstagefright_omx_utils.so": {
+      "sha256": "0eb42328d6661e32b3ce913c2b5f6c4b4960b58ff68077a75923cce03029314d",
+      "git_blob": "42c5d68a7d5e1abac9a604c17521af795d91eb6b"
+    },
+    "system/lib/libstagefright_surface_utils.so": {
+      "sha256": "b1f17377dea67c909d71eaa7d73816b18462d6b623982ad97c3ce41c8ccffac4",
+      "git_blob": "6767c2d6f4b86c1500166328305af0c4d3ea5109"
+    },
+    "system/lib/libstagefright_xmlparser.so": {
+      "sha256": "593b2bb037704e0f2555f7734024a894d682ed075aa396beca66ff25cf94ff3b",
+      "git_blob": "5fba0a37420cf910bd7dce79dac4453c217c89fe"
+    },
+    "system/lib/libstats_media_metrics.so": {
+      "sha256": "fb7384b7e33ea8aaa5b0b72e30d5f3e1a69f222f4d13056801a1b551c3af8e34",
+      "git_blob": "7442c714d18a8d133d02f4bce8c0391f79aa77b7"
+    },
+    "system/lib/libstatshidl.so": {
+      "sha256": "16ae296deb2b4a1a902a019abee7b5526057086982dbac2c5e94f46216732993",
+      "git_blob": "811999a7f674e92b1e7b8d2873ba6258b650ec91"
+    },
+    "system/lib/libstatslog.so": {
+      "sha256": "f516376fac5fbfcf21b44ef6713f40c2387bfaa981358e5ee7c8ae2929d105ed",
+      "git_blob": "299fa74d9e4db46042a29588534241313adbc8ca"
+    },
+    "system/lib/libstatslog_nfc.so": {
+      "sha256": "60fce4b971b0860c8d0f6fd33ba117564307df55d728f365ea8b8787f5f7f9c0",
+      "git_blob": "ec1e7bb271baaf3ca09a11c4c7dcb1ecd6295a0e"
+    },
+    "system/lib/libstdc++.so": {
+      "sha256": "0bc5efbc56a0f3491b56404f1eaed4871f8ee0122c9fe387ce759429597d0f84",
+      "git_blob": "dd1d04de2b082ad8b5aab18927fcfbefaa8930ef"
+    },
+    "system/lib/libsthmbc.so": {
+      "sha256": "cb06a6cd6b8a28f7eba9fd48c80482fa220feb2044cfc191a4eaf7c213eb51cb",
+      "git_blob": "997d5c8139512e0eb00ff8aef4c7feae775686dc"
+    },
+    "system/lib/libsthmbcadapter.so": {
+      "sha256": "c3102b22ee9f48f8132bd5cf2cbdea0c46a36419b8dbd3cee0451db9786cb4a2",
+      "git_blob": "bfcd54418336d40ad6ab917251e08aac88277c4d"
+    },
+    "system/lib/libsume.so": {
+      "sha256": "28224f73761180c379a14375d32cf7d7497007d1938d970e82bd9cc5f76c4e98",
+      "git_blob": "7487252dead5e1372a6025df677fc0fc4abfecce"
+    },
+    "system/lib/libsume_climgp.plugin.impl.so": {
+      "sha256": "35b186c8eaa13ee2d1d7c295fcf540169e075b0792b22da9a868dbf865d18b6d",
+      "git_blob": "94df1261e98cb4b426bf5ef64e67e6e1f4879671"
+    },
+    "system/lib/libsume_climgp.plugin.so": {
+      "sha256": "dccab986fccae635a721390ecb07d41570596a93ff5633fa5283ff74db133846",
+      "git_blob": "7235d2a911064ffdc3a66ad112f9d8237527ea9b"
+    },
+    "system/lib/libsume_jni.media.samsung.so": {
+      "sha256": "6f7142964b9638f33fb90de17c36526251a7b005e353a063a667cfc219e54ffd",
+      "git_blob": "d063d3188599b9ae6a69fd991d7922a3e9824aca"
+    },
+    "system/lib/libsume_mediabuffer_jni.media.samsung.so": {
+      "sha256": "17d492026e72882c4036c48315e66e493face29401df1313ee14f894e230b11c",
+      "git_blob": "0bdc6998630f622ebdaf00debfd24dc1f5f58cc6"
+    },
+    "system/lib/libsume_opencv.plugin.impl.so": {
+      "sha256": "93cf14f0e7706b43019afe12fc18b209daa9f2593a732662ce37c70cad307df1",
+      "git_blob": "ed16c1513ed51f151b9e473da3eae19ee7e065d3"
+    },
+    "system/lib/libsume_opencv.plugin.so": {
+      "sha256": "59ad98921a3edea2bde30357f5bfe2c8512eafbf017a528a3cd531b776d538d8",
+      "git_blob": "9cb522251da601163edcbd76079890ee7c734088"
+    },
+    "system/lib/libsume_simgcodec.plugin.so": {
+      "sha256": "bef70a19916b5ca349dc29afc702ad379f50be9ecf0759d1c08aeebc4e731d61",
+      "git_blob": "5128fce353fb78967fb93b4d192d6c34585b2167"
+    },
+    "system/lib/libsume_simgp.plugin.so": {
+      "sha256": "e9db33d80357275737bbec30aaa802fe630d461ef67778b3bdc284edd20175df",
+      "git_blob": "fe2b5b92367122de0d4b2aa42c4d6d991cfd0a91"
+    },
+    "system/lib/libswdap_legacy.so": {
+      "sha256": "e94907e3000d5250c91af382fd0982c07b3cfbf0d84251f991e8869c7158bc4f",
+      "git_blob": "ff00452072be9df145dfe16fc58d128d6e71786d"
+    },
+    "system/lib/libswspatializer_legacy.so": {
+      "sha256": "f8a0fa17c59b60fd422ea7284e003da1d8fdadc8736c386be4a69eaae866653b",
+      "git_blob": "2fbd7d4aeca2a3851fc583856e4427646ebcc4ac"
+    },
+    "system/lib/libsync.so": {
+      "sha256": "b6ea2a26e2de332f04f8a46c3d209a3a74f055e507e5bb3578a2cd43bc1804be",
+      "git_blob": "81bd354ae0a97b44cb701ad469b7204f4d18acec"
+    },
+    "system/lib/libsysinfo.gpuwatchapp.samsung.so": {
+      "sha256": "1f494bde36b10c8ea1c721e612c630e1c3611ac29b5431b1d1ca54eb34fac59f",
+      "git_blob": "267fbe3032d7da96ecbef3e33b93b9dc95fb3025"
+    },
+    "system/lib/libsysutils.so": {
+      "sha256": "b84d8e28f3d2520b846c85fa959d8e26d48601d630f3dd74276e602befef656b",
+      "git_blob": "db41a7d2b7246f9a22facf8b75c00af3dc805a62"
+    },
+    "system/lib/libteecl_aidl.so": {
+      "sha256": "eddf73124b66960a70b81a804a3ffa5d0d2a4328346df12d57f3f18958d2e089",
+      "git_blob": "f17bdbc6241fdac08bbaf3b1af5cd4c1cc75e451"
+    },
+    "system/lib/libtimeinstate.so": {
+      "sha256": "6e8f23ae307bf4cb60b5b4dcacb17adc97d718007ebbd695d10c90d63c6f2c90",
+      "git_blob": "e8d347f84a9fe06941a8c59b2392e0d2d0e6e712"
+    },
+    "system/lib/libtimestamphelper.so": {
+      "sha256": "03e70398c0023cdbcc85ad9562c6c7de8360f2ed62a7c13c0a55efce0ffcd80f",
+      "git_blob": "02780578eda6b011c39381c89ac63cf49d608bf4"
+    },
+    "system/lib/libtimestats_atoms_proto.so": {
+      "sha256": "f365ed5b9685c2733243f5a89d742e6cb1c394fd1efda2cdcd64d7fcfaf1a607",
+      "git_blob": "d09301f5bf8c9e988addef5c54bae15e11e706a9"
+    },
+    "system/lib/libtinyalsa.so": {
+      "sha256": "233cf575bac8429c6440f422087099004f4f4f81b3bfdfd91ad8648ca78ba565",
+      "git_blob": "fa51073e1db27abdb1b47fd3902434be0d6b2002"
+    },
+    "system/lib/libtinyxml2.so": {
+      "sha256": "e10d4dca8f7f86d8f01d78b57317ef51fb9de87f716d9b5a9b4a5705cc1f2acc",
+      "git_blob": "ece1f0f14b8fc3c1614c85106f0865e83ae506d5"
+    },
+    "system/lib/libtlc_blockchain_comm.so": {
+      "sha256": "11a8757cb91b8d6a6101482b69298fa4943c29e5f3bf95437572ec96341e47c4",
+      "git_blob": "b695230e32be69ca499aa80a31daf74b2e9f3a44"
+    },
+    "system/lib/libtlc_blockchain_direct_comm.so": {
+      "sha256": "60bc2ec33d79672a9597fd81dac237a261bd6f636130b08ebb9fce35a62a97b5",
+      "git_blob": "2dc80017de23143ddd9b3e36b64a2ccec17b1e03"
+    },
+    "system/lib/libtlc_blockchain_keystore.so": {
+      "sha256": "32e71cfe12a0d9497c88298bc0e5d5d5486b09fa2ce9cc81df53cbf76f87c071",
+      "git_blob": "b6f3fa54e251c5937306225b7004cf85f733b6a1"
+    },
+    "system/lib/libtlc_payment_comm.so": {
+      "sha256": "fcab9c2438d8be2742c882c22b7b5313ccbf60cdceece6b3df687922f381bcfc",
+      "git_blob": "ee97e57730ce10e97b7365c85f85e95a7b2c030f"
+    },
+    "system/lib/libtlc_payment_direct_comm.so": {
+      "sha256": "be6944aec523340d8202f223f3217d001656b2475f9a65013761b4c0ad03f8b1",
+      "git_blob": "2468b051713288278462b80c30d9d55e7626c03d"
+    },
+    "system/lib/libtlc_payment_spay.so": {
+      "sha256": "15c5ea7fa234c2f753f6135dfab188807d8273c275af356865b2a84e9968395e",
+      "git_blob": "2cf39891858d4d7382058208d41a7ce982a8b29f"
+    },
+    "system/lib/libtombstoned_client.so": {
+      "sha256": "39f4aa83e4daa2cea4cc4235eeb694ce42c846da2fd18b6c2cbbbe0b84a78d67",
+      "git_blob": "84d9f906ec94165c65cf5feb484eacffb33bccc8"
+    },
+    "system/lib/libtracing_perfetto.so": {
+      "sha256": "86bba7d36e132593fb7380095753f9e340e4be7361c35611bd61f6ba66fd54d4",
+      "git_blob": "f519c448dbfceb9de0762797355e53e854a4b7fe"
+    },
+    "system/lib/libtracingproxy.so": {
+      "sha256": "eb8da701282f9642e203b204269d030f267672f0542e556f1cb65b0b9a2f7b89",
+      "git_blob": "b24732f8f741a058307a5987a0d1489b65eca119"
+    },
+    "system/lib/libucm_esecomm_adapter.so": {
+      "sha256": "6939ba714152d9882fb3777c7ca734472fbe65fc0c909ce6f703e223ea54f216",
+      "git_blob": "2e7502f00f8e3ae48e4cc1bdc16bf81a70c18ed2"
+    },
+    "system/lib/libucm_tlc_hidl_api.so": {
+      "sha256": "d27ba2d9938845a523256ca028fcc4ba136fc76d0f01b6534ebf5991faebdf85",
+      "git_blob": "67b7bc92671f705ef14b7caffeb0658861f21e65"
+    },
+    "system/lib/libui.so": {
+      "sha256": "3c657bde417b21c4bd223e95b79255fcf827b62dc88881c0abc7766a7209e370",
+      "git_blob": "30d18ab6c87c2dd41666583a1a25c1e836ecf967"
+    },
+    "system/lib/libuibc.so": {
+      "sha256": "fd83d8eef7b2bed71460e552fe10775e97e99ae47d77917c05437aadcb2e1e49",
+      "git_blob": "e30fb7afe0b3655fbe2a07cfe7d879ea1e4e1597"
+    },
+    "system/lib/libuibcmanager_jni.so": {
+      "sha256": "bfd914535d6b43458e027bb356f94fbaa85d984ecffa5141bc51898133ab56b6",
+      "git_blob": "b0f827778294fce4de7c7b0fa04cc9723be688e4"
+    },
+    "system/lib/libuinputcommand_jni.so": {
+      "sha256": "365e6a978bc9eded9f93fa0254b3929f06a4f7ef456961f4f6b178b1590c4a07",
+      "git_blob": "26c48ed845bd6170dfe3d62d1b5e2d9933cc8ca4"
+    },
+    "system/lib/libultrahdr.so": {
+      "sha256": "98ad381341e44ef062c5f8c8fd3cf784909ef4e502325da2ff6edee67bec96d0",
+      "git_blob": "dc67b99291d63f3c8d0acdd26978fa689f082e1d"
+    },
+    "system/lib/libunwindstack.so": {
+      "sha256": "73b714ff6d9047c1a5a037cb4f9e85401c92e893cacfe53cc50eacdf3054c28c",
+      "git_blob": "e5ee9afe08bf9275c3fcc7e5ddb91317e7bbbebe"
+    },
+    "system/lib/libusbhost.so": {
+      "sha256": "1b49e178f30a8c43887855714adb24d663a17012c7867d388ba28a6a4c25e2af",
+      "git_blob": "772b9112c65b532c93501f971d4a09f69bfa477e"
+    },
+    "system/lib/libutils.so": {
+      "sha256": "627d1fad1f95f446e2c87e08b45cd78afbb451599942d46ae06579365e0f2269",
+      "git_blob": "c50c1d628c2cc21cf99783d099f47d9c31a00c35"
+    },
+    "system/lib/libutilscallstack.so": {
+      "sha256": "d66331e4e333274b07c177098db4165002ca6bd8cb37396ad772bada16b06ae1",
+      "git_blob": "4e6262559644924f66b0d2d0fd985c79d0c6d2fc"
+    },
+    "system/lib/libvendorsupport.so": {
+      "sha256": "97b73d7a74cbbac996d979cf2f68c0737b5a71101a7b038ce4ae4e9a3a602ef2",
+      "git_blob": "ac86e304e7bdd54925b6e879c5c29dc5e28e6bb1"
+    },
+    "system/lib/libvibratorservice.so": {
+      "sha256": "ac3a0b0dc7905468f60fe9cf89feae8c140e984b9fe6d23c082a1538a71c5ecd",
+      "git_blob": "9b98de269abb9d2409ad18a1edcc1d6fb70e62d3"
+    },
+    "system/lib/libvideoframedec.so": {
+      "sha256": "95e8a6c3d1f10a21a36888872878bb3dc7a54424a5fb1c45e07489df474973bb",
+      "git_blob": "c27f8953b113a9db98addf9025706b9be6eb41a9"
+    },
+    "system/lib/libvideoframedec_jni.so": {
+      "sha256": "12f48ef092942cc7142a4e611d911d1240deb41a5fab16c551f5b3b0b136099c",
+      "git_blob": "a7e1dcd38ba4a8e5f777e37058e34a67acfb2a93"
+    },
+    "system/lib/libvidthumbutils.so": {
+      "sha256": "0e8f24a028d02b876c05ad47d4c0e90f484bac45d295e155e541247c4e722b4a",
+      "git_blob": "f3553566a1202a23d28d9f2d1ccbde9cb4c7b0a6"
+    },
+    "system/lib/libvintf.so": {
+      "sha256": "d53a83eeda534a11cf7d07af07bc933043bdac82ee7852b4b78709d454def445",
+      "git_blob": "8110c1b674df256dcb457454d73ea2281cf7d60f"
+    },
+    "system/lib/libvintf_jni.so": {
+      "sha256": "b36d9a15c930bff55948bd7bbe1d0b04e34b5a480b4682cd323e1b5541182082",
+      "git_blob": "716248cad586d2b7f9a1c22513d2eb7f9cf20057"
+    },
+    "system/lib/libvkjni.so": {
+      "sha256": "a2fde3810bd0fbc9b977c51d023439f581558330f60fff9bbe1810f0d1bad106",
+      "git_blob": "6ed363174cf4af01d108a2e237feeba9d3d3f3c7"
+    },
+    "system/lib/libvkmanager.so": {
+      "sha256": "af8bd0681d5c5f540332fdb36315ca69c176441a24937e836b2e9c5e25e29bff",
+      "git_blob": "72a5a93c34af140dfe57a5dffa1acdc574a79ffa"
+    },
+    "system/lib/libvndksupport.so": {
+      "sha256": "76b90f7ffc325d7448ceedbe81732c46f0870a30bb014e43fc9ae305f8ee54ee",
+      "git_blob": "583bedb7c5396834ad113cf4817cbde5ee424761"
+    },
+    "system/lib/libvolumemonitor_energy.so": {
+      "sha256": "e630dadd591095731fea583efade017299360f330a39796db4feaa153bd406fb",
+      "git_blob": "44c5900488f4203478f1a8cea191f1b4f1126ab9"
+    },
+    "system/lib/libvolumemonitor_score.so": {
+      "sha256": "7044e2cb7773a08e10dffe44d86578f8deac1718c9c2b2e057169fdda2bebe1c",
+      "git_blob": "d5ea60829a7929424b4feecd87afc97c3a456d52"
+    },
+    "system/lib/libvorbisidec.so": {
+      "sha256": "60861f10d0d0d7b2671278c9770c251a81a6593ce41648e9fb3380737ed64fda",
+      "git_blob": "97644e5e06c0ed09d19122e33433231663cc4649"
+    },
+    "system/lib/libvpx.so": {
+      "sha256": "b6dc4d08cda37eb4534efed5077f850b16af6e8a67b6c70f001863a7f790037c",
+      "git_blob": "8adc6a8391cc96df7a3dcb1ab15f4ef7c42bf69c"
+    },
+    "system/lib/libvulkan.so": {
+      "sha256": "13504fe2066e699642ac102c639e5695c48bf4f3fd52067ca59cccdf0654983b",
+      "git_blob": "f1bef98225cb0a3903d867a4133b210c681f435a"
+    },
+    "system/lib/libwatermark.so": {
+      "sha256": "619935af2c29aed553521141afecc2f4b33e741623857fd61464d90c55c3bdff",
+      "git_blob": "cf2f32c201e796e8fcacf71eec3e307f5e0a650e"
+    },
+    "system/lib/libwebviewchromium_loader.so": {
+      "sha256": "a3dd4517862b573c2cfe8c2b0b4fe4ec10ea5514ae676c1ec993bcc4ee3bd7c5",
+      "git_blob": "ceeeb4c8c03533558083ea209884727fe87f91a9"
+    },
+    "system/lib/libwebviewchromium_plat_support.so": {
+      "sha256": "d9cc4e0eea2edd44895c4fd2bce2953b337b1489916cfb51d8be1dca64662de2",
+      "git_blob": "4fe7b9eb56f5f25f8042b58c16e8a2eeb4ddcb53"
+    },
+    "system/lib/libwfds.so": {
+      "sha256": "3e5f264686789eb481d8e238f60427a130081538cc2981b5b5e5aec10c8a0da0",
+      "git_blob": "731a78fb021e898ceb4bcf44ad72cc122b241275"
+    },
+    "system/lib/libwifipackettrackerjni.so": {
+      "sha256": "d393e6246432cb9e86fd340a8daf093dd9ea71c71ad5b6b0e32215c26b9a68e6",
+      "git_blob": "7ebaf49ea7245ed6566133a6067c34c6ee391cf7"
+    },
+    "system/lib/libwilhelm.so": {
+      "sha256": "e33424596809e90e8169023a1bae4c2240245855be7f388c124459f06a22a500",
+      "git_blob": "4b47fffcd1afef2f0588c62b5114a8a215de7eed"
+    },
+    "system/lib/libxml2.so": {
+      "sha256": "8326b309bca43a8cd2b011fabcb367771184979ba368a23eb2364214824764b0",
+      "git_blob": "4fb2cd4d18a669c6c145e5d87c90452807b893dd"
+    },
+    "system/lib/libyuv.so": {
+      "sha256": "1a22d545cf6346634bb92b82938024433074d70a83a1e0fbcbd26d7cf0bea2ac",
+      "git_blob": "a13cbc737bfe63ca48d4bb8d339f35f562b8e5c8"
+    },
+    "system/lib/libz.so": {
+      "sha256": "569cf74006b115777ffa6b2db4f21a5b0952a9e8f1ec8c4afd51c619ab5ec343",
+      "git_blob": "016c7c87793b6e114df4b62ecb17565578555dc5"
+    },
+    "system/lib/libziparchive.so": {
+      "sha256": "b07378266024b94f7f24b8141924624b53adeea78be451fe842c7774f231f052",
+      "git_blob": "e22cadf0188549533a5af62696a717786c9bd27f"
+    },
+    "system/lib/libztnativesdk.so": {
+      "sha256": "985aa89ca5ff573540067d57e97037b340af0403416b67716caf5d3488e9b204",
+      "git_blob": "b75a69b8849a1754ab9a077fe5cfb84a4c5f4524"
+    },
+    "system/lib/mediametricsservice-aidl-cpp.so": {
+      "sha256": "b3b89f05ed56d441c862cf520c3485978bdec8bbc6c19ade13331630a0ff78ec",
+      "git_blob": "99311ddae745a0c2804b51c759b0364794fa0015"
+    },
+    "system/lib/packagemanager_aidl-cpp.so": {
+      "sha256": "61980ac3fff4ae9f03184ed294fa98b7884e084070a60f92fa54148e9d85fe2e",
+      "git_blob": "213f0a6e364c163768097c6a28cb575180204a12"
+    },
+    "system/lib/persistent_source_aidl-cpp.so": {
+      "sha256": "086c631d4ed9738eadb967404b86726fc0b86acb24f1ff852d1fe8b15d9447bb",
+      "git_blob": "1794ebbd4dba3e74230a17d481973dd14a51c4b6"
+    },
+    "system/lib/server_configurable_flags.so": {
+      "sha256": "bf99bf1b7cfb2c814011f390274adbf7f572e64ca53a99e1e4730fb41aace010",
+      "git_blob": "a3141f1e2182f12a742ff831a24b20fa593b5ded"
+    },
+    "system/lib/service.incremental.so": {
+      "sha256": "736420ab6fc90355dca00ff0feb86e3a52ac98aabb2b6f1436020bd2f0588207",
+      "git_blob": "3e8d7ac9b45ea6f778f056bbdc1f2a090a08c05f"
+    },
+    "system/lib/shared-file-region-aidl-cpp.so": {
+      "sha256": "d85c053b79ef16e32cce0b30ca5e8464b63406708e4316103a24b64f665cd164",
+      "git_blob": "08751f91029bd71277a86973693e86d798548723"
+    },
+    "system/lib/spatializer-aidl-cpp.so": {
+      "sha256": "dd514d5601c903cf406e0b7f7bb00c306cd6c3916e5c7ab5ddb774020b521045",
+      "git_blob": "361eb9ed0a1fc8928160908d390dcb5a3bcd3396"
+    },
+    "system/lib/vendor.samsung.hardware.audio@1.0.so": {
+      "sha256": "697b5f0a967cfa3f6293a4f500d9f5cb10d5252c98f0fc039a207c1c7a8a3fa6",
+      "git_blob": "d6b593b2599fdaf64a8663dfcf8698c24d7ca1f1"
+    },
+    "system/lib/vendor.samsung.hardware.gnss-V4-cpp.so": {
+      "sha256": "79a9b36d053f833b648f70ecd9ccdab77b3facbf8c96478e178664d56a705aff",
+      "git_blob": "4c108065634c3b6c23051610e3610a82faca473e"
+    },
+    "system/lib/vendor.samsung.hardware.gnss@2.0.so": {
+      "sha256": "574bca386c4d1231988cf344f62aab85e27502baad3293f85486df0384159c6a",
+      "git_blob": "b46b0f3760bd1d0f4f2d7cf7826c06726c7e7014"
+    },
+    "system/lib/vendor.samsung.hardware.gnss@2.1.so": {
+      "sha256": "a19c37e4f1e35f5e58694762efca8c3136bd162fdba26eb97a62e69febe8f6a5",
+      "git_blob": "210759b7f751fb68f8039bd408ecafbc06d034db"
+    },
+    "system/lib/vendor.samsung.hardware.hyper-V2-cpp.so": {
+      "sha256": "05ee927b6022a315671f2ac1174b1a6de9beaa85435154eddd61bbbb37645951",
+      "git_blob": "a5298adc70ee8317bcea19429ca3e6407cca1da4"
+    },
+    "system/lib/vendor.samsung.hardware.hyper-V2-ndk.so": {
+      "sha256": "e9fa4a6d16252d4751477be6d7ed2858de2d2280fa77802e9bf6f2ec4786296e",
+      "git_blob": "24415475d3c3d028c5f6dd301edc924f3c033095"
+    },
+    "system/lib/vendor.samsung.hardware.keymint-V1-ndk.so": {
+      "sha256": "2f0f157def5bf38153729ba92e829fb9c734afa1d1a26402b3fd878c983b0c67",
+      "git_blob": "49076bf4b8e5e656534bd8a117487d38ac4bcc30"
+    },
+    "system/lib/vendor.samsung.hardware.media.converter-V2-ndk.so": {
+      "sha256": "255fe63f12c44585b823f75590741a1e477cc3dc31da72eee8159246254490bc",
+      "git_blob": "c504f40a3fdd54f08a02cfb3857c52f03e9b903a"
+    },
+    "system/lib/vendor.samsung.hardware.media.mpp-V5-ndk.so": {
+      "sha256": "f122d35c9bd14fe16c477a2c3500f314a60fa28ce43ea5df647c0341a0ce2838",
+      "git_blob": "9038a6649c6e96e376141d7ab608d3b92f9981a9"
+    },
+    "system/lib/vendor.samsung.hardware.miscpower@2.0.so": {
+      "sha256": "db0cb13fc7e5123fd3587a3dd24bcab1585b9c09cfa4ca66217742eea7035cad",
+      "git_blob": "1428b36ede9acbfc889f0a96a2e442c9f50de5ab"
+    },
+    "system/lib/vendor.samsung.hardware.mpos-V1-ndk.so": {
+      "sha256": "dffcd9fed053b05c3213bdcf9ad65fb3543bd97688ee20f355afefeeb8e37437",
+      "git_blob": "58c2690b4aef73c091a89dcd5717b8ca1fc18436"
+    },
+    "system/lib/vendor.samsung.hardware.security.drk@2.0.so": {
+      "sha256": "1a5a311f64f683f378fd95601759b86b3013a6afbf3d37eff979fb2ce12c2ead",
+      "git_blob": "d34ff42dadce9cf46ece2f6650620bdfac282186"
+    },
+    "system/lib/vendor.samsung.hardware.security.engmode@1.0.so": {
+      "sha256": "449fcbc7f08b2d8270ee4de2694c5e6fb5ed539fe13cd57a380d21f4681ae310",
+      "git_blob": "a5983f122f02c5489ba91031430b586e2998aced"
+    },
+    "system/lib/vendor.samsung.hardware.security.sem@1.0.so": {
+      "sha256": "6251cdde32c7f51299d1c5be676ddf0e07a12c1ac0812450e2825f5b6529b4d6",
+      "git_blob": "1fce02fd01b0f8f7ec6ec4c25d7b873766789010"
+    },
+    "system/lib/vendor.samsung.hardware.security.skpm@1.0.so": {
+      "sha256": "e86ae06aae663acb084724604978e80ac69d2374556520f6cb45926c317ed402",
+      "git_blob": "1bbc460f9d5dda13c32d9f23adb71b55822f1d14"
+    },
+    "system/lib/vendor.samsung.hardware.security.ssu-V1-ndk.so": {
+      "sha256": "c86b5cc78cd306917c7078c860a960e67c173440fe076c5da139d79442c4a1cd",
+      "git_blob": "023bba74c92ad73564d0cdb4e89d17f997d56ab5"
+    },
+    "system/lib/vendor.samsung.hardware.security.vaultkeeper@2.0.so": {
+      "sha256": "349a523da8548f416e65a7f13213d76d78a37aa1caa533cbccc938cb3931ed5d",
+      "git_blob": "ef21be0e7f972e1741dd5b0f3d4b5fcf368a91c8"
+    },
+    "system/lib/vendor.samsung.hardware.security.widevine.keyprov-V1-ndk.so": {
+      "sha256": "b1540ea44d75b638ed586a1f7e6fba68bb7d530036d044fe7aa2dfd0c91548f9",
+      "git_blob": "cd17d0c27c2d60c0580844f06cf1631409e0dfb5"
+    },
+    "system/lib/vendor.samsung.hardware.security.wsm.service-V1-ndk.so": {
+      "sha256": "6b4197fcba3d8c15607aa91ec8f2fa5661a3d1718c01fdbfba8ba5a450819130",
+      "git_blob": "e06ffa8d429c7d0c9f8e4a8a7694cd1ad04e0811"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.blockchain@1.0.so": {
+      "sha256": "ccab03b6e564de89c4ebce47a561e69ed3deaa7bd5e6d8e3f6c08ea34ca04bbc",
+      "git_blob": "e58c0d04f74fb70b1bc9817aa899e1653720fedc"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.ddar@1.0.so": {
+      "sha256": "dad718bbed9ffde0ae3915cad302c9c1d13d2d1c6088b60dc37072acb3e282f6",
+      "git_blob": "4e451b4d237c8fd7260f706d3982973d768158d5"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.hdm@1.0.so": {
+      "sha256": "2918b0b65a4fe8c70bad1a8a0032dc6cef353b5ebb5bd3316adebf0a13914b63",
+      "git_blob": "5c1c6de7b9ffed6f2679057737c2086a0f7670bb"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.hdm@1.1.so": {
+      "sha256": "1d13c2c878a6a994ef95d24c23c89d31654ccf33f6b6b51183cad6c388fd6fef",
+      "git_blob": "87d63517221474ac8b73191a23d2bda9fa39163b"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.iccc@1.0.so": {
+      "sha256": "afd438f163da7b3b309a3a6c163b3ec373b148b7576b98301cfc022b161c3d9e",
+      "git_blob": "d86a7c6166de697ffb05f7b3d1c36fddeb8fcdd4"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.kg-V2-ndk.so": {
+      "sha256": "c86c69431b7d72468e71676181f8e07d7e959e0f6864a25e3ef6d1381127cc07",
+      "git_blob": "3465e387a9d745b6e913e168e228065e3f2484bd"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.mpos_tui@1.0.so": {
+      "sha256": "14eaf0db5cdc030c4d8075d1ff8ffc7e588acfdaef05e0c8d8ddec6b4e4661de",
+      "git_blob": "630cd713c975fde98146fe3326f13ce80e471142"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.payment@1.0.so": {
+      "sha256": "2e626e2473383535832d674ad19763028148885adb3e6723d8767eeb787f6e32",
+      "git_blob": "01c9c1d0a8ea92915c7d4a99daab10e149435987"
+    },
+    "system/lib/vendor.samsung.hardware.tlc.ucm@2.0.so": {
+      "sha256": "9c06e87b1fc3d133807cc3da02f1e6defd5685129919ce7c26601c7ca0b63e10",
+      "git_blob": "d3f9c8de02a0c436477d166fac973016affae3d2"
+    },
+    "system/lib/vendor.samsung.hardware.vibrator-V5-cpp.so": {
+      "sha256": "67f512ff4a4553eac788e3f5121294bcffe8cd863242f38032c585ba6340bf71",
+      "git_blob": "c91e300b20ffced196128565e39d718a5fb6a9ce"
+    },
+    "system/lib/vendor.samsung.hardware.vibrator@2.0.so": {
+      "sha256": "4267173b1ecc3508b2adbcea687925c3cbb2d5bc8e02d21df85a4abf4adcbd0b",
+      "git_blob": "81d04d146f836c7a9f09b47ca4977f00b56cb449"
+    },
+    "system/lib/vendor.samsung.hardware.vibrator@2.1.so": {
+      "sha256": "c6bb5659c0d03457888b27717a0e97cf9faa22a4e1dbb28f995ae87a745e372d",
+      "git_blob": "7d4d16d2de81589c889131f3dcbae7b4b5673371"
+    },
+    "system/lib/vendor.samsung.hardware.vibrator@2.2.so": {
+      "sha256": "d4c3717ea955a4324765a1711f761a468e2d5285bba812e3f3e53059664a49a4",
+      "git_blob": "6a07533256d3260ed9b1474160517baffb72e0a2"
+    },
+    "system/lib/vendor.samsung_slsi.hardware.eden_runtime@1.0.so": {
+      "sha256": "9886f992054cd4c62f1dcdb257b1e521a18261cb82db250f2b55341be229361c",
+      "git_blob": "8858809432e73c5138fd6cbf23ea38f963e496cf"
+    },
+    "system/lib/vendor.samsung_slsi.hardware.enn_aux@1.0.so": {
+      "sha256": "3225922f982ae21bff4821ef0e95b6f8cf6f3e3aa0dd5e8d8953a79740368c55",
+      "git_blob": "09fcbb57032302c3a24e27c18e1a9811d257e1a8"
+    },
+    "system/lib/vexfwk_service_aidl-ndk.so": {
+      "sha256": "e9fc21d0334e752b5f09304673afacf6cb9132df63fd7267da85d6a5615b3dcb",
+      "git_blob": "90f56f23b78e35c65888b32ee25bdfcd5fa3c0a3"
+    },
+    "system/lib/vintf-codecsolution-V2-cpp.so": {
+      "sha256": "cc06bc3d3cd41632e66dd849429eb95c4a94202af4a474860492d006695ab9ba",
+      "git_blob": "1da76c652af598df8e19321bcfeed1228e0cffbd"
+    },
+    "system/lib/vintf-hdrsolution-V3-cpp.so": {
+      "sha256": "119e113c8532f3008ada85b312b3f605da597723541fcab79ded1e1701913fad",
+      "git_blob": "f29a1f274f843600cf4e131d2573e8f4063dc265"
+    }
+  },
+  "apex": {
+    "com.google.android.art_compressed.apex": {
+      "source_sha256": "bc04bea67a85ef8767693b5ff6bf25cf7aa16e4280f0e81734e4448ea9d45db6",
+      "donor_sha256": "2e119328b943c5b32f510862709cb0dab69cb27a8fb28ac06bb526bf8f7146f3"
+    },
+    "com.google.android.conscrypt_compressed.apex": {
+      "source_sha256": "22b33c81f3ab21c3496fc4db38e0b1e299be56b94c419c2a3f3622a2cb394d23",
+      "donor_sha256": "13123cbda17e860a8e1eeff2715fb177c519f842637014da4df3bde0760303e6"
+    },
+    "com.google.android.media_compressed.apex": {
+      "source_sha256": "7fbc696e310256f645c5938c84c0630855c022b73fef9b3e1cb4a836921ad8f2",
+      "donor_sha256": "0f65bf48c04d320ce1975bc8da8abba5d754001cb6300963fc26067eb5e162e6"
+    },
+    "com.google.android.mediaprovider_compressed.apex": {
+      "source_sha256": "aaf2133c0f9091df7d5abc75048ad19e0175e99380e35f5e906d4faa903468be",
+      "donor_sha256": "6fdd50e4750c771e07dae497da6b5df4f79f4b15a027700ff4a6a753522839ae"
+    },
+    "com.google.android.neuralnetworks_compressed.apex": {
+      "source_sha256": "4fe4136c63e4d89dd35384f4c92d0d2e0e9207eaf4e84d1752cfd2771072ec2b",
+      "donor_sha256": "0cfc675d69117655a526011c56ae07a1f98b8f27231f5a650b07706b4e5f8cad"
+    },
+    "com.google.android.os.statsd_compressed.apex": {
+      "source_sha256": "a39b35e99e11ee70689d6b14e3f2c9bfb7776c47d703006d6f66cf30f2114ba0",
+      "donor_sha256": "538e25d226c704cd008574655e620f5c0b2161ed57b0d97d5ef4b53bfe3389e0"
+    },
+    "com.google.android.tethering_compressed.apex": {
+      "source_sha256": "a1ff30912efdfd037e0964c73ba522f40a915f8a65936c60e874a30273189a25",
+      "donor_sha256": "1469a7802e1bf9437d66f9966175970c5e367ff39413b549bce101c43b4dd2f0"
+    }
+  },
+  "prerequisites": {
+    "system/apex/com.android.runtime.apex": "3f214aeae1f572dec306231ae4c0ca787a2bb5bbf4962e2d550e92a0b5ea8330",
+    "system/apex/com.android.i18n.apex": "250273fb4bcf04b171736f3d010ce5e6a1ddad31aa6b1e46fb2aa03aafbfad40"
+  }
+}

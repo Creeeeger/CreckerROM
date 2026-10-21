@@ -56,7 +56,8 @@ GET_WORK_DIR_HASH()
     fi
     case "$TARGET_CODENAME" in
         x1s|y2s|z3s|r8s|c1s|c2s)
-            HASH_DIRS+=("$SRC_DIR/scripts/internal/check_32bit_support.py")
+            HASH_DIRS+=("$SRC_DIR/scripts/internal/check_32bit_support.py"
+                "$SRC_DIR/prebuilts/samsung/r11sxxx_32bit")
             ;;
     esac
     TREE_HASH="$(
@@ -75,7 +76,6 @@ GET_WORK_DIR_HASH()
             "ROM_VERSION=${ROM_VERSION:-}" \
             "ROM_KERNEL_LOCALVERSION=${ROM_KERNEL_LOCALVERSION:-}" \
             "ROM_DISPLAY_NAME=${ROM_DISPLAY_NAME:-}" \
-            "COMPAT32_SOURCE_DIR=${COMPAT32_SOURCE_DIR:-}" \
             "ROM_DEBLOAT_LEVEL=${ROM_DEBLOAT_LEVEL:-default}" | \
             sha1sum | cut -d " " -f 1
     )"
