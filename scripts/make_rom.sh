@@ -19,6 +19,10 @@
 set -e
 
 # [
+source "$SRC_DIR/scripts/utils/kernel_mode_utils.sh" || exit 1
+VALIDATE_KERNEL_MODE_SELECTION "${TARGET_ENABLE_SECURE_KERNEL:-false}" \
+    "${TARGET_SAMSUNG_ENABLE_KVM:-false}" "${TARGET_BUILD_MODE:-normal}" \
+    "${TARGET_PLATFORM:-}" "${KERNEL_BRANCH:-}" || exit 1
 source "$SRC_DIR/scripts/utils/build_utils.sh" || exit 1
 source "$SRC_DIR/scripts/utils/module_utils.sh" || exit 1
 
@@ -50,7 +54,7 @@ GET_WORK_DIR_HASH()
     local TREE_HASH
     local OPTS_HASH
     local HASH_DIRS=("$SRC_DIR/unica" "$SRC_DIR/target/$TARGET_CODENAME" "$SRC_DIR/scripts/expertraw"
-        "$SRC_DIR/scripts/utils/kernel_utils.sh")
+        "$SRC_DIR/scripts/utils/kernel_utils.sh" "$SRC_DIR/scripts/utils/kernel_mode_utils.sh")
     if [ -d "$SRC_DIR/platform/$TARGET_PLATFORM/patches" ]; then
         HASH_DIRS+=("$SRC_DIR/platform/$TARGET_PLATFORM/patches")
     fi
@@ -73,6 +77,7 @@ GET_WORK_DIR_HASH()
             "FORCE_EXT4_IMAGES=${FORCE_EXT4_IMAGES:-false}" \
             "TARGET_ENABLE_ENCRYPTION=${TARGET_ENABLE_ENCRYPTION:-false}" \
             "TARGET_ENABLE_KSU=${TARGET_ENABLE_KSU:-true}" \
+            "TARGET_ENABLE_SECURE_KERNEL=${TARGET_ENABLE_SECURE_KERNEL:-false}" \
             "ROM_VERSION=${ROM_VERSION:-}" \
             "ROM_KERNEL_LOCALVERSION=${ROM_KERNEL_LOCALVERSION:-}" \
             "ROM_DISPLAY_NAME=${ROM_DISPLAY_NAME:-}" \

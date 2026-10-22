@@ -61,6 +61,7 @@ _PRINT_USAGE()
     echo " --kernel-only : Build and sign only kernel test images for Heimdall" >&2
     echo " --ksu : Include KernelSU in the kernel and preload its manager app (default)" >&2
     echo " --no-ksu : Disable KernelSU in the kernel and omit its manager app" >&2
+    echo " --secureKernel : Use Samsung_security for Exynos990 kernels (incompatible with --kvm and --rollback)" >&2
     echo " --stock : Use stock recovery from the target AP firmware instead of TWRP" >&2
     echo " --avb : Enable AVB signing, image signing and vbmeta creation" >&2
     echo " --avb-low-security : Enable AVB low-security mode without partition image signing" >&2
@@ -178,6 +179,7 @@ export ROM_AVB_LOW_SECURITY="false"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="true"
 export ROM_AVB_MODEL=""
 export ROM_ENABLE_KVM="false"
+export ROM_ENABLE_SECURE_KERNEL="false"
 export ROM_BUILD_MODE="normal"
 export ROM_ROLLBACK_FIRMWARE=""
 export ROM_IS_OFFICIAL="${ROM_IS_OFFICIAL:-true}"
@@ -228,6 +230,8 @@ while [[ "$1" == "-"* ]]; do
         export ROM_ENABLE_KSU="true"
     elif [[ "$1" == "--no-ksu" ]]; then
         export ROM_ENABLE_KSU="false"
+    elif [[ "$1" == "--secureKernel" ]]; then
+        export ROM_ENABLE_SECURE_KERNEL="true"
     elif [[ "$1" == "--stock" ]]; then
         export ROM_RECOVERY_TYPE="stock"
     elif [[ "$1" == "--avb" ]]; then
@@ -274,6 +278,10 @@ while [[ "$1" == "-"* ]]; do
     fi
     shift
 done
+
+source "$SRC_DIR/scripts/utils/kernel_mode_utils.sh" || return 1
+VALIDATE_KERNEL_MODE_SELECTION "$ROM_ENABLE_SECURE_KERNEL" "$ROM_ENABLE_KVM" \
+    "$ROM_BUILD_MODE" "" "${KERNEL_BRANCH:-}" || return 1
 
 if [[ "$ROM_DEBLOAT_LEVEL" != "default" ]] && \
         [[ "$ROM_DEBLOAT_LEVEL" != "none" ]] && \
@@ -420,6 +428,7 @@ _SAVED_ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY"
 _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
 _SAVED_ROM_AVB_MODEL="$ROM_AVB_MODEL"
 _SAVED_ROM_ENABLE_KVM="$ROM_ENABLE_KVM"
+_SAVED_ROM_ENABLE_SECURE_KERNEL="$ROM_ENABLE_SECURE_KERNEL"
 _SAVED_ROM_BUILD_MODE="$ROM_BUILD_MODE"
 _SAVED_ROM_ROLLBACK_FIRMWARE="$ROM_ROLLBACK_FIRMWARE"
 _SAVED_ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL"
@@ -434,6 +443,7 @@ export ROM_AVB_LOW_SECURITY="$_SAVED_ROM_AVB_LOW_SECURITY"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
 export ROM_AVB_MODEL="$_SAVED_ROM_AVB_MODEL"
 export ROM_ENABLE_KVM="$_SAVED_ROM_ENABLE_KVM"
+export ROM_ENABLE_SECURE_KERNEL="$_SAVED_ROM_ENABLE_SECURE_KERNEL"
 export ROM_BUILD_MODE="$_SAVED_ROM_BUILD_MODE"
 export ROM_ROLLBACK_FIRMWARE="$_SAVED_ROM_ROLLBACK_FIRMWARE"
 export ROM_IS_OFFICIAL="$_SAVED_ROM_IS_OFFICIAL"
@@ -447,6 +457,7 @@ unset _SAVED_ROM_AVB_LOW_SECURITY
 unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
 unset _SAVED_ROM_AVB_MODEL
 unset _SAVED_ROM_ENABLE_KVM
+unset _SAVED_ROM_ENABLE_SECURE_KERNEL
 unset _SAVED_ROM_BUILD_MODE
 unset _SAVED_ROM_ROLLBACK_FIRMWARE
 unset _SAVED_ROM_IS_OFFICIAL
@@ -470,6 +481,8 @@ env -i \
     ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS" \
     ROM_AVB_MODEL="$ROM_AVB_MODEL" \
     ROM_ENABLE_KVM="$ROM_ENABLE_KVM" \
+    ROM_ENABLE_SECURE_KERNEL="$ROM_ENABLE_SECURE_KERNEL" \
+    KERNEL_BRANCH="${KERNEL_BRANCH:-}" \
     ROM_BUILD_MODE="$ROM_BUILD_MODE" \
     ROM_ROLLBACK_FIRMWARE="$ROM_ROLLBACK_FIRMWARE" \
     ROM_IS_OFFICIAL="$ROM_IS_OFFICIAL" \

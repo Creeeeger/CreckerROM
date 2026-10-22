@@ -1,9 +1,11 @@
 # [
 source "$SRC_DIR/scripts/utils/kernel_utils.sh" || return 1
+source "$SRC_DIR/scripts/utils/kernel_mode_utils.sh" || return 1
 
 CREEEEGER_KERNEL_REPO="https://github.com/Creeeeger/exynos990Kernel"
 CREEEEGER_KERNEL_REPO="${CREEEEGER_KERNEL_REPO%/}"
 CREEEEGER_KERNEL_STABLE_BRANCH="OneUI7_8_stable"
+CREEEEGER_KERNEL_SECURITY_BRANCH="Samsung_security"
 
 HAS_LTE_DTBO()
 {
@@ -49,6 +51,13 @@ SELECT_KERNEL_REMOTE_BRANCH()
 {
     local BRANCH
 
+    if [ "${TARGET_ENABLE_SECURE_KERNEL:-false}" = "true" ]; then
+        git -C "$KERNEL_TMP_DIR" show-ref --verify --quiet \
+            "refs/remotes/origin/$CREEEEGER_KERNEL_SECURITY_BRANCH" || return 1
+        printf '%s\n' "$CREEEEGER_KERNEL_SECURITY_BRANCH"
+        return 0
+    fi
+
     if [ "${TARGET_SAMSUNG_ENABLE_KVM:-false}" = "true" ]; then
         while IFS= read -r BRANCH; do
             case "$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]')" in
@@ -79,7 +88,11 @@ SAFE_PULL_CHANGES()
     local REMOTE
     local REMOTE_BRANCH
 
-    if [ -n "${KERNEL_BRANCH:-}" ]; then
+    VALIDATE_KERNEL_MODE_SELECTION "${TARGET_ENABLE_SECURE_KERNEL:-false}" \
+        "${TARGET_SAMSUNG_ENABLE_KVM:-false}" "${TARGET_BUILD_MODE:-normal}" \
+        "${TARGET_PLATFORM:-}" "${KERNEL_BRANCH:-}" || return 1
+
+    if [ -n "${KERNEL_BRANCH:-}" ] && [ "${TARGET_ENABLE_SECURE_KERNEL:-false}" != "true" ]; then
         if ! git check-ref-format --branch "$KERNEL_BRANCH" >/dev/null 2>&1 || \
                 ! git -C "$KERNEL_TMP_DIR" show-ref --verify --quiet "refs/heads/$KERNEL_BRANCH"; then
             ABORT "Requested local kernel branch does not exist: $KERNEL_BRANCH"
@@ -90,12 +103,23 @@ SAFE_PULL_CHANGES()
         return 0
     fi
 
+    if [ "${TARGET_ENABLE_SECURE_KERNEL:-false}" = "true" ] && \
+            git -C "$KERNEL_TMP_DIR" show-ref --verify --quiet "refs/heads/$CREEEEGER_KERNEL_SECURITY_BRANCH"; then
+        LOG "- Using local security kernel branch: $CREEEEGER_KERNEL_SECURITY_BRANCH (automatic updates skipped)"
+        git -C "$KERNEL_TMP_DIR" switch -- "$CREEEEGER_KERNEL_SECURITY_BRANCH" || return 1
+        return 0
+    fi
+
     # Repair repositories previously cloned with --single-branch as well as
     # configuring fresh clones: every origin branch must have a remote ref.
     EVAL "git -C \"$KERNEL_TMP_DIR\" remote set-branches origin '*'" || return 1
     EVAL "git -C \"$KERNEL_TMP_DIR\" fetch origin --prune --recurse-submodules=on-demand" || return 1
 
     if ! REMOTE_BRANCH="$(SELECT_KERNEL_REMOTE_BRANCH)"; then
+        if [ "${TARGET_ENABLE_SECURE_KERNEL:-false}" = "true" ]; then
+            ABORT "Security kernel branch origin/$CREEEEGER_KERNEL_SECURITY_BRANCH was not found."
+            return 1
+        fi
         if [ "${TARGET_SAMSUNG_ENABLE_KVM:-false}" = "true" ]; then
             ABORT "No origin branch containing 'kvm' was found in the Creeeeger kernel repository."
             return 1
@@ -147,14 +171,17 @@ SAFE_PULL_CHANGES()
 REPLACE_KERNEL_BINARIES()
 {
     local KERNEL_TMP_DIR="$KERNEL_TMP_DIR-$TARGET_PLATFORM"
+    VALIDATE_KERNEL_MODE_SELECTION "${TARGET_ENABLE_SECURE_KERNEL:-false}" \
+        "${TARGET_SAMSUNG_ENABLE_KVM:-false}" "${TARGET_BUILD_MODE:-normal}" \
+        "$TARGET_PLATFORM" "${KERNEL_BRANCH:-}" || return 1
     [[ ! -d "$KERNEL_TMP_DIR" ]] && mkdir -p "$KERNEL_TMP_DIR"
 
-    if [ -n "${KERNEL_BRANCH:-}" ]; then
+    if [ -n "${KERNEL_BRANCH:-}" ] && [ "${TARGET_ENABLE_SECURE_KERNEL:-false}" != "true" ]; then
         if [ ! -e "$KERNEL_TMP_DIR/.git" ]; then
             ABORT "KERNEL_BRANCH requires an existing local kernel checkout: $KERNEL_TMP_DIR"
             return 1
         fi
-    elif [[ -d "$KERNEL_TMP_DIR/.git" ]]; then
+    elif [[ "${TARGET_ENABLE_SECURE_KERNEL:-false}" != "true" ]] && [[ -d "$KERNEL_TMP_DIR/.git" ]]; then
         local CURRENT_URL
 
         CURRENT_URL="$(git -C "$KERNEL_TMP_DIR" remote get-url origin 2>/dev/null || true)"
@@ -167,7 +194,11 @@ REPLACE_KERNEL_BINARIES()
 
     if [[ ! -e "$KERNEL_TMP_DIR/.git" ]]; then
         LOG "- Cloning Creeeeger kernel repo"
-        EVAL "git clone --recurse-submodules \"$CREEEEGER_KERNEL_REPO\" \"$KERNEL_TMP_DIR\"" || return 1
+        if [ "${TARGET_ENABLE_SECURE_KERNEL:-false}" = "true" ]; then
+            EVAL "git clone --recurse-submodules --branch \"$CREEEEGER_KERNEL_SECURITY_BRANCH\" \"$CREEEEGER_KERNEL_REPO\" \"$KERNEL_TMP_DIR\"" || return 1
+        else
+            EVAL "git clone --recurse-submodules \"$CREEEEGER_KERNEL_REPO\" \"$KERNEL_TMP_DIR\"" || return 1
+        fi
     else
         LOG "- Existing Creeeeger kernel repo found"
     fi
