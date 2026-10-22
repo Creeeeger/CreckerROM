@@ -311,7 +311,7 @@
 /system/lib/libbrotlidec\.so u:object_r:system_lib_file:s0
 /system/lib/libbrotlienc\.so u:object_r:system_lib_file:s0
 /system/lib/libbufferstats\.so u:object_r:system_lib_file:s0
-/system/lib/libc++\.so u:object_r:system_lib_file:s0
+/system/lib/libc\+\+\.so u:object_r:system_lib_file:s0
 /system/lib/libc\.so u:object_r:system_lib_file:s0
 /system/lib/libcallstatemanager\.so u:object_r:system_lib_file:s0
 /system/lib/libcamera2ndk\.so u:object_r:system_lib_file:s0
@@ -639,7 +639,7 @@
 /system/lib/libstatshidl\.so u:object_r:system_lib_file:s0
 /system/lib/libstatslog\.so u:object_r:system_lib_file:s0
 /system/lib/libstatslog_nfc\.so u:object_r:system_lib_file:s0
-/system/lib/libstdc++\.so u:object_r:system_lib_file:s0
+/system/lib/libstdc\+\+\.so u:object_r:system_lib_file:s0
 /system/lib/libsthmbc\.so u:object_r:system_lib_file:s0
 /system/lib/libsthmbcadapter\.so u:object_r:system_lib_file:s0
 /system/lib/libsume\.so u:object_r:system_lib_file:s0
