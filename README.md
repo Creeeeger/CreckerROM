@@ -41,7 +41,7 @@
   chain and rebuilt platform applications so locked-bootloader builds use one consistent signing identity
 - Exact physical-model boot-chain support for every supported Exynos990 S20, S20 FE and Note20 variant, including
   correct BL1 metadata, rollback/RP revisions, LTE/5G runtime aliases and signed PIT handling
-- Boot-image and AVB signing metadata updated to patch level **2026-10-01**
+- Boot-image and AVB signing metadata updated to patch level **2026-10-05**
 - Encrypted Exynos990 boot support with selectable encrypted or unencrypted builds
 - Correct Exynos990 HIDL DRK path, restoring proper IMEI and device-identity reporting
 - Working Samsung Cloud E2EE
