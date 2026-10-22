@@ -1,0 +1,17 @@
+{
+  "source": "https://github.com/KernelSU-Next/KernelSU-Next",
+  "manager_revision": "b427a3f9c2421a443f961007bfce66b25486643f",
+  "workflow_run": "https://github.com/KernelSU-Next/KernelSU-Next/actions/runs/39297115788",
+  "artifact_id": 12209218898,
+  "artifact_name": "manager",
+  "artifact_sha256": "01c3280daa769e634b955b2a43f032082c27268191c70bdbdba05d5f37b5a7b8",
+  "download_url": "https://nightly.link/KernelSU-Next/KernelSU-Next/actions/runs/39297115788/manager.zip",
+  "apk_name": "KernelSU_Next_v3.4.2-50-gb427a3f9_33405-release.apk",
+  "version_code": 33405,
+  "uapi": 6,
+  "apk_sha256": "43acb0587741b845712a12c1ea08cacb8aede72118f4895312745a6769a45fda",
+  "certificate_size": 998,
+  "certificate_sha256": "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7",
+  "kernel_legacy_revision": "0b17f24246db5c80c056b92c15bcad2b77f1276e",
+  "kernel_legacy_version": 33315
+}

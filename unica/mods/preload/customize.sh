@@ -1,4 +1,4 @@
-KERNELSU_MANAGER_APK="https://github.com/KernelSU-Next/KernelSU-Next/releases/download/v3.4.1/KernelSU_Next_v3.4.1_33333-release.apk"
+KERNELSU_MANAGER_APK="$SRC_DIR/prebuilts/kernelsu/KernelSU-Next.apk"
 # https://github.com/tiann/KernelSU/issues/886
 APK_PATH="system/preload/KernelSU-Next/com.rifsxd.ksunext-mesa==/base.apk"
 
@@ -6,7 +6,7 @@ mkdir -p "$WORK_DIR/system/system/preload"
 if [ "${TARGET_ENABLE_KSU:-true}" = "true" ]; then
     LOG "- Adding KernelSU-Next.apk to preload apps"
     mkdir -p "$WORK_DIR/system/$(dirname "$APK_PATH")"
-    DOWNLOAD_FILE "$KERNELSU_MANAGER_APK" "$WORK_DIR/system/$APK_PATH"
+    cp "$KERNELSU_MANAGER_APK" "$WORK_DIR/system/$APK_PATH" || exit 1
 else
     LOG "- Omitting KernelSU-Next.apk from preload apps"
     rm -rf "$WORK_DIR/system/system/preload/KernelSU-Next"
