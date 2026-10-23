@@ -74,7 +74,6 @@ GET_WORK_DIR_HASH()
     OPTS_HASH="$(
         printf '%s\n' \
             "DEBUG=${DEBUG:-false}" \
-            "FORCE_EXT4_IMAGES=${FORCE_EXT4_IMAGES:-false}" \
             "TARGET_ENABLE_ENCRYPTION=${TARGET_ENABLE_ENCRYPTION:-false}" \
             "TARGET_ENABLE_KSU=${TARGET_ENABLE_KSU:-true}" \
             "TARGET_ENABLE_SECURE_KERNEL=${TARGET_ENABLE_SECURE_KERNEL:-false}" \
