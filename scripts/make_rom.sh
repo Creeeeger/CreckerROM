@@ -79,7 +79,6 @@ GET_WORK_DIR_HASH()
             "TARGET_ENABLE_KSU=${TARGET_ENABLE_KSU:-true}" \
             "TARGET_ENABLE_SECURE_KERNEL=${TARGET_ENABLE_SECURE_KERNEL:-false}" \
             "ROM_VERSION=${ROM_VERSION:-}" \
-            "ROM_KERNEL_LOCALVERSION=${ROM_KERNEL_LOCALVERSION:-}" \
             "ROM_DISPLAY_NAME=${ROM_DISPLAY_NAME:-}" \
             "ROM_DEBLOAT_LEVEL=${ROM_DEBLOAT_LEVEL:-default}" | \
             sha1sum | cut -d " " -f 1

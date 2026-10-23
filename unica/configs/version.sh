@@ -20,7 +20,6 @@ VERSION_MINOR=7
 VERSION_PATCH=0
 
 ROM_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
-ROM_KERNEL_LOCALVERSION="-CreckerKernel_${ROM_VERSION}"
 
 # Release signing metadata; updating this does not apply Android security fixes.
 # Keep aligned with PIF_SECURITY_PATCH in the bundled Play Integrity profile.

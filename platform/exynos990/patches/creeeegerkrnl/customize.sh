@@ -21,12 +21,6 @@ HAS_LTE_DTBO()
 
 BUILD_KERNEL()
 {
-    if [ -z "${ROM_KERNEL_LOCALVERSION:-}" ]; then
-        LOGE "Missing ROM kernel version. Run source ./buildenv.sh [options] <target> again."
-        return 1
-    fi
-    local KERNEL_LOCALVERSION="$ROM_KERNEL_LOCALVERSION"
-    local KERNEL_BASE_CONFIG="arch/arm64/configs/exynos9830_defconfig"
     local KSU_OPTION=y
     local POLICY_ARGS=()
     if [ "${TARGET_ENABLE_KSU:-true}" = "false" ]; then
