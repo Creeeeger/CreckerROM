@@ -28,7 +28,10 @@ do
         libDocColorEnhance.camera.samsung.so \
         libDocColorEnhance_Auto.camera.samsung.so
     do
-        DELETE_FROM_WORK_DIR "system" "system/$scan_arch/$scan_lib" || return 1
+        if [ -e "$WORK_DIR/system/system/$scan_arch/$scan_lib" ] || \
+                [ -L "$WORK_DIR/system/system/$scan_arch/$scan_lib" ]; then
+            DELETE_FROM_WORK_DIR "system" "system/$scan_arch/$scan_lib" || return 1
+        fi
     done
 done
 
@@ -47,7 +50,9 @@ for scan_assets in \
     saiv/image_understanding/db/aig_document_detector \
     saiv/image_understanding/db/aig_document_classifier
 do
-    DELETE_FROM_WORK_DIR "vendor" "$scan_assets" || return 1
+    if [ -e "$WORK_DIR/vendor/$scan_assets" ] || [ -L "$WORK_DIR/vendor/$scan_assets" ]; then
+        DELETE_FROM_WORK_DIR "vendor" "$scan_assets" || return 1
+    fi
 done
 
 unset scan_arch scan_lib scan_assets
