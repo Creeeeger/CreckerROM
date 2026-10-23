@@ -54,6 +54,7 @@ _PRINT_USAGE()
     echo " --unofficial : Mark the generated config/build as unofficial" >&2
     echo " --ext4-images : Force EROFS target partitions to be built as ext4" >&2
     echo " --encrypt : Enable data encryption in the generated config" >&2
+    echo " --update : Build an update package that preserves misc, metadata and userdata" >&2
     echo " --debloat <default|none|ultra> : Select debloat level (default: current debloat)" >&2
     echo " --no-debloat : Alias for --debloat none" >&2
     echo " --ultra-debloat : Alias for --debloat ultra" >&2
@@ -172,6 +173,7 @@ export ROM_ENABLE_ENCRYPTION="${ROM_ENABLE_ENCRYPTION:-false}"
 export ROM_DEBLOAT_LEVEL="${ROM_DEBLOAT_LEVEL:-default}"
 export ROM_BUILD_HEIMDALL_ONLY="false"
 export ROM_BUILD_KERNEL_ONLY="false"
+export ROM_BUILD_UPDATE="false"
 export ROM_ENABLE_KSU="true"
 export ROM_RECOVERY_TYPE="twrp"
 export ROM_ENABLE_AVB="false"
@@ -208,6 +210,8 @@ while [[ "$1" == "-"* ]]; do
         export FORCE_EXT4_IMAGES=true
     elif [[ "$1" == "--encrypt" ]]; then
         export ROM_ENABLE_ENCRYPTION="true"
+    elif [[ "$1" == "--update" ]]; then
+        export ROM_BUILD_UPDATE="true"
     elif [[ "$1" == "--no-debloat" ]]; then
         export ROM_DEBLOAT_LEVEL="none"
     elif [[ "$1" == "--ultra-debloat" ]]; then
@@ -323,6 +327,10 @@ case "$ROM_BUILD_MODE" in
 esac
 
 if [[ "$ROM_BUILD_MODE" == "rollback" ]]; then
+    if [[ "$ROM_BUILD_UPDATE" == "true" ]]; then
+        echo "--update and --rollback cannot be used together" >&2
+        return 1
+    fi
     if [ -z "$ROM_ROLLBACK_FIRMWARE" ]; then
         echo "Rollback mode requires --rollback-firmware <name>" >&2
         _PRINT_USAGE
@@ -423,6 +431,7 @@ _SAVED_ROM_ENABLE_ENCRYPTION="$ROM_ENABLE_ENCRYPTION"
 _SAVED_ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL"
 _SAVED_ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY"
 _SAVED_ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY"
+_SAVED_ROM_BUILD_UPDATE="$ROM_BUILD_UPDATE"
 _SAVED_ROM_ENABLE_AVB="$ROM_ENABLE_AVB"
 _SAVED_ROM_AVB_LOW_SECURITY="$ROM_AVB_LOW_SECURITY"
 _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
@@ -438,6 +447,7 @@ export ROM_ENABLE_ENCRYPTION="$_SAVED_ROM_ENABLE_ENCRYPTION"
 export ROM_DEBLOAT_LEVEL="$_SAVED_ROM_DEBLOAT_LEVEL"
 export ROM_BUILD_HEIMDALL_ONLY="$_SAVED_ROM_BUILD_HEIMDALL_ONLY"
 export ROM_BUILD_KERNEL_ONLY="$_SAVED_ROM_BUILD_KERNEL_ONLY"
+export ROM_BUILD_UPDATE="$_SAVED_ROM_BUILD_UPDATE"
 export ROM_ENABLE_AVB="$_SAVED_ROM_ENABLE_AVB"
 export ROM_AVB_LOW_SECURITY="$_SAVED_ROM_AVB_LOW_SECURITY"
 export ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS="$_SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS"
@@ -452,6 +462,7 @@ unset _SAVED_ROM_ENABLE_ENCRYPTION
 unset _SAVED_ROM_DEBLOAT_LEVEL
 unset _SAVED_ROM_BUILD_HEIMDALL_ONLY
 unset _SAVED_ROM_BUILD_KERNEL_ONLY
+unset _SAVED_ROM_BUILD_UPDATE
 unset _SAVED_ROM_ENABLE_AVB
 unset _SAVED_ROM_AVB_LOW_SECURITY
 unset _SAVED_ROM_AVB_INCLUDE_PARTITION_DESCRIPTORS
@@ -474,6 +485,7 @@ env -i \
     ROM_DEBLOAT_LEVEL="$ROM_DEBLOAT_LEVEL" \
     ROM_BUILD_HEIMDALL_ONLY="$ROM_BUILD_HEIMDALL_ONLY" \
     ROM_BUILD_KERNEL_ONLY="$ROM_BUILD_KERNEL_ONLY" \
+    ROM_BUILD_UPDATE="$ROM_BUILD_UPDATE" \
     ROM_ENABLE_KSU="$ROM_ENABLE_KSU" \
     ROM_RECOVERY_TYPE="$ROM_RECOVERY_TYPE" \
     ROM_ENABLE_AVB="$ROM_ENABLE_AVB" \

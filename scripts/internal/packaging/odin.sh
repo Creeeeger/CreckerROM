@@ -1,10 +1,16 @@
+source "$(dirname "${BASH_SOURCE[0]}")/update_mode.sh" || return 1
+
 PREPARE_ODIN_EXTRA_FIRMWARE_IMAGES()
 {
     [ -d "$ODIN_EXTRA_DIR" ] && rm -rf "$ODIN_EXTRA_DIR"
     mkdir -p "$ODIN_EXTRA_AP_DIR" "$ODIN_EXTRA_CP_DIR" "$ODIN_EXTRA_CSC_DIR"
 
     PREPARE_ODIN_COMPONENT "AP" "dqmdbg.img" "$ODIN_EXTRA_AP_DIR/dqmdbg.img" "download" "" "true"
-    PREPARE_ODIN_COMPONENT "AP" "misc.bin" "$ODIN_EXTRA_AP_DIR/misc.bin" "stage2" "misc" "true"
+    # Stock misc requests data resizing, which makes Samsung init erase
+    # /metadata. Ship it only for the full installation flow.
+    if ! SHOULD_SKIP_UPDATE_IMAGE "misc"; then
+        PREPARE_ODIN_COMPONENT "AP" "misc.bin" "$ODIN_EXTRA_AP_DIR/misc.bin" "stage2" "misc" "true"
+    fi
 
     PREPARE_ODIN_COMPONENT "CSC" "cache.img" "$ODIN_EXTRA_CSC_DIR/cache.img" "download" "" "true"
     PREPARE_ODIN_COMPONENT "CSC" "omr.img" "$ODIN_EXTRA_CSC_DIR/omr.img" "download" "" "true"
@@ -63,6 +69,7 @@ BUILD_ODIN_PACKAGE_FROM_DIR()
     local TAR_PATH="$ODIN_PACKAGE_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar"
     local TAR_MD5="$ODIN_PACKAGE_DIR/${PACKAGE_PREFIX}_${PACKAGE_NAME}.tar.md5"
     local CHECKSUM
+    local ENTRY
     local -a ARCHIVE_ENTRIES=()
 
     [ -d "$PACKAGE_DIR" ] || {
@@ -72,7 +79,10 @@ BUILD_ODIN_PACKAGE_FROM_DIR()
 
     pushd "$PACKAGE_DIR" > /dev/null
     shopt -s dotglob nullglob
-    ARCHIVE_ENTRIES=(*)
+    for ENTRY in *; do
+        SHOULD_SKIP_UPDATE_IMAGE "$ENTRY" && continue
+        ARCHIVE_ENTRIES+=("$ENTRY")
+    done
     shopt -u dotglob nullglob
     if [ "${#ARCHIVE_ENTRIES[@]}" -lt 1 ]; then
         LOGW "No Odin $PACKAGE_PREFIX package contents were generated; skipping"
@@ -117,6 +127,7 @@ PREPARE_ODIN_AP_DIR()
     else
         while IFS= read -r f; do
             PARTITION="$(basename "$f")"
+            SHOULD_SKIP_UPDATE_IMAGE "$PARTITION" && continue
             IS_VALID_PARTITION_NAME "$PARTITION" || continue
             [ -f "$IMAGE_DIR/$PARTITION.img" ] || continue
             cp -fa "$IMAGE_DIR/$PARTITION.img" "$ODIN_AP_DIR/$PARTITION.img"
@@ -136,6 +147,7 @@ PREPARE_ODIN_AP_DIR()
         [ -n "$ENTRY" ] || continue
         PARTITION="${ENTRY%%=*}"
         COMPONENT_FILE="${ENTRY#*=}"
+        SHOULD_SKIP_UPDATE_IMAGE "$PARTITION" "$COMPONENT_FILE" && continue
         if [ "$PARTITION" = "bootloader" ]; then
             LOGW "Skipping bootloader from AVB firmware components during Odin packaging"
             continue
@@ -161,6 +173,7 @@ PREPARE_ODIN_AP_DIR()
     done < <(LIST_AVB_IMAGE_PACK_FIRMWARE_COMPONENTS)
 
     for PARTITION in $TARGET_ODIN_EXTRA_PARTITIONS; do
+        SHOULD_SKIP_UPDATE_IMAGE "$PARTITION" && continue
         if [ "$PARTITION" = "bootloader" ]; then
             LOGW "Skipping bootloader in TARGET_ODIN_EXTRA_PARTITIONS"
             continue
@@ -168,6 +181,7 @@ PREPARE_ODIN_AP_DIR()
 
         COMPONENT_FILE="$(GET_KV_VALUE "$PARTITION" "$TARGET_ODIN_EXTRA_IMAGE_MAP")"
         [ -n "$COMPONENT_FILE" ] || COMPONENT_FILE="$PARTITION.img"
+        SHOULD_SKIP_UPDATE_IMAGE "$COMPONENT_FILE" && continue
         if IS_BOOTLOADER_COMPONENT "$PARTITION" "$COMPONENT_FILE" && ! SHOULD_PACKAGE_BOOTLOADER_COMPONENTS_IN_AP; then
             LOGW "Skipping bootloader component already packaged in BL Odin: $COMPONENT_FILE"
             continue
@@ -202,6 +216,7 @@ PREPARE_ODIN_AP_DIR()
         while IFS= read -r EXTRA_FILE; do
             COMPONENT_FILE="$(basename "$EXTRA_FILE")"
             PARTITION="${COMPONENT_FILE%.*}"
+            SHOULD_SKIP_UPDATE_IMAGE "$PARTITION" && continue
             if [ -n "${AP_INCLUDED_PARTITIONS[$PARTITION]+x}" ]; then
                 LOGW "Skipping duplicate Odin AP firmware partition $PARTITION ($COMPONENT_FILE)"
                 continue

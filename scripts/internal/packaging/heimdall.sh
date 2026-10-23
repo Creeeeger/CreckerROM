@@ -1,3 +1,5 @@
+source "$(dirname "${BASH_SOURCE[0]}")/update_mode.sh" || return 1
+
 IS_HEIMDALL_DYNAMIC_PARTITION_IMAGE()
 {
     case "$1" in
@@ -20,6 +22,10 @@ COPY_HEIMDALL_IMAGES_FROM_DIR()
 
     while IFS= read -r ENTRY; do
         FILE_NAME="$(basename "$ENTRY")"
+        if SHOULD_SKIP_UPDATE_IMAGE "$FILE_NAME"; then
+            LOG "- Preserving installed ${FILE_NAME%.*} partition in update package"
+            continue
+        fi
         # Dynamic partitions are represented by super.img when the target uses
         # one, so individual logical images are intentionally skipped.
         if [ "$TARGET_SUPER_PARTITION_SIZE" -ne 0 ] && \

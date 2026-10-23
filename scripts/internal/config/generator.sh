@@ -55,6 +55,13 @@ if [[ "$ROM_BUILD_KERNEL_ONLY" != "true" ]] && \
     exit 1
 fi
 
+ROM_BUILD_UPDATE="${ROM_BUILD_UPDATE:-false}"
+if [[ "$ROM_BUILD_UPDATE" != "true" ]] && [[ "$ROM_BUILD_UPDATE" != "false" ]]; then
+    LOGE "ROM_BUILD_UPDATE must be \"true\" or \"false\" (got: $ROM_BUILD_UPDATE)"
+    exit 1
+fi
+TARGET_BUILD_UPDATE="$ROM_BUILD_UPDATE"
+
 ROM_BUILD_MODE="${ROM_BUILD_MODE:-normal}"
 if [[ "$ROM_BUILD_MODE" != "normal" ]] && [[ "$ROM_BUILD_MODE" != "rollback" ]]; then
     LOGE "ROM_BUILD_MODE must be \"normal\" or \"rollback\" (got: $ROM_BUILD_MODE)"
@@ -63,6 +70,10 @@ fi
 
 ROM_ROLLBACK_FIRMWARE="${ROM_ROLLBACK_FIRMWARE:-}"
 if [[ "$ROM_BUILD_MODE" == "rollback" ]]; then
+    if [[ "$ROM_BUILD_UPDATE" == "true" ]]; then
+        LOGE "ROM_BUILD_UPDATE=true cannot be used with ROM_BUILD_MODE=rollback"
+        exit 1
+    fi
     if [ -z "$ROM_ROLLBACK_FIRMWARE" ]; then
         LOGE "Rollback mode requires ROM_ROLLBACK_FIRMWARE"
         exit 1
@@ -248,6 +259,7 @@ fi
     GET_BUILD_VAR "TARGET_ENABLE_KSU" "true"
     GET_BUILD_VAR "TARGET_ENABLE_SECURE_KERNEL" "false"
     GET_BUILD_VAR "TARGET_BUILD_KERNEL_ONLY" "$ROM_BUILD_KERNEL_ONLY"
+    GET_BUILD_VAR "TARGET_BUILD_UPDATE" "$ROM_BUILD_UPDATE"
     GET_BUILD_VAR "TARGET_KERNEL_BUILD_MODULE_PATH" "none"
     GET_BUILD_VAR "TARGET_BUILD_ODIN_PACKAGE" "$TARGET_BUILD_ODIN_PACKAGE"
     GET_BUILD_VAR "TARGET_BUILD_HEIMDALL_PACKAGE" "$TARGET_BUILD_HEIMDALL_PACKAGE"

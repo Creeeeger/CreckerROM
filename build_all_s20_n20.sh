@@ -8,17 +8,18 @@ cd "$SCRIPT_DIR"
 
 PRINT_USAGE()
 {
-    echo "Usage: $0 [--stock] [--ksu|--no-ksu] [--secureKernel]" >&2
+    echo "Usage: $0 [--stock] [--ksu|--no-ksu] [--secureKernel] [--update]" >&2
     echo " --stock : Use stock recovery from each target AP firmware (default: TWRP)" >&2
     echo " --ksu : Include KernelSU in the kernel and preload its manager app (default)" >&2
     echo " --no-ksu : Disable KernelSU in the kernel and omit its manager app" >&2
     echo " --secureKernel : Build Samsung_security kernels for all targets" >&2
+    echo " --update : Build update packages that preserve misc, metadata and userdata" >&2
 }
 
 BUILD_OPTIONS=()
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --stock|--ksu|--no-ksu|--secureKernel)
+        --stock|--ksu|--no-ksu|--secureKernel|--update)
             BUILD_OPTIONS+=("$1")
             ;;
         -h|--help)
