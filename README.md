@@ -62,6 +62,8 @@
 - Camera feed no longer flickers above 40x zoom while recording video, confirmed on retest
 - Motion Photos capture and Samsung Gallery playback; open Gallery and wait a second before taking Motion Photos
 - Fixed Camera Shot suggestions on Exynos990 (thanks to UN1CA)
+- Restored S20 document scanning in the One UI 7 Camera: detection, cropping, perspective correction, neural dewarping,
+  shadow removal, text extraction and image saving
 - Telephoto camera support in Pro photo mode
 - Video recording with the telephoto camera in Pro mode
 - Special telephoto mode combinations in video
@@ -103,10 +105,6 @@ For legacy Google attestation root expiry errors, boot into TWRP and run
 `python3 scripts/update_attestation_root.py` from the computer. It creates and
 verifies a complete EFS backup on the desktop, renews the four public root
 certificates, verifies the changes, and reboots.
-
-# Known bugs
-
-- Document saving in camera shows but crashes on extract / save
 
 # Building
 
