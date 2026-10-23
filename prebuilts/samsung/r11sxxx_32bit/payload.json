@@ -9,6 +9,10 @@
     "commit": "dcd4f778e22e0ba45202b6653ef01d3554599462"
   },
   "files": {
+    "system/apex/com.google.android.adbd_compressed.apex": {
+      "sha256": "28f1c306bda439ca4e305b1a399c02f172ab740b09147014b0810ae43d2513bb",
+      "git_blob": "a002254a718d3e9ff2d35ad235b2f8e635d56d24"
+    },
     "system/apex/com.google.android.art_compressed.apex": {
       "sha256": "2e119328b943c5b32f510862709cb0dab69cb27a8fb28ac06bb526bf8f7146f3",
       "git_blob": "113ee9a7a147eafba2622b48b74eb695de03987e"
@@ -2999,6 +3003,10 @@
     }
   },
   "apex": {
+    "com.google.android.adbd_compressed.apex": {
+      "source_sha256": "d862c8f958760d9622d6e16d4bab0ac221fc4485f0e9b412ceff114b83ddc120",
+      "donor_sha256": "28f1c306bda439ca4e305b1a399c02f172ab740b09147014b0810ae43d2513bb"
+    },
     "com.google.android.art_compressed.apex": {
       "source_sha256": "bc04bea67a85ef8767693b5ff6bf25cf7aa16e4280f0e81734e4448ea9d45db6",
       "donor_sha256": "2e119328b943c5b32f510862709cb0dab69cb27a8fb28ac06bb526bf8f7146f3"

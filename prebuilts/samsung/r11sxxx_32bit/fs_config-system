@@ -1,5 +1,6 @@
 system 0 0 755 capabilities=0x0
 system/apex 0 0 755 capabilities=0x0
+system/apex/com.google.android.adbd_compressed.apex 0 0 644 capabilities=0x0
 system/apex/com.google.android.art_compressed.apex 0 0 644 capabilities=0x0
 system/apex/com.google.android.conscrypt_compressed.apex 0 0 644 capabilities=0x0
 system/apex/com.google.android.media_compressed.apex 0 0 644 capabilities=0x0

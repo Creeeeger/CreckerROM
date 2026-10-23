@@ -5,6 +5,8 @@
 """Validate ARM32 launchers and match OEM public library lists to installed ABIs."""
 
 import argparse
+import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -41,6 +43,22 @@ def require_launchers(work: Path) -> None:
             raise ValueError(f"Missing executable image metadata: /{relative}")
         if contexts.get("/" + re.escape(relative)) != f"u:object_r:{label}:s0":
             raise ValueError(f"Incorrect SELinux image label for /{relative}")
+
+
+def require_multilib_apexes(work: Path) -> None:
+    payload = Path(__file__).resolve().parents[2] / "prebuilts/samsung/r11sxxx_32bit/payload.json"
+    manifest = json.loads(payload.read_text())
+    # ART's 32-bit zygote also loads providers from other APEXes, including
+    # libadbconnection_client.so from adbd. Check the final staged packages
+    # after all ROM modules have run, not just the initial donor payload.
+    for name, expected in manifest["apex"].items():
+        path = work / "system/system/apex" / name
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(block)
+        if digest.hexdigest() != expected["donor_sha256"]:
+            raise ValueError(f"Missing matching ARM32 runtime APEX: {name}")
 
 
 def installed_library(system: Path, name: str, bits: int) -> bool:
@@ -106,13 +124,14 @@ def main() -> int:
     args = parser.parse_args()
     try:
         require_launchers(args.work_dir)
+        require_multilib_apexes(args.work_dir)
         changes, findings = public_library_changes(args.work_dir)
         if findings and not args.fix_public_libraries:
             print("\n".join(findings), file=sys.stderr)
             return 1
         for path, contents in changes.items():
             path.write_text(contents)
-        print(f"ARM32 launchers and image metadata verified; corrected {len(findings)} OEM public library declarations.")
+        print(f"ARM32 launchers, multilib APEXes and image metadata verified; corrected {len(findings)} OEM public library declarations.")
     except (OSError, ValueError) as error:
         print(f"32-bit support validation failed: {error}", file=sys.stderr)
         return 1

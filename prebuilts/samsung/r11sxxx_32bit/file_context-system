@@ -1,5 +1,6 @@
 /system u:object_r:system_file:s0
 /system/apex u:object_r:system_file:s0
+/system/apex/com\.google\.android\.adbd_compressed\.apex u:object_r:system_file:s0
 /system/apex/com\.google\.android\.art_compressed\.apex u:object_r:system_file:s0
 /system/apex/com\.google\.android\.conscrypt_compressed\.apex u:object_r:system_file:s0
 /system/apex/com\.google\.android\.media_compressed\.apex u:object_r:system_file:s0
