@@ -293,6 +293,13 @@ ROUND_UP_TO_4K()
 
 PREPARE_SCRIPT "$@"
 
+# The Exynos990 PROCA_S_OS implementation binds user.pa to SHA256(SHA1(file)).
+# Keep stock certificates intact, but discard stale ones after ROM patching.
+# The EROFS image writer imports the remaining xattrs from INPUT_DIR.
+if [ "${TARGET_PLATFORM:-}" = "exynos990" ] && [ "$FS_TYPE" = "erofs" ]; then
+    python3 "$SRC_DIR/scripts/internal/samsung_auth_xattrs.py" "$INPUT_DIR" || exit 1
+fi
+
 if $DEBUG; then
     if $SPARSE; then
         LOG_STEP_IN "- Starting build_fs_image for $(basename "$OUTPUT_FILE") ($FS_TYPE+sparse)..."
