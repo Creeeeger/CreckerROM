@@ -10,19 +10,7 @@ HEX_PATCH "$WORK_DIR/vendor/lib64/libshotsuggestion_engines.so" \
     "685640b91f850071eb01005469000090" "685640b91f8500710f00001469000090"
 LOG_STEP_OUT
 
-LOG_STEP_IN "- Adding document scan models and configuration"
-# The source camera libraries require these vendor assets when saving scans.
-BLOBS_LIST="
-etc/saiv/image_understanding/db/doc_rectifier
-etc/midas_enhancedocumentscan
-saiv/image_understanding/db/aig_document_detector
-saiv/image_understanding/db/aig_document_classifier
-"
-for blob in $BLOBS_LIST
-do
-    ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "$blob"
-done
-LOG_STEP_OUT
+source "$MODPATH/document_scan.sh" || exit 1
 
 LOG_STEP_IN "- Replacing camera blobs"
 BLOBS_LIST="

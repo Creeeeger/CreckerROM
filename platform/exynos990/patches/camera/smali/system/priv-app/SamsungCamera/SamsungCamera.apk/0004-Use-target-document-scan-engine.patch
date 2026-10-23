@@ -1,0 +1,1110 @@
+From: CreckerROM <creckerrom@localhost>
+Subject: [PATCH] Use the target SmartScan bitmap API for document saving
+
+Keep neural dewarping and shadow removal through the target firmware's scan
+engine. Translate the UI7 SSParam request to its retained legacy bitmap API;
+do not request the donor's per-task JNI API or force the CV-only task.
+
+---
+--- a/smali_classes3/com/samsung/android/smartscan/SmartScanRectify.smali
++++ b/smali_classes3/com/samsung/android/smartscan/SmartScanRectify.smali
+@@ -451,107 +451,10 @@
+ .end method
+
+ .method public static deinitializeMode(I)Z
+-    .locals 6
+-
+-    new-instance v0, Ljava/util/ArrayList;
+-
+-    invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
+-
+-    const/4 v1, 0x0
+-
+-    :goto_0
+-    const/4 v2, 0x7
+-
+-    const/4 v3, 0x1
+-
+-    if-gt v1, v2, :cond_1
+-
+-    const/4 v2, 0x2
+-
+-    const/4 v4, -0x1
+-
+-    invoke-static {v2, v1, v4}, Lcom/samsung/android/smartscan/SmartScanRectify;->nativeGetProperty(III)I
+-
+-    move-result v2
+-
+-    if-ne v3, v2, :cond_0
+-
+-    invoke-static {v1}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+-
+-    move-result-object v3
+-
+-    invoke-virtual {v0, v3}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+-
+-    :cond_0
+-    sget-object v3, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance v4, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v5, "taskStatus ["
+-
+-    invoke-direct {v4, v5}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v4, v1}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    const-string v5, "] = "
+-
+-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v4, v2}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-static {v3, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    add-int/lit8 v1, v1, 0x1
+-
+-    goto :goto_0
+-
+-    :cond_1
+-    sget-object v1, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance v2, Ljava/lang/StringBuilder;
+-
+-    const-string v4, "Supported TaskList = "
+-
+-    invoke-direct {v2, v4}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v2, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-static {v1, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    if-nez p0, :cond_2
+-
+-    new-instance p0, LL2/q;
+-
+-    const/16 v1, 0x13
+-
+-    invoke-direct {p0, v1}, LL2/q;-><init>(I)V
+-
+-    invoke-virtual {v0, p0}, Ljava/util/ArrayList;->removeIf(Ljava/util/function/Predicate;)Z
+-
+-    goto :goto_1
+-
+-    :cond_2
+-    if-ne p0, v3, :cond_3
+-
+-    new-instance p0, LL2/q;
+-
+-    const/16 v1, 0x14
+-
+-    invoke-direct {p0, v1}, LL2/q;-><init>(I)V
+-
+-    invoke-virtual {v0, p0}, Ljava/util/ArrayList;->removeIf(Ljava/util/function/Predicate;)Z
+-
+-    :cond_3
+-    :goto_1
+-    invoke-static {}, Lcom/samsung/android/smartscan/SmartScanRectify;->deinit()Z
++    .locals 0
++
++    # The target engine initializes its supported rectifier/shadow nodes together.
++    invoke-static {}, Lcom/samsung/android/smartscan/SmartScanRectify;->deinitialize()Z
+
+     move-result p0
+
+@@ -683,525 +586,108 @@
+ .end method
+
+ .method public static execute(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;)I
+-    .locals 13
+-
+-    sget-object v0, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    const-string v1, "execute w/ SSparams API is called"
+-
+-    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    sget-boolean v1, Lcom/samsung/android/smartscan/SmartScanRectify;->asyncInitCalled:Z
+-
+-    const/4 v2, 0x1
+-
+-    if-eqz v1, :cond_0
+-
+-    invoke-static {}, Lcom/samsung/android/smartscan/SmartScanRectify;->waitAndGetInitStatus()Z
+-
+-    move-result v1
+-
+-    goto :goto_0
+-
+-    :cond_0
+-    move v1, v2
+-
+-    :goto_0
+-    const/4 v3, -0x1
+-
+-    if-eqz v1, :cond_e
+-
+-    sget-boolean v1, Lcom/samsung/android/smartscan/SmartScanRectify;->existNativeWrapper:Z
+-
+-    if-eqz v1, :cond_c
+-
+-    new-instance v1, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v4, "param.bitmap Size = "
+-
+-    invoke-direct {v1, v4}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
++    .locals 9
++
++    # The Exynos990 ROM supplies the target's legacy native scan engine.
++    # Keep the UI7 SSParam API, but use its existing bitmap JNI entry points.
++    const/4 v0, -0x1
++
++    if-eqz p0, :scan_invalid
++
++    if-eqz p1, :scan_invalid
+
+     invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1000(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Landroid/graphics/Bitmap;
+
+-    move-result-object v4
+-
+-    invoke-virtual {v4}, Landroid/graphics/Bitmap;->getWidth()I
+-
+-    move-result v4
+-
+-    invoke-virtual {v1, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    const-string v4, ", "
+-
+-    invoke-virtual {v1, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1000(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Landroid/graphics/Bitmap;
+-
+-    move-result-object v4
+-
+-    invoke-virtual {v4}, Landroid/graphics/Bitmap;->getHeight()I
+-
+-    move-result v4
+-
+-    invoke-virtual {v1, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+     move-result-object v1
+
+-    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    new-instance v1, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v4, "param.execMode = "
+-
+-    invoke-direct {v1, v4}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
++    if-eqz v1, :scan_invalid
++
++    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1300(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Ljava/util/ArrayList;
++
++    move-result-object v2
++
++    if-eqz v2, :scan_invalid
++
++    invoke-virtual {v2}, Ljava/util/ArrayList;->size()I
++
++    move-result v3
++
++    const/4 v4, 0x4
++
++    if-eq v3, v4, :scan_points_valid
++
++    const/4 v4, 0x5
++
++    if-ne v3, v4, :scan_invalid
++
++    :scan_points_valid
++    mul-int/lit8 v3, v3, 0x2
++
++    new-array v4, v3, [F
++
++    invoke-virtual {v2}, Ljava/util/ArrayList;->iterator()Ljava/util/Iterator;
++
++    move-result-object v2
++
++    const/4 v5, 0x0
++
++    :scan_next_point
++    invoke-interface {v2}, Ljava/util/Iterator;->hasNext()Z
++
++    move-result v6
++
++    if-eqz v6, :scan_execute
++
++    invoke-interface {v2}, Ljava/util/Iterator;->next()Ljava/lang/Object;
++
++    move-result-object v6
++
++    check-cast v6, Landroid/graphics/PointF;
++
++    if-eqz v6, :scan_invalid
++
++    iget v7, v6, Landroid/graphics/PointF;->x:F
++
++    aput v7, v4, v5
++
++    add-int/lit8 v5, v5, 0x1
++
++    iget v7, v6, Landroid/graphics/PointF;->y:F
++
++    aput v7, v4, v5
++
++    add-int/lit8 v5, v5, 0x1
++
++    goto :scan_next_point
++
++    :scan_execute
+     invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1100(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
+
+-    move-result v4
+-
+-    invoke-virtual {v1, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v1
+-
+-    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    new-instance v1, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v4, "param.dewarpType"
+-
+-    invoke-direct {v1, v4}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1200(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
+-
+-    move-result v4
+-
+-    invoke-virtual {v1, v4}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v1
+-
+-    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    new-instance v1, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v4, "param.cornerList"
+-
+-    invoke-direct {v1, v4}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1300(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Ljava/util/ArrayList;
+-
+-    move-result-object v4
+-
+-    invoke-virtual {v1, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v1
+-
+-    invoke-static {v0, v1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1300(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Ljava/util/ArrayList;
+-
+-    move-result-object v0
+-
+-    invoke-virtual {v0}, Ljava/util/ArrayList;->size()I
+-
+-    move-result v1
+-
+-    const/4 v4, 0x2
+-
+-    mul-int/2addr v1, v4
+-
+-    new-array v5, v1, [F
+-
+-    invoke-virtual {v0}, Ljava/util/ArrayList;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v0
+-
+-    const/4 v6, 0x0
+-
+-    move v7, v6
+-
+-    :goto_1
+-    invoke-interface {v0}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v8
+-
+-    if-eqz v8, :cond_1
+-
+-    invoke-interface {v0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v8
+-
+-    check-cast v8, Landroid/graphics/PointF;
+-
+-    add-int/lit8 v9, v7, 0x1
+-
+-    iget v10, v8, Landroid/graphics/PointF;->x:F
+-
+-    aput v10, v5, v7
+-
+-    add-int/2addr v7, v4
+-
+-    iget v8, v8, Landroid/graphics/PointF;->y:F
+-
+-    aput v8, v5, v9
+-
+-    goto :goto_1
+-
+-    :cond_1
+-    :try_start_0
+-    invoke-static {v4, v6, v3}, Lcom/samsung/android/smartscan/SmartScanRectify;->nativeGetProperty(III)I
+-    :try_end_0
+-    .catch Ljava/lang/UnsatisfiedLinkError; {:try_start_0 .. :try_end_0} :catch_0
+-
+-    move v0, v6
+-
+-    goto :goto_2
+-
+-    :catch_0
+-    move-exception v0
+-
+-    invoke-virtual {v0}, Ljava/lang/Throwable;->printStackTrace()V
+-
+-    sget-object v0, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    const-string v7, "Fail to call a new API so the old API will be called"
+-
+-    invoke-static {v0, v7}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    move v0, v2
+-
+-    :goto_2
+-    const/4 v7, 0x3
+-
+-    if-eqz v0, :cond_3
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1100(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
++    move-result v5
++
++    const/4 v6, 0x3
++
++    if-eq v5, v6, :scan_selected_nodes
++
++    const/4 v6, 0x1
++
++    if-eq v5, v6, :scan_selected_nodes
++
++    if-nez v5, :scan_invalid
++
++    invoke-static {v1, v4, p1, v3}, Lcom/samsung/android/smartscan/SmartScanRectify;->execute(Landroid/graphics/Bitmap;[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;I)I
+
+     move-result v0
+
+-    if-ne v0, v7, :cond_2
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1000(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Landroid/graphics/Bitmap;
+-
+-    move-result-object v0
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1100(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
+-
+-    move-result p0
+-
+-    invoke-static {v0, v5, p1, v1, p0}, Lcom/samsung/android/smartscan/SmartScanRectify;->rectify(Landroid/graphics/Bitmap;[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;II)I
+-
+-    move-result v6
+-
+-    goto/16 :goto_6
+-
+-    :cond_2
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1000(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Landroid/graphics/Bitmap;
+-
+-    move-result-object p0
+-
+-    invoke-static {p0, v5, p1, v1}, Lcom/samsung/android/smartscan/SmartScanRectify;->rectify(Landroid/graphics/Bitmap;[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;I)I
+-
+-    move-result v6
+-
+-    goto/16 :goto_6
+-
+-    :cond_3
+-    new-instance v0, Ljava/util/ArrayList;
+-
+-    invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
+-
+-    move v8, v6
+-
+-    :goto_3
+-    const/4 v9, 0x7
+-
+-    if-gt v8, v9, :cond_5
+-
+-    invoke-static {v4, v8, v3}, Lcom/samsung/android/smartscan/SmartScanRectify;->nativeGetProperty(III)I
+-
+-    move-result v9
+-
+-    if-ne v2, v9, :cond_4
+-
+-    invoke-static {v8}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+-
+-    move-result-object v10
+-
+-    invoke-virtual {v0, v10}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+-
+-    :cond_4
+-    sget-object v10, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance v11, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v12, "taskStatus ["
+-
+-    invoke-direct {v11, v12}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v11, v8}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    const-string v12, "] = "
+-
+-    invoke-virtual {v11, v12}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v11, v9}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v11}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v9
+-
+-    invoke-static {v10, v9}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    add-int/lit8 v8, v8, 0x1
+-
+-    goto :goto_3
+-
+-    :cond_5
+-    sget-object v4, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance v8, Ljava/lang/StringBuilder;
+-
+-    const-string v9, "Supported TaskList = "
+-
+-    invoke-direct {v8, v9}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v8, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v8}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v8
+-
+-    invoke-static {v4, v8}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1100(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
+-
+-    move-result v8
+-
+-    if-ne v8, v7, :cond_6
+-
+-    new-instance v7, LL2/q;
+-
+-    const/16 v8, 0x15
+-
+-    invoke-direct {v7, v8}, LL2/q;-><init>(I)V
+-
+-    invoke-virtual {v0, v7}, Ljava/util/ArrayList;->removeIf(Ljava/util/function/Predicate;)Z
+-
+-    goto :goto_4
+-
+-    :cond_6
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1100(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
+-
+-    move-result v7
+-
+-    if-ne v7, v2, :cond_7
+-
+-    new-instance v7, LL2/q;
+-
+-    const/16 v8, 0x16
+-
+-    invoke-direct {v7, v8}, LL2/q;-><init>(I)V
+-
+-    invoke-virtual {v0, v7}, Ljava/util/ArrayList;->removeIf(Ljava/util/function/Predicate;)Z
+-
+-    goto :goto_4
+-
+-    :cond_7
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1100(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
+-
+-    move-result v7
+-
+-    const/16 v8, 0xfe
+-
+-    if-ne v7, v8, :cond_8
+-
+-    new-instance v7, LL2/q;
+-
+-    const/16 v8, 0x17
+-
+-    invoke-direct {v7, v8}, LL2/q;-><init>(I)V
+-
+-    invoke-virtual {v0, v7}, Ljava/util/ArrayList;->removeIf(Ljava/util/function/Predicate;)Z
+-
+-    :cond_8
+-    :goto_4
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1200(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)I
+-
+-    move-result v7
+-
+-    if-ne v7, v2, :cond_9
+-
+-    invoke-static {v6}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+-
+-    move-result-object v2
+-
+-    invoke-virtual {v0, v2}, Ljava/util/ArrayList;->indexOf(Ljava/lang/Object;)I
+-
+-    move-result v2
+-
+-    if-eq v2, v3, :cond_9
+-
+-    const/16 v7, 0x10
+-
+-    invoke-static {v7}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+-
+-    move-result-object v7
+-
+-    invoke-virtual {v0, v2, v7}, Ljava/util/ArrayList;->set(ILjava/lang/Object;)Ljava/lang/Object;
+-
+-    const-string v2, "DewarpTaskType is changed"
+-
+-    invoke-static {v4, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    :cond_9
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;->access$1000(Lcom/samsung/android/smartscan/SmartScanRectify$SSParam;)Landroid/graphics/Bitmap;
+-
+-    move-result-object p0
+-
+-    invoke-static {p0}, Lcom/samsung/android/smartscan/SmartScanRectify;->convertBitmapToSSImage(Landroid/graphics/Bitmap;)Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;
+-
+-    move-result-object p0
+-
+-    invoke-virtual {v0}, Ljava/util/ArrayList;->size()I
+-
+-    move-result v2
+-
+-    if-nez v2, :cond_a
+-
+-    const-string/jumbo v0, "taskList is empty"
+-
+-    invoke-static {v4, v0}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    iget v0, p0, Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;->width:I
+-
+-    iput v0, p1, Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;->width:I
+-
+-    iget v0, p0, Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;->height:I
+-
+-    iput v0, p1, Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;->height:I
+-
+-    iget-object p0, p0, Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;->ImageData:[B
+-
+-    iput-object p0, p1, Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;->ImageData:[B
+-
+-    goto :goto_6
+-
+-    :cond_a
+-    invoke-virtual {v0}, Ljava/util/ArrayList;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object v0
+-
+-    move v6, v3
+-
+-    :goto_5
+-    invoke-interface {v0}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v2
+-
+-    if-eqz v2, :cond_d
+-
+-    invoke-interface {v0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v2
+-
+-    check-cast v2, Ljava/lang/Integer;
+-
+-    sget-object v4, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance v6, Ljava/lang/StringBuilder;
+-
+-    const-string v7, "inImage.data = "
+-
+-    invoke-direct {v6, v7}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    iget-object v7, p0, Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;->ImageData:[B
+-
+-    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+-
+-    const-string v7, ", taskType : "
+-
+-    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v6, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v6
+-
+-    invoke-static {v4, v6}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    invoke-virtual {v2}, Ljava/lang/Integer;->intValue()I
+-
+-    move-result v2
+-
+-    invoke-static {p0, v5, p1, v1, v2}, Lcom/samsung/android/smartscan/SmartScanRectify;->nativeExecuteTask(Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;II)I
+-
+-    move-result v6
+-
+-    if-ne v6, v3, :cond_b
+-
+-    goto :goto_6
+-
+-    :cond_b
+-    move-object p0, p1
+-
+-    goto :goto_5
+-
+-    :cond_c
+-    const-string/jumbo p0, "rectify function is not exist"
+-
+-    invoke-static {v0, p0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    move v6, v3
+-
+-    :cond_d
+-    :goto_6
+-    sget-object p0, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance p1, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v0, "rectify("
+-
+-    invoke-direct {p1, v0}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    sget-object v0, Lcom/samsung/android/smartscan/SmartScanRectify;->activatedAARVer:Ljava/lang/String;
+-
+-    invoke-virtual {p1, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    const-string v0, ") has been executed"
+-
+-    invoke-virtual {p1, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {p1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object p1
+-
+-    invoke-static {p0, p1}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    goto :goto_7
+-
+-    :cond_e
+-    move v6, v3
+-
+-    :goto_7
+-    if-ne v6, v3, :cond_f
+-
+-    sget-object p0, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    const-string p1, "Fail to execute API"
+-
+-    invoke-static {p0, p1}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    :cond_f
+-    return v6
++    return v0
++
++    :scan_selected_nodes
++    invoke-static {v1, v4, p1, v3, v6}, Lcom/samsung/android/smartscan/SmartScanRectify;->execute(Landroid/graphics/Bitmap;[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;II)I
++
++    move-result v0
++
++    :scan_invalid
++    return v0
+ .end method
+
+ .method public static execute([BIII[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;I)I
+@@ -1331,148 +817,85 @@
+ .end method
+
+ .method public static initializeMode(I)Z
+-    .locals 6
+-
++    .locals 0
++
++    # The target engine initializes its supported rectifier/shadow nodes together.
++    invoke-static {}, Lcom/samsung/android/smartscan/SmartScanRectify;->initialize()Z
++
++    move-result p0
++
++    return p0
++.end method
++
++.method private static synthetic lambda$deinitializeMode$5(Ljava/lang/Integer;)Z
++    .locals 1
++
++    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
++
++    move-result p0
++
++    const/4 v0, 0x1
++
++    if-lt p0, v0, :cond_0
++
++    goto :goto_0
++
++    :cond_0
+     const/4 v0, 0x0
+
+-    sput-boolean v0, Lcom/samsung/android/smartscan/SmartScanRectify;->asyncInitCalled:Z
+-
+-    new-instance v1, Ljava/util/ArrayList;
+-
+-    invoke-direct {v1}, Ljava/util/ArrayList;-><init>()V
+-
+-    :goto_0
+-    const/4 v2, 0x7
+-
+-    const/4 v3, 0x1
+-
+-    if-gt v0, v2, :cond_1
+-
+-    const/4 v2, 0x2
+-
+-    const/4 v4, -0x1
+-
+-    invoke-static {v2, v0, v4}, Lcom/samsung/android/smartscan/SmartScanRectify;->nativeGetProperty(III)I
+-
+-    move-result v2
+-
+-    if-ne v3, v2, :cond_0
+-
+-    invoke-static {v0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+-
+-    move-result-object v3
+-
+-    invoke-virtual {v1, v3}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+-
+-    :cond_0
+-    sget-object v3, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance v4, Ljava/lang/StringBuilder;
+-
+-    const-string/jumbo v5, "taskStatus ["
+-
+-    invoke-direct {v4, v5}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v4, v0}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    const-string v5, "] = "
+-
+-    invoke-virtual {v4, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v4, v2}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-static {v3, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    add-int/lit8 v0, v0, 0x1
+-
+-    goto :goto_0
+-
+-    :cond_1
+-    sget-object v0, Lcom/samsung/android/smartscan/SmartScanRectify;->TAG:Ljava/lang/String;
+-
+-    new-instance v2, Ljava/lang/StringBuilder;
+-
+-    const-string v4, "Supported TaskList = "
+-
+-    invoke-direct {v2, v4}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v2, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v2}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v2
+-
+-    invoke-static {v0, v2}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I
+-
+-    if-nez p0, :cond_2
+-
+-    new-instance p0, LL2/q;
+-
+-    const/16 v0, 0x18
+-
+-    invoke-direct {p0, v0}, LL2/q;-><init>(I)V
+-
+-    invoke-virtual {v1, p0}, Ljava/util/ArrayList;->removeIf(Ljava/util/function/Predicate;)Z
+-
+-    goto :goto_1
+-
+-    :cond_2
+-    if-ne p0, v3, :cond_3
+-
+-    new-instance p0, LL2/q;
+-
+-    const/16 v0, 0x19
+-
+-    invoke-direct {p0, v0}, LL2/q;-><init>(I)V
+-
+-    invoke-virtual {v1, p0}, Ljava/util/ArrayList;->removeIf(Ljava/util/function/Predicate;)Z
+-
+-    :cond_3
+-    :goto_1
+-    invoke-virtual {v1}, Ljava/util/ArrayList;->iterator()Ljava/util/Iterator;
+-
+-    move-result-object p0
+-
+-    :goto_2
+-    invoke-interface {p0}, Ljava/util/Iterator;->hasNext()Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_4
+-
+-    invoke-interface {p0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v0
+-
+-    check-cast v0, Ljava/lang/Integer;
+-
+-    invoke-virtual {v0}, Ljava/lang/Integer;->intValue()I
+-
+-    move-result v0
+-
+-    invoke-static {v0}, Lcom/samsung/android/smartscan/SmartScanRectify;->nativeInitTask(I)Z
+-
+-    move-result v0
+-
+-    or-int/2addr v3, v0
+-
+-    goto :goto_2
+-
+-    :cond_4
+-    return v3
+-.end method
+-
+-.method private static synthetic lambda$deinitializeMode$5(Ljava/lang/Integer;)Z
+-    .locals 1
++    :goto_0
++    return v0
++.end method
++
++.method private static synthetic lambda$deinitializeMode$6(Ljava/lang/Integer;)Z
++    .locals 0
+
+     invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
+
+     move-result p0
+
++    if-nez p0, :cond_0
++
++    const/4 p0, 0x1
++
++    goto :goto_0
++
++    :cond_0
++    const/4 p0, 0x0
++
++    :goto_0
++    return p0
++.end method
++
++.method private static synthetic lambda$execute$2(Ljava/lang/Integer;)Z
++    .locals 1
++
++    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
++
++    move-result p0
++
++    const/4 v0, 0x2
++
++    if-lt p0, v0, :cond_0
++
++    const/4 p0, 0x1
++
++    goto :goto_0
++
++    :cond_0
++    const/4 p0, 0x0
++
++    :goto_0
++    return p0
++.end method
++
++.method private static synthetic lambda$execute$3(Ljava/lang/Integer;)Z
++    .locals 1
++
++    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
++
++    move-result p0
++
+     const/4 v0, 0x1
+
+     if-lt p0, v0, :cond_0
+@@ -1486,7 +909,7 @@
+     return v0
+ .end method
+
+-.method private static synthetic lambda$deinitializeMode$6(Ljava/lang/Integer;)Z
++.method private static synthetic lambda$execute$4(Ljava/lang/Integer;)Z
+     .locals 0
+
+     invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
+@@ -1506,17 +929,35 @@
+     return p0
+ .end method
+
+-.method private static synthetic lambda$execute$2(Ljava/lang/Integer;)Z
++.method private static synthetic lambda$initializeMode$0(Ljava/lang/Integer;)Z
+     .locals 1
+
+     invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
+
+     move-result p0
+
+-    const/4 v0, 0x2
++    const/4 v0, 0x1
+
+     if-lt p0, v0, :cond_0
+
++    goto :goto_0
++
++    :cond_0
++    const/4 v0, 0x0
++
++    :goto_0
++    return v0
++.end method
++
++.method private static synthetic lambda$initializeMode$1(Ljava/lang/Integer;)Z
++    .locals 0
++
++    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
++
++    move-result p0
++
++    if-nez p0, :cond_0
++
+     const/4 p0, 0x1
+
+     goto :goto_0
+@@ -1526,101 +967,6 @@
+
+     :goto_0
+     return p0
+-.end method
+-
+-.method private static synthetic lambda$execute$3(Ljava/lang/Integer;)Z
+-    .locals 1
+-
+-    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
+-
+-    move-result p0
+-
+-    const/4 v0, 0x1
+-
+-    if-lt p0, v0, :cond_0
+-
+-    goto :goto_0
+-
+-    :cond_0
+-    const/4 v0, 0x0
+-
+-    :goto_0
+-    return v0
+-.end method
+-
+-.method private static synthetic lambda$execute$4(Ljava/lang/Integer;)Z
+-    .locals 0
+-
+-    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
+-
+-    move-result p0
+-
+-    if-nez p0, :cond_0
+-
+-    const/4 p0, 0x1
+-
+-    goto :goto_0
+-
+-    :cond_0
+-    const/4 p0, 0x0
+-
+-    :goto_0
+-    return p0
+-.end method
+-
+-.method private static synthetic lambda$initializeMode$0(Ljava/lang/Integer;)Z
+-    .locals 1
+-
+-    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
+-
+-    move-result p0
+-
+-    const/4 v0, 0x1
+-
+-    if-lt p0, v0, :cond_0
+-
+-    goto :goto_0
+-
+-    :cond_0
+-    const/4 v0, 0x0
+-
+-    :goto_0
+-    return v0
+-.end method
+-
+-.method private static synthetic lambda$initializeMode$1(Ljava/lang/Integer;)Z
+-    .locals 0
+-
+-    invoke-virtual {p0}, Ljava/lang/Integer;->intValue()I
+-
+-    move-result p0
+-
+-    if-nez p0, :cond_0
+-
+-    const/4 p0, 0x1
+-
+-    goto :goto_0
+-
+-    :cond_0
+-    const/4 p0, 0x0
+-
+-    :goto_0
+-    return p0
+-.end method
+-
+-.method private static synchronized native nativeDeinitTask(I)Z
+-.end method
+-
+-.method private static synchronized native nativeExecuteTask(Lcom/samsung/android/smartscan/SmartScanRectify$SSImage;[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;II)I
+-.end method
+-
+-.method private static synchronized native nativeGetProperty(III)I
+-.end method
+-
+-.method private static synchronized native nativeInitTask(I)Z
+-.end method
+-
+-.method private static synchronized native nativeSetProperty(III)Z
+ .end method
+
+ .method private static synchronized native rectify(Landroid/graphics/Bitmap;[FLcom/samsung/android/smartscan/SmartScanRectify$SSImage;I)I

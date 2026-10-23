@@ -1,0 +1,17 @@
+From: CreckerROM <creckerrom@localhost>
+Subject: [PATCH] Allow the target document scan inference bridge
+
+DeepDocRectify loads the target DLInterface bridge dynamically. Declare the
+existing public library so updated Camera installations can also load it.
+
+---
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -578,6 +578,7 @@
+         <uses-native-library android:name="libQREngine.camera.samsung.so" android:required="false"/>
+         <uses-native-library android:name="libRectify.camera.samsung.so" android:required="false"/>
+         <uses-native-library android:name="libDocRectifyWrapper.camera.samsung.so" android:required="false"/>
++        <uses-native-library android:name="libDLInterface_aidl.camera.samsung.so" android:required="false"/>
+         <uses-native-library android:name="libSDKRecognitionOCR.spenocr.samsung.so" android:required="false"/>
+         <uses-native-library android:name="libSDKMoireDetector.spenocr.samsung.so" android:required="false"/>
+         <uses-native-library android:name="libStride.camera.samsung.so" android:required="false"/>
