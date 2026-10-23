@@ -92,6 +92,7 @@
 - Three debloat levels while preserving the applications and services required for messaging, Samsung accounts, firmware
   updates, Motion Photos, SIM unlocking and storage sharing
 - Meta bloat services removed by default
+- OMC carrier apps install as removable user apps, while keeping the active CSC's app selection
 - Fixed display corner radius
 - Stock wallpapers added
 - Option to force a 120 Hz refresh rate

@@ -27,6 +27,13 @@ SOURCE_MODEL=$(echo -n "$SOURCE_FIRMWARE" | cut -d "/" -f 1)
 TARGET_MODEL=$(echo -n "$TARGET_FIRMWARE" | cut -d "/" -f 1)
 find "$WORK_DIR/optics" -type f -exec sed -i "s/SAOMC_SM-S938B/SAOMC_${TARGET_MODEL}/g" {} +
 
+# Keep OMC apps removable regardless of the selected debloat profile.
+LOG "- Making OMC apps uninstallable"
+python3 "$MODPATH/removable_apps.py" "$WORK_DIR" "$TOOLS_DIR/bin/apktool" || exit 1
+if [ -f "$WORK_DIR/system/system/etc/system_to_data_app_list.xml" ]; then
+    ENSURE_WORK_DIR_METADATA "system" "system/etc/system_to_data_app_list.xml" || exit 1
+fi
+
 LOG_STEP_IN "- Patching CSC Features"
 while read -r FILE; do
     (
