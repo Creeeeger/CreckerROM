@@ -75,14 +75,12 @@ priv-app/MyGalaxy
 # Samsung app provisioning, recommendations, customization and diagnostic/analytics uploaders
 SYSTEM_DEBLOAT+="
 system/app/MAPSAgent
-system/priv-app/OMCAgent5
 system/priv-app/DiagMonAgent94
 system/priv-app/DeviceQualityAgent35
 system/priv-app/knoxanalyticsagent
 system/etc/default-permissions/default-permissions-com.samsung.android.rubin.app.xml
 system/etc/permissions/signature-permissions-com.samsung.android.rubin.app.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.rubin.app.xml
-system/etc/permissions/privapp-permissions-com.samsung.android.app.omcagent.xml
 system/etc/permissions/privapp-permissions-com.sec.android.diagmonagent.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.dqagent.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.knox.analytics.uploader.xml

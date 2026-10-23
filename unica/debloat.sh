@@ -84,6 +84,7 @@ system/etc/permissions/com.samsung.feature.ipsgeofence.xml
 system/etc/permissions/com.samsung.feature.samsungpositioning.xml
 system/etc/permissions/org.carconnectivity.android.digitalkey.rangingintent.xml
 system/etc/permissions/org.carconnectivity.android.digitalkey.secureelement.xml
+system/etc/permissions/privapp-permissions-com.samsung.android.app.omcagent.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.app.updatecenter.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.authfw.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.carkey.xml
