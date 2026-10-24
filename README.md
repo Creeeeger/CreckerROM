@@ -100,6 +100,32 @@
 - Model-labelled Odin and Heimdall output, plus signed rollback-firmware and kernel-only testing workflows
 - Fixed excessive build disk usage
 
+## Exynos990 security kernel
+
+Enabled with `--secureKernel` (`Samsung_security`):
+
+- Samsung UH, FASTUH_RKP, UH_PDBT and module-load blocking
+- CFP/JOPP control-flow protection
+- DEFEX privilege-escalation, safeplace, integrity, immutable-file and trusted-map protection
+- FIVE file integrity and trusted keyring
+- PROCA S-OS process authentication and GAF/GAF_V6
+- DSMS security-event reporting
+- HDM and MST/TEEGRIS support
+- Knox NCM/NPA and NETPM networking
+- Enforcing Samsung SELinux
+- SDP/DDAR, fscrypt SDP, eCryptFS and FEK integrity
+- Crypto FIPS, Exynos FMP FIPS and FIPS RNG
+- Encrypted first boot and factory-reset support
+- KernelSU-Next legacy with DEFEX and RKP compatibility
+- Android BPF interpreter support; unprivileged BPF disabled by default
+- KPTI and Spectre mitigations
+- Hardened slab freelists and usercopy; stack and heap zeroing
+- Mandatory SHA-256-signed modules and trusted/blacklist keyrings
+- IMA/EVM, dm-integrity, securityfs, path/XFRM hooks and Yama
+- Restricted kernel logs and performance events
+- KPERFMON logging support
+- Signed DEFEX policies and build-time security/integrity checks
+
 # Attestation root certificate renewal
 
 For legacy Google attestation root expiry errors, boot into TWRP and run
