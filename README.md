@@ -1,7 +1,6 @@
 > [!CAUTION]
-> Before booting CreckerROM, **lock the bootloader** and wipe the `data`,
-> `keystorage`, `keyrefuge`, and `metadata` partitions. These steps are mandatory
-> and will erase all user data, so make a backup first.
+> Before first boot, **lock the bootloader**. In TWRP, **Format Data**, then **wipe Data only**.
+> This erases all user data, so make a backup first.
 
 > [!IMPORTANT]
 > **Play Integrity Fix** is integrated and enabled by default. After flashing, use
